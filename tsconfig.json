@@ -32,6 +32,7 @@
     },
     "files": [
         "src/index.ts",
+        "src/firebaseRules.ts",
         "typings/firebase.d.ts"
     ],
     "exclude": [

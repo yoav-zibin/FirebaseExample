@@ -8,7 +8,6 @@ module firebaseRules {
   function getRulesJson(): string {
     let rules: any = getRules();
     addValidateNoOther(rules);
-    delete rules[".validate"]; // because I don't want to validate all the root childs (/recentlyConnected, /chats, etc exist).
     return prettyJson({"rules": rules});
   }
 
@@ -80,8 +79,19 @@ module firebaseRules {
     return keys;
   }
 
-  // We can't initially add it because there is no chats field.
-  const EXCLUDED_CHILDREN = ['privateButAddable', 'messages'];
+  function hasNonCollectionGrandchildren(rules: any): boolean {
+    if (typeof rules == "string") throw new Error("Internal error: we traversed into a leaf");
+    let allKeys = Object.keys(rules);
+    if (allKeys.length == 1 && allKeys[0] == ".validate") return true; // leaf
+    let keys = getNonSpecialKeys(rules);
+    let result = false;
+    for (let key of keys) {
+      if (key.charAt(0) != '$') {
+        result = result || hasNonCollectionGrandchildren(rules[key]);
+      }
+    }
+    return result;
+  }
 
   function addValidateNoOther(rules: any): void {
     if (typeof rules == "string") return;
@@ -94,12 +104,13 @@ module firebaseRules {
     if (keys.length > 1 || keys[0].charAt(0) != '$') {
       rules["$other"] = { ".validate": false };
       
-      let filteredChildren = keys.filter((v) => EXCLUDED_CHILDREN.indexOf(v) === -1); 
-
-      let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
-      // We use .validate only on the leaves.
-      if (rules[".validate"]) throw new Error("Rule already has .validate: " + prettyJson(rules));
-      rules[".validate"] = `newData.hasChildren([${quotedChildren}])`;
+      let filteredChildren = keys.filter((key) => hasNonCollectionGrandchildren(rules[key])); 
+      if (filteredChildren.length > 0) {
+        let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
+        // We use .validate only on the leaves.
+        if (rules[".validate"]) throw new Error("Rule already has .validate: " + prettyJson(rules));
+        rules[".validate"] = `newData.hasChildren([${quotedChildren}])`;
+      }
     }
     
     if (keys.length > 1) {
@@ -134,8 +145,8 @@ module firebaseRules {
       ".read": "false",
       ".write": "false",
       "images": {
+        ".read": ANYONE,
         "$image_id": {
-          ".read": ANYONE,
           ".write": ADD_OR_UPLOADER,
           "downloadURL": validateSecureUrl(),
           "width": validateNumber(10, 1024),
@@ -145,6 +156,15 @@ module firebaseRules {
           "name": validateString(100),
           "uploader_email": validateEmail(),
           "uploader_uid": validateUid(),
+          "createdOn": validateNow(),
+        },
+      },
+      "specs": {
+        ".read": ANYONE,
+        "$game_name": {
+          ".write": ADD_OR_UPLOADER,
+          "uploader_uid": validateUid(),
+          "spec": validateString(5000),
           "createdOn": validateNow(),
         },
       },
@@ -200,15 +220,6 @@ module firebaseRules {
               "timestamp": validateNow(),
             },
           },
-        },
-      },
-      "specs": {
-        "$game_name": {
-          ".read": ANYONE,
-          ".write": ADD_OR_UPLOADER,
-          "uploader_uid": validateUid(),
-          "spec": validateString(5000),
-          "createdOn": validateNow(),
         },
       },
     };

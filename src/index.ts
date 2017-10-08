@@ -78,6 +78,8 @@ module main {
 
   function runDbTest() {
     uid = firebase.auth().currentUser.uid;
+    canRead("/images");
+    canRead("/specs");
     canRead("/images/123");
     cannotWrite("/images/123", 42);
     write("/images/123", {

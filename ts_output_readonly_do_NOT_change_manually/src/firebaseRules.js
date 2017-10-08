@@ -6,7 +6,6 @@ var firebaseRules;
     function getRulesJson() {
         var rules = getRules();
         addValidateNoOther(rules);
-        delete rules[".validate"]; // because I don't want to validate all the root childs (/recentlyConnected, /chats, etc exist).
         return prettyJson({ "rules": rules });
     }
     function validate(exp) {
@@ -70,8 +69,22 @@ var firebaseRules;
         }
         return keys;
     }
-    // We can't initially add it because there is no chats field.
-    var EXCLUDED_CHILDREN = ['privateButAddable', 'messages'];
+    function hasNonCollectionGrandchildren(rules) {
+        if (typeof rules == "string")
+            throw new Error("Internal error: we traversed into a leaf");
+        var allKeys = Object.keys(rules);
+        if (allKeys.length == 1 && allKeys[0] == ".validate")
+            return true; // leaf
+        var keys = getNonSpecialKeys(rules);
+        var result = false;
+        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
+            var key = keys_2[_i];
+            if (key.charAt(0) != '$') {
+                result = result || hasNonCollectionGrandchildren(rules[key]);
+            }
+        }
+        return result;
+    }
     function addValidateNoOther(rules) {
         if (typeof rules == "string")
             return;
@@ -83,23 +96,25 @@ var firebaseRules;
             return;
         if (keys.length > 1 || keys[0].charAt(0) != '$') {
             rules["$other"] = { ".validate": false };
-            var filteredChildren = keys.filter(function (v) { return EXCLUDED_CHILDREN.indexOf(v) === -1; });
-            var quotedChildren = filteredChildren.map(function (val) { return "'" + val + "'"; }).join(", ");
-            // We use .validate only on the leaves.
-            if (rules[".validate"])
-                throw new Error("Rule already has .validate: " + prettyJson(rules));
-            rules[".validate"] = "newData.hasChildren([" + quotedChildren + "])";
+            var filteredChildren = keys.filter(function (key) { return hasNonCollectionGrandchildren(rules[key]); });
+            if (filteredChildren.length > 0) {
+                var quotedChildren = filteredChildren.map(function (val) { return "'" + val + "'"; }).join(", ");
+                // We use .validate only on the leaves.
+                if (rules[".validate"])
+                    throw new Error("Rule already has .validate: " + prettyJson(rules));
+                rules[".validate"] = "newData.hasChildren([" + quotedChildren + "])";
+            }
         }
         if (keys.length > 1) {
-            for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
-                var key = keys_2[_i];
+            for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
+                var key = keys_3[_i];
                 if (key.charAt(0) == '$')
                     throw new Error("You can't use a $ property with other non-$ properties, but you have these keys=" + keys);
             }
         }
         // recurse
-        for (var _a = 0, keys_3 = keys; _a < keys_3.length; _a++) {
-            var key = keys_3[_a];
+        for (var _a = 0, keys_4 = keys; _a < keys_4.length; _a++) {
+            var key = keys_4[_a];
             addValidateNoOther(rules[key]);
         }
     }
@@ -123,8 +138,8 @@ var firebaseRules;
             ".read": "false",
             ".write": "false",
             "images": {
+                ".read": ANYONE,
                 "$image_id": {
-                    ".read": ANYONE,
                     ".write": ADD_OR_UPLOADER,
                     "downloadURL": validateSecureUrl(),
                     "width": validateNumber(10, 1024),
@@ -134,6 +149,15 @@ var firebaseRules;
                     "name": validateString(100),
                     "uploader_email": validateEmail(),
                     "uploader_uid": validateUid(),
+                    "createdOn": validateNow(),
+                },
+            },
+            "specs": {
+                ".read": ANYONE,
+                "$game_name": {
+                    ".write": ADD_OR_UPLOADER,
+                    "uploader_uid": validateUid(),
+                    "spec": validateString(5000),
                     "createdOn": validateNow(),
                 },
             },
@@ -189,15 +213,6 @@ var firebaseRules;
                             "timestamp": validateNow(),
                         },
                     },
-                },
-            },
-            "specs": {
-                "$game_name": {
-                    ".read": ANYONE,
-                    ".write": ADD_OR_UPLOADER,
-                    "uploader_uid": validateUid(),
-                    "spec": validateString(5000),
-                    "createdOn": validateNow(),
                 },
             },
         };

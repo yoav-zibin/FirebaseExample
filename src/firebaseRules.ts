@@ -146,6 +146,7 @@ module firebaseRules {
       ".write": "false",
       "images": {
         ".read": ANYONE,
+        ".indexOn": ["is_board_image"],
         "$image_id": {
           ".write": ADD_OR_UPLOADER,
           "downloadURL": validateSecureUrl(),

@@ -189,6 +189,7 @@ var firebaseRules;
                 },
             },
             "recentlyConnected": {
+                ".read": ANYONE,
                 "$push_key_id": {
                     // Anyone can add a new value (or delete old values; although that's better done sever-side),
                     // but not modify values.

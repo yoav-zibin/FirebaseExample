@@ -86,23 +86,31 @@ module firebaseRules {
 
   function validatePieceState(): Rule {
     return {
-      // The top left point has x=0 and y=0.
-      // The x position is 1.4% of the board width to the left.
+      // The top left point of the board has x=0 & y=0.
+      // x=1.4 means the top-left point was moved 1.4% of the board width to the left.
+      // Note that x=100 means the image is outside the board, so x should also be less
+      // than 100.
       "x": validateNumber(0, 100),
-      // The y position is 91.44% of the board height from the top.
+      // Similar to "x".
       "y": validateNumber(0, 100),
+      
+      // zIndex means how close the object is to the user.
+      // Greater zIndex numbers mean closer to the observer
+      // Whenever you drag a piece, it should get a zIndex that makes it closest to the observer.
+      // After shuffling a deck, zIndex should determine the order of the cards.
+      "zIndex": validateNumber(1, 100000000000000000),
 
       // For a toggable/dice element: the index of the currently selected image.
       // For a card element, currentImageIndex must always be 0
-      // (and GamePortal should use cardVisiblity below to determine whether to show image index 0 or 1).
+      // (and GamePortal should use cardVisibility below to determine whether to show image index 0 or 1).
       "currentImageIndex": validateNumber(0, 100),
 
       // Card visibility: only set it for cards.
-      // cardVisiblity contains exactly the userIds that can see the private face.
+      // cardVisibility contains exactly the participant indices that can see the private face.
       // If this element is missing, that means no one can see the private face.
       // If this element is contains all the participants' ids, then everyone can see the private face.
-      "cardVisiblity": {
-        "$userId": validateTrue(),
+      "cardVisibility": {
+        "$participantIndex": validateTrue(),
       },
     };
   }
@@ -212,9 +220,9 @@ module firebaseRules {
             "uploaderEmail": validateEmail(false),
             "uploaderUid": validateMyUid(),
             "createdOn": validateNow(),
-            "downloadURL": validateSecureUrl(),
             "width": validateNumber(10, 1024),
             "height": validateNumber(10, 1024),
+            "downloadURL": validateSecureUrl(),
             "isBoardImage": validateBoolean(),
             "cloudStorageKey": validateString(100),
             "name": validateString(100),
@@ -226,6 +234,8 @@ module firebaseRules {
             "uploaderEmail": validateEmail(false),
             "uploaderUid": validateMyUid(),
             "createdOn": validateNow(),
+            "width": validateNumber(10, 1024),
+            "height": validateNumber(10, 1024),
             "images": {
               "$imageIndex": {
                 "imageId": validateImageId(),
@@ -252,8 +262,17 @@ module firebaseRules {
             "isCard": validateBoolean(),
 
             // When a game spec contains a deck, it must contain all its elements as well.
-            "deck": {
-              "$elementIndex": {
+            // After shuffling a deck, all elements receive their
+            // initial cardVisibility (as set in that piece initialState).
+            // Initially a deck is shuffled.
+            // There are two types of decks:
+            // 1) cardsDeck: A deck of cards, where the cards are stacked on top of another,
+            // so you can only take a card from the top.
+            // 2) piecesDeck: Like in Stratego, where the red/blue pieces are one deck, and you
+            // can shuffle the deck, but you can take a piece from anywhere in the deck.
+            "deckType": validateRegex('notDeck|cardsDeck|piecesDeck'),
+            "deckElements": {
+              "$deckMemberIndex": {
                 "elementId": validateElementId(),
               },
             },
@@ -347,14 +366,19 @@ module firebaseRules {
           "timestamp": validateNow(),
         },
       },
-      // All groups of users (2 or more users).
+      // All groups of users (2-10 users).
       "groups": {
         "$groupId": {
           // Anyone can create a group, but only the participants can read/modify it
           ".read": "data.child('participants').child(auth.uid).exists()",
           ".write": "!data.exists() || data.child('participants').child(auth.uid).exists()",
           "participants": {
-            "$uid": validateTrue(),
+            "$uid": {
+              // Some games require giving each participant an index,
+              // e.g., Stratego initially shows the black pieces to participantIndex=0
+              // and blue pieces to participantIndex=1.
+              "participantIndex": validateNumber(0, 9),
+            },
           },
           // An optional name (i.e., groupName can be "").
           "groupName": validateString(100, 0),

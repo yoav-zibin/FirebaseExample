@@ -139,7 +139,7 @@ module main {
       "uid": uid,
       "timestamp": firebase.database.ServerValue.TIMESTAMP,
     });
-    write(`/recentlyConnected/123`, null);
+    cannotWrite(`/recentlyConnected/123`, null);
 
     write(`/specs/some_game`, {
       "uploader_uid": uid,

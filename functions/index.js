@@ -18,18 +18,19 @@ const functions = require('firebase-functions');
 // });
 
 // https://firebase.google.com/docs/functions/database-events
-exports.deleteOldEntriesOnRecentlyConnected = functions.database.ref('/recentlyConnected')
+exports.deleteOldEntriesOnRecentlyConnected =
+functions.database.ref('/gamePortal/recentlyConnected')
 .onWrite(event => {
   let maxEntries = 20;
   if (!event.data.exists()) {
     console.log('deleteOldEntriesOnRecentlyConnected: no data');
-    return;
+    return null;
   }
   const original = event.data.val();
   let keys = Object.keys(original);
   if (keys.length <= maxEntries) {
     console.log('deleteOldEntriesOnRecentlyConnected: less than maxEntries');
-    return;
+    return null;
   }
   // Find the oldest entries.
   keys.sort();

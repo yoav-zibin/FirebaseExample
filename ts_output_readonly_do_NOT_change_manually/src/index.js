@@ -1,6 +1,7 @@
 var main;
 (function (main) {
     var uid = "";
+    var idSuffix = (Math.random() + "xxxx").substr(2);
     var commands = [];
     function db() { return firebase.database(); }
     function canRead(path) {
@@ -14,6 +15,9 @@ var main;
     }
     function cannotWrite(path, val) {
         commands.push({ type: "w", path: path, shouldSucceed: false, writeVal: val });
+    }
+    function prettyJson(obj) {
+        return JSON.stringify(obj, null, '  ');
     }
     function executeCommands() {
         if (commands.length == 0) {
@@ -46,107 +50,423 @@ var main;
         }
         else {
             db().ref(path).set(writeVal, function (err) {
+                var writeValJson = prettyJson(writeVal);
                 // on complete
                 if (!err) {
                     if (!shouldSucceed) {
-                        console.error("We managed to write path=", path, " writeVal=", writeVal, " but we should have failed!");
+                        console.error("We managed to write path=", path, " writeVal=", writeValJson, " but we should have failed!");
                     }
                     else {
-                        console.log("Writing path=", path, " writeVal=", writeVal, " succeeded.");
+                        console.log("Writing path=", path, " writeVal=", writeValJson, " succeeded.");
                         executeCommands();
                     }
                 }
                 else {
                     if (shouldSucceed) {
-                        console.error("We failed to write path=", path, " writeVal=", writeVal, " but we should have succeeded! err=", err);
+                        console.error("We failed to write path=", path, " writeVal=", writeValJson, " but we should have succeeded! err=", err);
                     }
                     else {
-                        console.log("Writing path=", path, " writeVal=", writeVal, " failed as expected with err=", err);
+                        console.log("Writing path=", path, " writeVal=", writeValJson, " failed as expected with err=", err);
                         executeCommands();
                     }
                 }
             });
         }
     }
-    function runDbTest() {
-        uid = firebase.auth().currentUser.uid;
-        canRead("/images");
-        canRead("/specs");
-        canRead("/images/123");
-        cannotWrite("/images/123", 42);
-        write("/images/123", {
-            "downloadURL": "https://blabla.com",
-            "width": 1024,
-            "height": 10,
-            "is_board_image": true,
-            "key": "abc",
-            "name": "whatever",
-            "uploader_email": "yoav@goo.bar",
-            "uploader_uid": uid,
-            "createdOn": firebase.database.ServerValue.TIMESTAMP,
+    function addImage(id, width, height, isBoardImage) {
+        write("/gameBuilder/images/" + id + idSuffix, {
+            name: "whatever",
+            width: width,
+            height: height,
+            sizeInBytes: 150000,
+            isBoardImage: isBoardImage,
+            downloadURL: "https://blabla.com",
+            cloudStoragePath: "images/-KuV-Y9TXnfnaZExRTli.gif",
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
         });
-        write("/images/123/downloadURL", "https://blabla.com/sdfsdf");
-        cannotWrite("/images/123/downloadURL", "http://blabla.com/sdfsdf");
-        cannotWrite("/images/123/width", "123");
-        cannotWrite("/images/123/width", 1025);
-        cannotWrite("/images/123/height", 2);
-        cannotWrite("/images/123/is_board_image", 2);
-        cannotWrite("/images/123/uploader_email", "not_email@");
-        cannotWrite("/images/123/uploader_uid", "not_email");
-        // Reading another user's data.
-        canRead("/users/123/publicFields");
-        cannotRead("/users/123/privateFields");
-        cannotRead("/users/123/privateButAddable");
-        cannotRead("/users/123");
-        cannotWrite("/users/123/publicFields/isConnected", true);
-        write("/users/" + uid, {
-            "publicFields": {
-                "avatarImageUrl": "https://foo.bar/avatar",
-                "displayName": "Yoav Ziii",
-                "isConnected": true,
-                "lastSeen": firebase.database.ServerValue.TIMESTAMP,
+    }
+    function runGameBuilderTest() {
+        canRead("/gameBuilder/images");
+        canRead("/gameBuilder/gameSpecs");
+        canRead("/gameBuilder/images/boardImage" + idSuffix);
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix, 42);
+        addImage("boardImage", 1024, 10, true);
+        write("/gameBuilder/images/boardImage" + idSuffix + "/downloadURL", "https://blabla.com/sdfsdf");
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/downloadURL", "http://blabla.com/sdfsdf");
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/width", "1024");
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/width", 1025);
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/height", 2);
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/is_board_image", 2);
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/uploaderEmail", "not_email@");
+        cannotWrite("/gameBuilder/images/boardImage" + idSuffix + "/uploaderUid", "not_email");
+        // Create a standard element
+        addImage("blokus_L_element", 100, 100, false);
+        write("/gameBuilder/elements/standard" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 100,
+            height: 100,
+            images: [
+                { imageId: "blokus_L_element" + idSuffix },
+            ],
+            isDraggable: true,
+            elementKind: 'standard',
+            rotatableDegrees: 90,
+            deckElements: [],
+            isDrawable: true,
+        });
+        // Create a toggable element
+        addImage("reversiWhite", 100, 100, false);
+        addImage("reversiBlack", 100, 100, false);
+        write("/gameBuilder/elements/toggable" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 100,
+            height: 100,
+            images: [
+                { imageId: "reversiWhite" + idSuffix },
+                { imageId: "reversiBlack" + idSuffix },
+            ],
+            isDraggable: true,
+            elementKind: 'toggable',
+            rotatableDegrees: 360,
+            deckElements: [],
+            isDrawable: false,
+        });
+        // Create a dice element
+        addImage("diceSide1", 100, 100, false);
+        addImage("diceSide2", 100, 100, false);
+        addImage("diceSide3", 100, 100, false);
+        addImage("diceSide4", 100, 100, false);
+        addImage("diceSide5", 100, 100, false);
+        addImage("diceSide6", 100, 100, false);
+        write("/gameBuilder/elements/dice" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 100,
+            height: 100,
+            images: [
+                { imageId: "diceSide1" + idSuffix },
+                { imageId: "diceSide2" + idSuffix },
+                { imageId: "diceSide3" + idSuffix },
+                { imageId: "diceSide4" + idSuffix },
+                { imageId: "diceSide5" + idSuffix },
+                { imageId: "diceSide6" + idSuffix },
+            ],
+            isDraggable: true,
+            elementKind: 'dice',
+            rotatableDegrees: 360,
+            deckElements: [],
+            isDrawable: false,
+        });
+        // Create two card elements
+        addImage("publicFace", 100, 100, false);
+        addImage("privateFace1", 100, 100, false);
+        addImage("privateFace2", 100, 100, false);
+        write("/gameBuilder/elements/card1" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 100,
+            height: 100,
+            images: [
+                { imageId: "publicFace" + idSuffix },
+                { imageId: "privateFace1" + idSuffix },
+            ],
+            isDraggable: true,
+            elementKind: 'card',
+            rotatableDegrees: 360,
+            deckElements: [],
+            isDrawable: true,
+        });
+        write("/gameBuilder/elements/card2" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 100,
+            height: 100,
+            images: [
+                { imageId: "publicFace" + idSuffix },
+                { imageId: "privateFace2" + idSuffix },
+            ],
+            isDraggable: true,
+            elementKind: 'card',
+            rotatableDegrees: 360,
+            deckElements: [],
+            isDrawable: true,
+        });
+        // Create two deck elements (cardsDeck|piecesDeck)
+        addImage("deckArea", 200, 200, false);
+        write("/gameBuilder/elements/cardsDeck" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 200,
+            height: 200,
+            images: [
+                { imageId: "deckArea" + idSuffix },
+            ],
+            isDraggable: false,
+            elementKind: 'cardsDeck',
+            rotatableDegrees: 360,
+            deckElements: [
+                { deckMemberElementId: "card1" + idSuffix },
+                { deckMemberElementId: "card2" + idSuffix },
+            ],
+            isDrawable: false,
+        });
+        write("/gameBuilder/elements/piecesDeck" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            width: 200,
+            height: 200,
+            images: [
+                { imageId: "deckArea" + idSuffix },
+            ],
+            isDraggable: false,
+            elementKind: 'piecesDeck',
+            rotatableDegrees: 360,
+            deckElements: [
+                { deckMemberElementId: "card1" + idSuffix },
+                { deckMemberElementId: "card2" + idSuffix },
+            ],
+            isDrawable: false,
+        });
+        addImage("gameIcon50x50", 50, 50, false);
+        addImage("gameIcon512x512", 512, 512, false);
+        write("/gameBuilder/gameSpecs/gameSpec" + idSuffix, {
+            uploaderEmail: "yoav@goo.bar",
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            gameName: "Chess!",
+            gameIcon50x50: "gameIcon50x50" + idSuffix,
+            gameIcon512x512: "gameIcon512x512" + idSuffix,
+            wikipediaUrl: "https://en.wikipedia.org/wiki/Chess",
+            tutorialYoutubeVideo: "",
+            board: {
+                imageId: "boardImage" + idSuffix,
+                backgroundColor: "FFFFFF",
+                maxScale: 1,
             },
-            "privateFields": {
-                "email": "yoav.zibin@yooo.goo",
-                "createdOn": firebase.database.ServerValue.TIMESTAMP,
+            pieces: [
+                {
+                    pieceElementId: "piecesDeck" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: -1,
+                },
+                {
+                    pieceElementId: "card1" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: 0,
+                },
+                {
+                    pieceElementId: "card2" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: 0,
+                },
+                {
+                    pieceElementId: "cardsDeck" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: -1,
+                },
+                {
+                    pieceElementId: "card1" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: 3,
+                },
+                {
+                    pieceElementId: "card2" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: 3,
+                },
+                {
+                    pieceElementId: "standard" + idSuffix,
+                    initialState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: -1,
+                },
+                {
+                    pieceElementId: "standard" + idSuffix,
+                    initialState: {
+                        x: 5.9,
+                        y: 19.9,
+                        zDepth: 1,
+                        currentImageIndex: 0
+                    },
+                    deckPieceIndex: -1,
+                },
+                {
+                    pieceElementId: "toggable" + idSuffix,
+                    initialState: {
+                        x: 5.9,
+                        y: 19.9,
+                        zDepth: 1,
+                        currentImageIndex: 1
+                    },
+                    deckPieceIndex: -1,
+                },
+                {
+                    pieceElementId: "dice" + idSuffix,
+                    initialState: {
+                        x: 5.9,
+                        y: 19.9,
+                        zDepth: 1,
+                        currentImageIndex: 5
+                    },
+                    deckPieceIndex: -1,
+                },
+            ],
+        });
+    }
+    function runGamePortalTest() {
+        write("/gamePortal/recentlyConnected/" + idSuffix, {
+            userId: uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        cannotWrite("/gamePortal/recentlyConnected/" + idSuffix, null);
+        cannotWrite("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            addedByUid: uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        cannotWrite("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            addedByUid: uid,
+        });
+        cannotWrite("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        write("/gamePortal/groups/groupId" + idSuffix, {
+            participants: (_a = {},
+                _a[uid] = { participantIndex: 0 },
+                _a),
+            groupName: "",
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+        });
+        cannotWrite("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            addedByUid: uid,
+        });
+        cannotWrite("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        write("/users/" + uid + "/privateButAddable/groups/groupId" + idSuffix, {
+            addedByUid: uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        write("/gamePortal/groups/groupId" + idSuffix + "/messages/messageId" + idSuffix, {
+            senderUid: uid,
+            message: "message",
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        });
+        write("/gamePortal/groups/groupId" + idSuffix + "/matches/matchId" + idSuffix, {
+            gameSpecId: "gameSpec" + idSuffix,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            lastUpdatedOn: firebase.database.ServerValue.TIMESTAMP,
+            pieces: [
+                {
+                    currentState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 0
+                    },
+                },
+                {
+                    currentState: {
+                        x: -99.9,
+                        y: 99.9,
+                        zDepth: 10000000000000000,
+                        currentImageIndex: 1
+                    },
+                },
+            ]
+        });
+        // Updating a specific piece
+        write("/gamePortal/groups/groupId" + idSuffix + "/matches/matchId" + idSuffix + "/lastUpdatedOn", firebase.database.ServerValue.TIMESTAMP);
+        write("/gamePortal/groups/groupId" + idSuffix + "/matches/matchId" + idSuffix + "/pieces/1/currentState", {
+            x: 9.9,
+            y: 42.9,
+            zDepth: 23,
+            currentImageIndex: 0
+        });
+        // Adding a review
+        write("/gamePortal/gameSpec/reviews/gameSpec" + idSuffix + "/" + uid, {
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            stars: 5,
+        });
+        var _a;
+    }
+    function runUserTest() {
+        uid = firebase.auth().currentUser.uid;
+        console.info("My uid=", uid);
+        // Reading another user's data.
+        canRead("/users/userId" + idSuffix + "/publicFields");
+        cannotRead("/users/userId" + idSuffix + "/privateFields");
+        cannotRead("/users/userId" + idSuffix + "/privateButAddable");
+        cannotRead("/users/userId" + idSuffix);
+        cannotWrite("/users/userId" + idSuffix + "/publicFields/isConnected", true);
+        // Adding my user data.
+        write("/users/" + uid, {
+            publicFields: {
+                avatarImageUrl: "https://foo.bar/avatar",
+                displayName: "Yoav Ziii",
+                isConnected: true,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            },
+            privateFields: {
+                email: "yoav.zibin@yooo.goo",
+                createdOn: firebase.database.ServerValue.TIMESTAMP,
+                phoneNumber: "",
+                facebookId: "",
+                googleId: "",
+                twitterId: "",
+                githubId: "",
+                //friends: {}, // Not needed: you can add it later.
+                pushNotificationsToken: "",
             },
         });
         write("/users/" + uid + "/publicFields/displayName", "New name!");
-        write("/users/" + uid + "/privateButAddable/chats/4242", {
-            "addedByUid": uid,
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-        });
-        cannotWrite("/users/" + uid + "/privateButAddable/chats/4243", {
-            "addedByUid": uid,
-        });
-        cannotWrite("/users/" + uid + "/privateButAddable/chats/4243", {
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-        });
-        write("/recentlyConnected/123", {
-            "uid": uid,
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-        });
-        cannotWrite("/recentlyConnected/123", null);
-        write("/specs/some_game", {
-            "uploader_uid": uid,
-            "spec": "whatever",
-            "createdOn": firebase.database.ServerValue.TIMESTAMP,
-        });
-        write("/chats/123", {
-            "participants": (_a = {},
-                _a[uid] = true,
-                _a["ab123"] = true,
-                _a),
-            "groupName": "",
-            "createdOn": firebase.database.ServerValue.TIMESTAMP,
-        });
-        write("/chats/123/messages/456", {
-            "senderUid": uid,
-            "message": "message",
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-        });
+        runGameBuilderTest();
+        runGamePortalTest();
         executeCommands();
-        var _a;
     }
     function init() {
         var config = {
@@ -162,11 +482,11 @@ var main;
         firebase.auth().onAuthStateChanged(function (user) {
             console.log("onAuthStateChanged user=", user);
             if (user) {
-                runDbTest();
+                runUserTest();
                 return;
             }
             // No auth user.
-            cannotRead("/images/123"); // We must authenticate first.
+            cannotRead("/gameBuilder/images/" + idSuffix); // We must authenticate first.
         });
     }
     function login() {
@@ -178,7 +498,7 @@ var main;
             //let token = result.credential.accessToken;
             // The signed-in user info.
             //let user = result.user;
-            runDbTest();
+            runUserTest();
         })
             .catch(function (error) {
             console.error("Failed auth: ", error);

@@ -292,7 +292,7 @@ module firebaseRules {
     }
     let keys = getNonSpecialKeys(rules);
 
-    let validateConditions = [];
+    let validateConditions: string[] = [];
     if (keys.length > 1 || (keys.length > 0 && keys[0].charAt(0) != '$')) {
       rules["$other"] = { ".validate": false };
       
@@ -304,7 +304,7 @@ module firebaseRules {
     }
 
     if (parentKey.charAt(0) == '$') {
-      validateConditions.push(getValidateForParentKey(parentKey)[".validate"]);
+      validateConditions.push(<string>getValidateForParentKey(parentKey)[".validate"]);
     }
     if (validateConditions.length > 0) {
       if (rules[".validate"]) {

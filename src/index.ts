@@ -13,19 +13,19 @@ module main {
   function db() { return firebase.database(); }
 
   function canRead(path: string) {
-    commands.push({type: `r`, path: path, shouldSucceed: true});
+    commands.push({type: "r", path: path, shouldSucceed: true});
   }
 
   function cannotRead(path: string) {
-    commands.push({type: `r`, path: path, shouldSucceed: false});
+    commands.push({type: "r", path: path, shouldSucceed: false});
   }
 
   function write(path: string, val: any) {
-    commands.push({type: `w`, path: path, shouldSucceed: true, writeVal: val});
+    commands.push({type: "w", path: path, shouldSucceed: true, writeVal: val});
   }
 
   function cannotWrite(path: string, val: any) {
-    commands.push({type: `w`, path: path, shouldSucceed: false, writeVal: val});
+    commands.push({type: "w", path: path, shouldSucceed: false, writeVal: val});
   }
 
   function prettyJson(obj: any): string {
@@ -40,7 +40,7 @@ module main {
     let path = command.path;
     let shouldSucceed = command.shouldSucceed;
     let writeVal = command.writeVal;
-    if (command.type == `r`) {
+    if (command.type == "r") {
       db().ref(path).once('value', (snap) => {
         // successCallback
         if (!shouldSucceed) {

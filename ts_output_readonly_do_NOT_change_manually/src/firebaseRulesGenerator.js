@@ -647,4 +647,4 @@ var firebaseRules;
     }
     init();
 })(firebaseRules || (firebaseRules = {}));
-//# sourceMappingURL=firebaseRules.js.map
+//# sourceMappingURL=firebaseRulesGenerator.js.map

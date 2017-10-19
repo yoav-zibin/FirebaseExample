@@ -31,8 +31,8 @@
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
     "files": [
-        "src/index.ts",
-        "src/firebaseRules.ts",
+        "src/firebaseDbExample.ts",
+        "src/firebaseRulesGenerator.ts",
         "src/dragAndDropExample.ts",
         "typings/firebase.d.ts"
     ],

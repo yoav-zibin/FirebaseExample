@@ -507,4 +507,4 @@ var main;
     document.getElementById('login').onclick = login;
     init();
 })(main || (main = {}));
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=firebaseDbExample.js.map

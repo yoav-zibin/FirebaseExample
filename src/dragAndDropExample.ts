@@ -60,20 +60,35 @@ module dragAndDrop {
   function init() {
     let currentElement: HTMLElement = null;
     let currentZIndex = 100;
-    addDragListener('draggableArea', (type: string, clientX: number, clientY: number, event: TouchEvent | MouseEvent) => {
+
+    function endDrag() {
+      if (currentElement != null) {
+        currentElement.classList.remove('currentlyDragged');
+        currentElement = null;
+      }
+    }
+
+    function touchHandler(type: string, clientX: number, clientY: number, event: TouchEvent | MouseEvent) {
       if (type == "touchstart") {
+        endDrag();
         currentElement = <HTMLElement> document.elementFromPoint(clientX, clientY);
-        if (!currentElement.classList.contains('draggable')) currentElement = null;
+        if (!currentElement.classList.contains('draggable')) {
+          currentElement = null;
+        } else {
+          currentElement.classList.add('currentlyDragged');
+        }
       }
       if (currentElement != null) {
-        currentElement.style.left = clientX + 'px';
-        currentElement.style.top = clientY + 'px';
+        currentElement.style.left = (clientX - currentElement.offsetWidth/2) + 'px';
+        currentElement.style.top = (clientY - currentElement.offsetHeight/2) + 'px';
         currentElement.style.zIndex = '' + (++currentZIndex);
       }
       if (type == "touchend") {
-        currentElement = null;
+        endDrag();
       }
-    });
+    }
+
+    addDragListener('draggableArea', touchHandler);
   }
 
   init();

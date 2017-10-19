@@ -52,21 +52,33 @@ var dragAndDrop;
     function init() {
         var currentElement = null;
         var currentZIndex = 100;
-        addDragListener('draggableArea', function (type, clientX, clientY, event) {
+        function endDrag() {
+            if (currentElement != null) {
+                currentElement.classList.remove('currentlyDragged');
+                currentElement = null;
+            }
+        }
+        function touchHandler(type, clientX, clientY, event) {
             if (type == "touchstart") {
+                endDrag();
                 currentElement = document.elementFromPoint(clientX, clientY);
-                if (!currentElement.classList.contains('draggable'))
+                if (!currentElement.classList.contains('draggable')) {
                     currentElement = null;
+                }
+                else {
+                    currentElement.classList.add('currentlyDragged');
+                }
             }
             if (currentElement != null) {
-                currentElement.style.left = clientX + 'px';
-                currentElement.style.top = clientY + 'px';
+                currentElement.style.left = (clientX - currentElement.offsetWidth / 2) + 'px';
+                currentElement.style.top = (clientY - currentElement.offsetHeight / 2) + 'px';
                 currentElement.style.zIndex = '' + (++currentZIndex);
             }
             if (type == "touchend") {
-                currentElement = null;
+                endDrag();
             }
-        });
+        }
+        addDragListener('draggableArea', touchHandler);
     }
     init();
 })(dragAndDrop || (dragAndDrop = {}));

@@ -33,7 +33,9 @@
     "files": [
         "src/firebaseDbExample.ts",
         "src/firebaseRulesGenerator.ts",
-        "src/dragAndDropExample.ts",
+        "src/dragAndDropCanvasExample.ts",
+        "src/dragAndDropHtmlExample.ts",
+        "typings/concrete.d.ts",
         "typings/firebase.d.ts"
     ],
     "exclude": [

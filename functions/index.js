@@ -27,20 +27,33 @@ functions.database.ref('/gamePortal/recentlyConnected')
     return null;
   }
   const original = event.data.val();
-  let keys = Object.keys(original);
-  if (keys.length <= maxEntries) {
-    console.log('deleteOldEntriesOnRecentlyConnected: less than maxEntries');
-    return null;
-  }
-  // Find the oldest entries.
-  keys.sort();
-  // Filter the newest maxEntries entries.
-  keys.splice(keys.length - maxEntries, maxEntries);
   let updates = {};
+  let keys = Object.keys(original);
+  // Filter users with duplicate entries.
+  keys.sort((key1, key2) => original[key2].timestamp - original[key1].timestamp); // newest entries are at the beginning
+  let userIds = {};
   for (let key of keys) {
-    updates[key] = null;
+    let recentlyConnectedEntry = original[key];
+    let userId = recentlyConnectedEntry.userId;
+    if (userIds[userId]) {
+      updates[key] = null;
+      delete original[key];
+    }
+    userIds[userId] = true;
   }
 
+  // Filter the newest maxEntries entries.
+  keys = Object.keys(original);
+  if (keys.length > maxEntries) {
+    keys.sort((entry1, entry2) => original[key1].timestamp - original[key2].timestamp); // oldest entries are at the beginning
+    // Removes the newest 20 entries from the end (the ones we want to keep).
+    keys.splice(keys.length - maxEntries, maxEntries);
+    // Delete everything else.
+    for (let key of keys) {
+      updates[key] = null;
+    }
+  }
+  
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);
 });

@@ -21,6 +21,12 @@ const functions = require('firebase-functions');
 exports.deleteOldEntriesOnRecentlyConnected =
 functions.database.ref('/gamePortal/recentlyConnected')
 .onWrite(event => {
+  function getSortedKeys(original) {
+    let keys = Object.keys(original);
+    // Filter users with duplicate entries.
+    keys.sort((key1, key2) => original[key2].timestamp - original[key1].timestamp); // newest entries are at the beginning
+    return keys;
+  }
   let maxEntries = 20;
   if (!event.data.exists()) {
     console.log('deleteOldEntriesOnRecentlyConnected: no data');
@@ -28,9 +34,7 @@ functions.database.ref('/gamePortal/recentlyConnected')
   }
   const original = event.data.val();
   let updates = {};
-  let keys = Object.keys(original);
-  // Filter users with duplicate entries.
-  keys.sort((key1, key2) => original[key2].timestamp - original[key1].timestamp); // newest entries are at the beginning
+  let keys = getSortedKeys(original);
   let userIds = {};
   for (let key of keys) {
     let recentlyConnectedEntry = original[key];
@@ -43,9 +47,9 @@ functions.database.ref('/gamePortal/recentlyConnected')
   }
 
   // Filter the newest maxEntries entries.
-  keys = Object.keys(original);
+  keys = getSortedKeys(original);
   if (keys.length > maxEntries) {
-    keys.sort((entry1, entry2) => original[key1].timestamp - original[key2].timestamp); // oldest entries are at the beginning
+    keys.reverse(); // oldest entries are at the beginning
     // Removes the newest 20 entries from the end (the ones we want to keep).
     keys.splice(keys.length - maxEntries, maxEntries);
     // Delete everything else.

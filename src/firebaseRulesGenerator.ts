@@ -297,6 +297,10 @@ module firebaseRules {
       rules["$other"] = { ".validate": false };
       
       let filteredChildren = keys.filter((key) => hasNonCollectionGrandchildren(rules[key])); 
+      
+      // filter out $elementId.name because I added it later.
+      if (parentKey == "$elementId") filteredChildren = filteredChildren.filter((key) => key != "name"); 
+
       if (filteredChildren.length > 0) {
         let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
         validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
@@ -373,6 +377,7 @@ module firebaseRules {
             "createdOn": validateNow(),
             "width": validateNumber(10, 1024),
             "height": validateNumber(10, 1024),
+            "name": validateOptionalString(100),
 
             // An array of image ids.
             // All the images must have the same width&height as that of the element.

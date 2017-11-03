@@ -260,6 +260,9 @@ var firebaseRules;
         if (keys.length > 1 || (keys.length > 0 && keys[0].charAt(0) != '$')) {
             rules["$other"] = { ".validate": false };
             var filteredChildren = keys.filter(function (key) { return hasNonCollectionGrandchildren(rules[key]); });
+            // filter out $elementId.name because I added it later.
+            if (parentKey == "$elementId")
+                filteredChildren = filteredChildren.filter(function (key) { return key != "name"; });
             if (filteredChildren.length > 0) {
                 var quotedChildren = filteredChildren.map(function (val) { return "'" + val + "'"; }).join(", ");
                 validateConditions.push("newData.hasChildren([" + quotedChildren + "])");
@@ -335,6 +338,7 @@ var firebaseRules;
                         "createdOn": validateNow(),
                         "width": validateNumber(10, 1024),
                         "height": validateNumber(10, 1024),
+                        "name": validateOptionalString(100),
                         // An array of image ids.
                         // All the images must have the same width&height as that of the element.
                         // Read about arrays in firebase DB: http://firebase.googleblog.com/2014/04/best-practices-arrays-in-firebase.html

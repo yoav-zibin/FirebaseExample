@@ -4,7 +4,7 @@ var firebaseRules;
         return JSON.stringify(obj, null, '  ');
     }
     function getRulesJson() {
-        var rules = getRules();
+        let rules = getRules();
         addValidateNoOther('', rules);
         return prettyJson({ "rules": rules });
     }
@@ -25,16 +25,16 @@ var firebaseRules;
     }
     // maxLength excluding, minLength incuding.
     function validateStringLen(minLengthInclusive, maxLengthExclusive) {
-        return validate("newData.isString() && newData.val().length >= " + minLengthInclusive + " && newData.val().length < " + maxLengthExclusive);
+        return validate(`newData.isString() && newData.val().length >= ${minLengthInclusive} && newData.val().length < ${maxLengthExclusive}`);
     }
     function validateRegex(pattern) {
-        return validate("newData.isString() && newData.val().matches(/^" + pattern + "$/)");
+        return validate(`newData.isString() && newData.val().matches(/^${pattern}$/)`);
     }
     function validElementImageProp(prop) {
-        return "(newData.parent().parent().parent().child('" + prop + "').val() === root.child('gameBuilder/images/' + newData.val() + '/" + prop + "').val())";
+        return `(newData.parent().parent().parent().child('${prop}').val() === root.child('gameBuilder/images/' + newData.val() + '/${prop}').val())`;
     }
     function validateSecureUrl() {
-        return validate("newData.isString() && newData.val().beginsWith(\"https://\") && newData.val().length >= 10 && newData.val().length < 500");
+        return validate(`newData.isString() && newData.val().beginsWith("https://") && newData.val().length >= 10 && newData.val().length < 500`);
     }
     function validateOptionalEmail() {
         return validateEmail(true);
@@ -43,8 +43,8 @@ var firebaseRules;
         return validateEmail(false);
     }
     function validateEmail(allowEmptyString) {
-        var allowEmptyCondition = allowEmptyString ? "newData.val() == '' || " : "";
-        return validate("newData.isString() && (" + allowEmptyCondition + "newData.val().matches(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$/i))");
+        let allowEmptyCondition = allowEmptyString ? "newData.val() == '' || " : "";
+        return validate(`newData.isString() && (${allowEmptyCondition}newData.val().matches(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$/i))`);
     }
     // Color is represented as an RGB string, e.g., FFFFFF is white.
     function validateColor() {
@@ -56,31 +56,31 @@ var firebaseRules;
     // cloud key id: "-KtSs_LylUvVkgrc433r" (len 20)
     // image id: "-KwC4GgT2oJXK-FaKGq3" (len 20)
     // user id: "KTz2OcYNrQUCy8brAV9D8rcj4it" or "zg1ZOW7P2AM7va3FAdnpUHGw2HD2" (len 27-28)
-    var ID_PATTERN = "[-_A-Za-z0-9]{17,40}";
+    const ID_PATTERN = "[-_A-Za-z0-9]{17,40}";
     function validateAnyId() {
         return validateRegex(ID_PATTERN);
     }
-    var YOUTUBE_VIDEO_ID_PATTERN = "[-_A-Za-z0-9]{11}"; // e.g. -FyjEnoIgTM or lWhqORImND0
+    const YOUTUBE_VIDEO_ID_PATTERN = "[-_A-Za-z0-9]{11}"; // e.g. -FyjEnoIgTM or lWhqORImND0
     function validateImageIdOfSize(width, height) {
-        return "root.child('gameBuilder/images/' + newData.val() + '/width').val() === " + width + " && root.child('gameBuilder/images/' + newData.val() + '/height').val() === " + height;
+        return `root.child('gameBuilder/images/' + newData.val() + '/width').val() === ${width} && root.child('gameBuilder/images/' + newData.val() + '/height').val() === ${height}`;
     }
     function validateBoardImage() {
-        return "root.child('gameBuilder/images/' + newData.val() + '/isBoardImage').val() === true";
+        return `root.child('gameBuilder/images/' + newData.val() + '/isBoardImage').val() === true`;
     }
     function validateIdValueExists(path, value) {
-        return validate("root.child('" + path + "' + " + value + ").exists()");
+        return validate(`root.child('${path}' + ${value}).exists()`);
     }
     function validateNewDataIdExists(path) {
         return validateIdValueExists(path, 'newData.val()');
     }
     function validateImageId() {
-        return validateNewDataIdExists("gameBuilder/images/");
+        return validateNewDataIdExists(`gameBuilder/images/`);
     }
     function validateElementId() {
-        return validateNewDataIdExists("gameBuilder/elements/");
+        return validateNewDataIdExists(`gameBuilder/elements/`);
     }
     function validateGameSpecId() {
-        return validateNewDataIdExists("gameBuilder/gameSpecs/");
+        return validateNewDataIdExists(`gameBuilder/gameSpecs/`);
     }
     function validateMyUid() {
         return validate("newData.isString() && newData.val() === auth.uid");
@@ -107,15 +107,14 @@ var firebaseRules;
     function validateInteger(fromInclusive, toInclusive) {
         return validateNumber(fromInclusive, toInclusive, true);
     }
-    function validateNumber(fromInclusive, toInclusive, isInteger) {
-        if (isInteger === void 0) { isInteger = false; }
-        var intCond = isInteger ? "&& (newData.val() % 1 === 0.0) " : "";
-        return validate("newData.isNumber() " + intCond + "&& newData.val() >= " + fromInclusive + " && newData.val() <= " + toInclusive);
+    function validateNumber(fromInclusive, toInclusive, isInteger = false) {
+        let intCond = isInteger ? "&& (newData.val() % 1 === 0.0) " : "";
+        return validate(`newData.isNumber() ${intCond}&& newData.val() >= ${fromInclusive} && newData.val() <= ${toInclusive}`);
     }
-    var MAX_IMAGES_IN_ELEMENT = 256;
-    var MAX_IMAGES_IN_DECK = 256;
-    var MAX_PIECES = 256;
-    var MAX_USERS_IN_GROUP = 10;
+    const MAX_IMAGES_IN_ELEMENT = 256;
+    const MAX_IMAGES_IN_DECK = 256;
+    const MAX_PIECES = 256;
+    const MAX_USERS_IN_GROUP = 10;
     function validatePieceState() {
         return {
             // The top left point of the board has x=0 & y=0.
@@ -171,7 +170,7 @@ var firebaseRules;
         return rule;
     }
     function deleteElement(arr, elem) {
-        var index = arr.indexOf(elem);
+        let index = arr.indexOf(elem);
         if (index != -1) {
             if (typeof arr[index] != "string") {
                 throw new Error("key " + elem + " must have a string value, but it had the value of " + prettyJson(arr[index]));
@@ -180,14 +179,13 @@ var firebaseRules;
         }
     }
     function getNonSpecialKeys(rule) {
-        var keys = Object.keys(rule);
+        let keys = Object.keys(rule);
         // remove the special keys: .read, .write, .validate, .indexOn
         deleteElement(keys, ".write");
         deleteElement(keys, ".read");
         deleteElement(keys, ".validate");
         deleteElement(keys, ".indexOn");
-        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-            var key = keys_1[_i];
+        for (let key of keys) {
             if (key.charAt(0) == '.')
                 throw new Error("You can't start a property with '.', but you used key=" + key);
         }
@@ -196,13 +194,12 @@ var firebaseRules;
     function hasNonCollectionGrandchildren(rules) {
         if (typeof rules == "string")
             throw new Error("Internal error: we traversed into a leaf");
-        var allKeys = Object.keys(rules);
+        let allKeys = Object.keys(rules);
         if (allKeys.length == 1 && allKeys[0] == ".validate")
             return true; // leaf
-        var keys = getNonSpecialKeys(rules);
-        var result = false;
-        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
-            var key = keys_2[_i];
+        let keys = getNonSpecialKeys(rules);
+        let result = false;
+        for (let key of keys) {
             if (key.charAt(0) != '$') {
                 result = result || hasNonCollectionGrandchildren(rules[key]);
             }
@@ -218,8 +215,8 @@ var firebaseRules;
         // because convert a string to number in firebase rules (see https://medium.com/front-end-hacking/fun-with-firebase-security-rules-3c0304efa29).
         // I can't even do >= and <=  
         // So we just ensure it's all digits.
-        var maxDigitsNum = Math.ceil(Math.log10(maxExclusive));
-        return validate(parentKey + ".matches(/^[0-9]{1," + maxDigitsNum + "}$/)");
+        let maxDigitsNum = Math.ceil(Math.log10(maxExclusive));
+        return validate(`${parentKey}.matches(/^[0-9]{1,${maxDigitsNum}}$/)`);
     }
     function getValidateForParentKey(parentKey) {
         switch (parentKey) {
@@ -245,7 +242,7 @@ var firebaseRules;
             case "$signalId":
             case "$drawingId":
             case "$pushNotificationId":
-                return validate(parentKey + ".matches(/^" + ID_PATTERN + "$/)");
+                return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
         }
         throw new Error("Illegal parentKey=" + parentKey);
     }
@@ -255,17 +252,17 @@ var firebaseRules;
         if (typeof rules != "object") {
             throw new Error("rules can either be a string or object, but it was: rules=" + rules);
         }
-        var keys = getNonSpecialKeys(rules);
-        var validateConditions = [];
+        let keys = getNonSpecialKeys(rules);
+        let validateConditions = [];
         if (keys.length > 1 || (keys.length > 0 && keys[0].charAt(0) != '$')) {
             rules["$other"] = { ".validate": false };
-            var filteredChildren = keys.filter(function (key) { return hasNonCollectionGrandchildren(rules[key]); });
+            let filteredChildren = keys.filter((key) => hasNonCollectionGrandchildren(rules[key]));
             // filter out $elementId.name because I added it later.
             if (parentKey == "$elementId")
-                filteredChildren = filteredChildren.filter(function (key) { return key != "name"; });
+                filteredChildren = filteredChildren.filter((key) => key != "name");
             if (filteredChildren.length > 0) {
-                var quotedChildren = filteredChildren.map(function (val) { return "'" + val + "'"; }).join(", ");
-                validateConditions.push("newData.hasChildren([" + quotedChildren + "])");
+                let quotedChildren = filteredChildren.map((val) => `'${val}'`).join(", ");
+                validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
             }
         }
         if (parentKey.charAt(0) == '$') {
@@ -278,23 +275,21 @@ var firebaseRules;
             rules[".validate"] = validateConditions.join(" && ");
         }
         if (keys.length > 1) {
-            for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
-                var key = keys_3[_i];
+            for (let key of keys) {
                 if (key.charAt(0) == '$')
                     throw new Error("You can't use a $ property with other non-$ properties, but you have these keys=" + keys);
             }
         }
         // recurse
-        for (var _a = 0, keys_4 = keys; _a < keys_4.length; _a++) {
-            var key = keys_4[_a];
+        for (let key of keys) {
             addValidateNoOther(key, rules[key]);
         }
     }
-    var ANYONE = "auth != null";
-    var ONLY_ME = "$userId === auth.uid";
+    const ANYONE = "auth != null";
+    const ONLY_ME = "$userId === auth.uid";
     // Anyone can add a new image,
     // but not delete/modify values (only the uploader can change anything).
-    var ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
+    const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
     /*
     - permission cascades down:
         once you've granted read or write permission on a certain level in the tree,
@@ -326,7 +321,7 @@ var firebaseRules;
                         "isBoardImage": validateBoolean(),
                         "downloadURL": validateSecureUrl(),
                         "sizeInBytes": validateNumber(100, 2 * 1024 * 1024),
-                        "cloudStoragePath": validateRegex("images\\/" + ID_PATTERN + "[.](gif|png|jpg)"),
+                        "cloudStoragePath": validateRegex(`images\\/${ID_PATTERN}[.](gif|png|jpg)`),
                         "name": validateMandatoryString(100),
                     },
                 },
@@ -344,7 +339,7 @@ var firebaseRules;
                         // Read about arrays in firebase DB: http://firebase.googleblog.com/2014/04/best-practices-arrays-in-firebase.html
                         "images": {
                             "$imageIndex": {
-                                "imageId": addValidate(validateImageId(), validElementImageProp('width') + " && " + validElementImageProp('height')),
+                                "imageId": addValidate(validateImageId(), `${validElementImageProp('width')} && ${validElementImageProp('height')}`),
                             },
                         },
                         // Sometimes you shouldn't be able to drag elements,
@@ -441,7 +436,7 @@ var firebaseRules;
                         "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
                         "wikipediaUrl": validateSecureUrl(),
                         // Optional tutorial video (it can be an empty string).
-                        "tutorialYoutubeVideo": validateRegex("(" + YOUTUBE_VIDEO_ID_PATTERN + ")?"),
+                        "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),
                         // Info about the board.
                         "board": {
                             "imageId": addValidate(validateImageId(), validateBoardImage()),
@@ -466,10 +461,10 @@ var firebaseRules;
                                 "deckPieceIndex": addValidate(validateInteger(-1, 1000), 
                                 // Checking that if deckPieceIndex is not -1, then this element is a card
                                 // and the index points to an element of type deck.
-                                "newData.val() === -1 || (" +
-                                    "root.child('gameBuilder/elements/' + newData.parent().child('pieceElementId').val() + '/elementKind').val() == 'card'" +
-                                    " && root.child('gameBuilder/elements/' + newData.parent().parent().child('' + newData.val()).child('pieceElementId').val() + '/elementKind').val().endsWith('Deck')" +
-                                    ")"),
+                                `newData.val() === -1 || (` +
+                                    `root.child('gameBuilder/elements/' + newData.parent().child('pieceElementId').val() + '/elementKind').val() == 'card'` +
+                                    ` && root.child('gameBuilder/elements/' + newData.parent().parent().child('' + newData.val()).child('pieceElementId').val() + '/elementKind').val().endsWith('Deck')` +
+                                    `)`),
                             },
                         },
                     },
@@ -643,7 +638,7 @@ var firebaseRules;
         };
     }
     function init() {
-        var r = getRulesJson();
+        let r = getRulesJson();
         //console.log(r);
         document.getElementById('firebaseRulesTextarea').value = r;
     }

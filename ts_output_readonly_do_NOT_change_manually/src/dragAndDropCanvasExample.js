@@ -2,9 +2,9 @@ function addDragListener(touchElementId, handleDragEvent) {
     if (!touchElementId || !handleDragEvent) {
         throw new Error("When calling addDragListener(touchElementId, handleDragEvent), you must pass two parameters");
     }
-    var isMouseDown = false;
+    let isMouseDown = false;
     function touchHandler(event) {
-        var touch = event.changedTouches[0];
+        let touch = event.changedTouches[0];
         handleEvent(event, event.type, touch.clientX, touch.clientY);
     }
     function mouseDownHandler(event) {
@@ -34,7 +34,7 @@ function addDragListener(touchElementId, handleDragEvent) {
         console.log("handleDragEvent:", type, clientX, clientY);
         handleDragEvent(type, clientX, clientY, event);
     }
-    var gameArea = document.getElementById(touchElementId);
+    let gameArea = document.getElementById(touchElementId);
     if (!gameArea) {
         throw new Error("You must have <div id='" + touchElementId + "'>...</div>");
     }
@@ -47,18 +47,18 @@ function addDragListener(touchElementId, handleDragEvent) {
     gameArea.addEventListener("mousemove", mouseMoveHandler, true);
     gameArea.addEventListener("mouseup", mouseUpHandler, true);
 }
-var pieces = [];
-var currentlyDragged = null;
-var concreteContainer = document.getElementById('concreteContainer');
-var boundingRect = concreteContainer.getBoundingClientRect();
+let pieces = [];
+let currentlyDragged = null;
+let concreteContainer = document.getElementById('concreteContainer');
+let boundingRect = concreteContainer.getBoundingClientRect();
 // create viewport
-var viewport = new Concrete.Viewport({
+let viewport = new Concrete.Viewport({
     width: 1024,
     height: 512,
     container: concreteContainer
 });
 function addPiece(url, x, y) {
-    var img = new Image();
+    let img = new Image();
     img.crossOrigin = "Anonymous";
     // img.onload = () => {...}
     img.src = url;
@@ -75,10 +75,10 @@ function addPiece(url, x, y) {
     });
 }
 function initPieces() {
-    for (var i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
         addPiece("imgs/chess_piece_white_queen.png", 10 + i * 10, 10);
     }
-    for (var i = 0; i < 2; i++) {
+    for (let i = 0; i < 2; i++) {
         addPiece("imgs/GreenPiece.png", 10 + i * 20, 100);
     }
 }
@@ -91,7 +91,7 @@ function drawPieces() {
 }
 requestAnimationFrame(drawPieces);
 function drawPiece(piece) {
-    var scene = piece.layer.scene, context = scene.context;
+    let scene = piece.layer.scene, context = scene.context;
     scene.clear();
     context.drawImage(piece.img, piece.x, piece.y, piece.width, piece.height);
 }
@@ -102,8 +102,8 @@ function initDragAndDrop() {
             currentlyDragged.layer.moveToTop();
         }
         if (currentlyDragged != null) {
-            var x = clientX - boundingRect.left - currentlyDragged.width / 2;
-            var y = clientY - boundingRect.top - currentlyDragged.height / 2;
+            let x = clientX - boundingRect.left - currentlyDragged.width / 2;
+            let y = clientY - boundingRect.top - currentlyDragged.height / 2;
             currentlyDragged.x = x;
             currentlyDragged.y = y;
         }

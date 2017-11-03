@@ -1,49 +1,46 @@
 var pushNotifications;
 (function (pushNotifications) {
     function db() { return firebase.database(); }
+    function prettyJson(obj) {
+        return JSON.stringify(obj, null, '  ');
+    }
+    function dbSet(ref, writeVal) {
+        let writeValJson = prettyJson(writeVal);
+        console.log(`Writing path=`, ref.toString(), ` writeVal=`, writeValJson, ` succeeded.`);
+        return ref.set(writeVal);
+    }
     function writeUser() {
-        var uid = firebase.auth().currentUser.uid;
+        let uid = firebase.auth().currentUser.uid;
         console.info("My uid=", uid);
-        db().ref("/users/" + uid).set({
+        let userPromise = dbSet(db().ref(`/users/${uid}`), {
             publicFields: {
-                avatarImageUrl: "https://foo.bar/avatar",
-                displayName: "Yoav Ziii",
+                avatarImageUrl: `https://foo.bar/avatar`,
+                displayName: `Yoav Ziii`,
                 isConnected: true,
                 lastSeen: firebase.database.ServerValue.TIMESTAMP,
             },
             privateFields: {
-                email: "yoav.zibin@yooo.goo",
+                email: `yoav.zibin@yooo.goo`,
                 createdOn: firebase.database.ServerValue.TIMESTAMP,
-                phoneNumber: "",
-                facebookId: "",
-                googleId: "",
-                twitterId: "",
-                githubId: "",
-                pushNotificationsToken: "",
+                phoneNumber: ``,
+                facebookId: ``,
+                googleId: ``,
+                twitterId: ``,
+                githubId: ``,
+                pushNotificationsToken: ``,
             },
         });
         // Create group
-        var groupData = db().ref("/gamePortal/groups").push();
-        var groupId = groupData.key;
-        groupData.set({
-            participants: (_a = {},
-                _a[uid] = { participantIndex: 0 },
-                _a),
-            groupName: "",
+        let groupData = db().ref(`/gamePortal/groups`).push();
+        let groupId = groupData.key;
+        let groupPromise = dbSet(groupData, {
+            participants: {
+                [uid]: { participantIndex: 0 },
+            },
+            groupName: ``,
             createdOn: firebase.database.ServerValue.TIMESTAMP,
         });
-        var messaging = firebase.messaging();
-        // Callback fired if Instance ID token is updated.
-        messaging.onTokenRefresh(function () {
-            messaging.getToken()
-                .then(function (refreshedToken) {
-                console.log('Token refreshed:', refreshedToken);
-                db().ref("/users/" + uid + "/privateFields/pushNotificationsToken").set(refreshedToken);
-            })
-                .catch(function (err) {
-                console.log('Unable to retrieve refreshed token ', err);
-            });
-        });
+        const messaging = firebase.messaging();
         messaging.onMessage(function (payload) {
             console.log("Message received when using the site (in foreground): ", payload);
             alert("Got notification, check the JS console");
@@ -51,24 +48,36 @@ var pushNotifications;
         messaging.requestPermission()
             .then(function () {
             console.log('Notification permission granted.');
-            // Send notification to myself.
-            var pushNotificationData = db().ref("gamePortal/pushNotification").push();
-            pushNotificationData.set({
-                "fromUserId": uid,
-                "toUserId": uid,
-                "groupId": groupId,
-                "timestamp": firebase.database.ServerValue.TIMESTAMP,
-                // Push notification message fields, see
-                // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-                // https://firebase.google.com/docs/cloud-messaging/js/first-message
-                "title": "title",
-                "body": "body",
+            messaging.onTokenRefresh(function () {
+                messaging.getToken()
+                    .then(function (refreshedToken) {
+                    console.log('Token refreshed:', refreshedToken);
+                    let fcmTokenPromise = dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), refreshedToken);
+                    // Wait for all DB write operations to finish.
+                    Promise.all([fcmTokenPromise, userPromise, groupPromise]).then(() => {
+                        console.log('Send notification to myself.');
+                        let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
+                        dbSet(pushNotificationData, {
+                            "fromUserId": uid,
+                            "toUserId": uid,
+                            "groupId": groupId,
+                            "timestamp": firebase.database.ServerValue.TIMESTAMP,
+                            // Push notification message fields, see
+                            // https://firebase.google.com/docs/cloud-messaging/http-server-ref
+                            // https://firebase.google.com/docs/cloud-messaging/js/first-message
+                            "title": "title",
+                            "body": "body",
+                        });
+                    });
+                })
+                    .catch(function (err) {
+                    console.log('Unable to retrieve refreshed token ', err);
+                });
             });
         })
             .catch(function (err) {
             console.log('Unable to get permission to notify.', err);
         });
-        var _a;
     }
     function login() {
         if ('serviceWorker' in navigator) {
@@ -86,7 +95,7 @@ var pushNotifications;
             console.error('No ServiceWorker!');
         }
         // Initialize Firebase
-        var config = {
+        let config = {
             apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
             authDomain: "universalgamemaker.firebaseapp.com",
             databaseURL: "https://universalgamemaker.firebaseio.com",
@@ -101,7 +110,7 @@ var pushNotifications;
             writeUser();
         })
             .catch(function (error) {
-            console.error("Failed auth: ", error);
+            console.error(`Failed auth: `, error);
         });
     }
     document.getElementById('login').onclick = login;

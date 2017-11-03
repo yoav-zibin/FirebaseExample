@@ -33,6 +33,7 @@
     "files": [
         "src/firebaseDbExample.ts",
         "src/firebaseRulesGenerator.ts",
+        "src/firebasePushNotifications.ts",
         "src/dragAndDropCanvasExample.ts",
         "src/dragAndDropHtmlExample.ts",
         "typings/concrete.d.ts",

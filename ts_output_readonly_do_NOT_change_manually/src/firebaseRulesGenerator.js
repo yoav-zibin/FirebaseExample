@@ -595,8 +595,6 @@ var firebaseRules;
                         // https://firebase.google.com/docs/cloud-messaging/js/first-message
                         "title": validateMandatoryString(300),
                         "body": validateMandatoryString(300),
-                        "icon": validateOptionalString(200),
-                        "clickAction": validateOptionalString(200),
                     },
                 },
                 // All groups of users (2-10 users).

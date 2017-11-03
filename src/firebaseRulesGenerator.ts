@@ -648,11 +648,6 @@ module firebaseRules {
             // https://firebase.google.com/docs/cloud-messaging/js/first-message
             "title": validateMandatoryString(300),
             "body": validateMandatoryString(300),
-            "icon": validateOptionalString(200),
-            "clickAction": validateOptionalString(200),
-            // I'm not sure whether tag&dataJson are supported for web, so not adding them now.
-            //"tag": validateOptionalString(30),
-            //"dataJson": validateOptionalString(3000), // push notifications must be less than 4KB, and I keep 1KB for the above (title&body&icon&clickAction).
           },
         },
         // All groups of users (2-10 users).

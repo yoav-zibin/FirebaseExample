@@ -94,14 +94,9 @@ var pushNotifications;
             messagingSenderId: "957323548528"
         };
         firebase.initializeApp(config);
-        var provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithRedirect(provider)
+        firebase.auth().signInAnonymously()
             .then(function (result) {
             console.info(result);
-            // This gives you a Google Access Token. You can use it to access the Google API.
-            //let token = result.credential.accessToken;
-            // The signed-in user info.
-            //let user = result.user;
             writeUser();
         })
             .catch(function (error) {

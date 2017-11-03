@@ -87,13 +87,14 @@ module pushNotifications {
       console.error('No ServiceWorker!');
     }
 
+    // Initialize Firebase
     let config = {
-      apiKey: `AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI`,
-      authDomain: `testproject-a6dce.firebaseapp.com`,
-      databaseURL: `https://testproject-a6dce.firebaseio.com`,
-      projectId: `testproject-a6dce`,
-      storageBucket: ``,
-      messagingSenderId: `957323548528`
+      apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
+      authDomain: "universalgamemaker.firebaseapp.com",
+      databaseURL: "https://universalgamemaker.firebaseio.com",
+      projectId: "universalgamemaker",
+      storageBucket: "universalgamemaker.appspot.com",
+      messagingSenderId: "144595629077"
     };
     firebase.initializeApp(config);
 

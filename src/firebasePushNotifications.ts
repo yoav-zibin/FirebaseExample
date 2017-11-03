@@ -6,8 +6,12 @@ module pushNotifications {
 
   function dbSet(ref: any, writeVal: any) {
     let writeValJson = prettyJson(writeVal);
-    console.log(`Writing path=`, ref.toString(), ` writeVal=`, writeValJson, ` succeeded.`);
-    return ref.set(writeVal);
+    console.log(`Writing path=`, ref.toString(), ` writeVal=`, writeValJson, `...`);
+    let promise = ref.set(writeVal);
+    promise.then(()=>{
+      console.log(`Writing path=`, ref.toString(), ` succeeded.`);
+    })
+    return promise;
   }
 
   function writeUser() {
@@ -49,34 +53,41 @@ module pushNotifications {
       alert("Got notification, check the JS console");
     });
 
+    messaging.onTokenRefresh(function() {
+      console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
+      messaging.getToken()
+      .then(function(refreshedToken) {
+        console.log('Token refreshed:', refreshedToken);
+        dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), refreshedToken);
+      });
+    });
+
     messaging.requestPermission()
     .then(function() {
       console.log('Notification permission granted.');
-      messaging.onTokenRefresh(function() {
-        messaging.getToken()
-        .then(function(refreshedToken) {
-          console.log('Token refreshed:', refreshedToken);
-          let fcmTokenPromise = dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), refreshedToken);
-          // Wait for all DB write operations to finish.
-          Promise.all([fcmTokenPromise, userPromise, groupPromise]).then(() => {
-            console.log('Send notification to myself.');
-            let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
-            dbSet(pushNotificationData, {
-              "fromUserId": uid,
-              "toUserId": uid,
-              "groupId": groupId,
-              "timestamp": firebase.database.ServerValue.TIMESTAMP,
-              // Push notification message fields, see
-              // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-              // https://firebase.google.com/docs/cloud-messaging/js/first-message
-              "title": "title",
-              "body": "body",
-            });
-          })
+      messaging.getToken()
+      .then(function(token) {
+        console.log('Token:', token);
+        let fcmTokenPromise = dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), token);
+        // Wait for all DB write operations to finish.
+        Promise.all([fcmTokenPromise, userPromise, groupPromise]).then(() => {
+          console.log('Send notification to myself.');
+          let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
+          dbSet(pushNotificationData, {
+            "fromUserId": uid,
+            "toUserId": uid,
+            "groupId": groupId,
+            "timestamp": firebase.database.ServerValue.TIMESTAMP,
+            // Push notification message fields, see
+            // https://firebase.google.com/docs/cloud-messaging/http-server-ref
+            // https://firebase.google.com/docs/cloud-messaging/js/first-message
+            "title": "title",
+            "body": "body",
+          });
         })
-        .catch(function(err) {
-          console.log('Unable to retrieve refreshed token ', err);
-        });
+      })
+      .catch(function(err) {
+        console.log('Unable to retrieve refreshed token ', err);
       });
     })
     .catch(function(err) {

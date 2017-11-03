@@ -89,21 +89,7 @@ var pushNotifications;
             console.log('Unable to get permission to notify.', err);
         });
     }
-    function login() {
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
-                    // Registration was successful
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function (err) {
-                    // registration failed :(
-                    console.error('ServiceWorker registration failed: ', err);
-                });
-            });
-        }
-        else {
-            console.error('No ServiceWorker!');
-        }
+    function initFirebase() {
         // Initialize Firebase
         let config = {
             apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
@@ -122,6 +108,21 @@ var pushNotifications;
             .catch(function (error) {
             console.error(`Failed auth: `, error);
         });
+    }
+    function login() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
+                // Registration was successful
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                initFirebase();
+            }, function (err) {
+                // registration failed :(
+                console.error('ServiceWorker registration failed: ', err);
+            });
+        }
+        else {
+            console.error('No ServiceWorker!');
+        }
     }
     document.getElementById('login').onclick = login;
 })(pushNotifications || (pushNotifications = {}));

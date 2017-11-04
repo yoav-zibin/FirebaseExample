@@ -1,7 +1,7 @@
 var pushNotifications;
 (function (pushNotifications) {
-    const messaging = firebase.messaging();
-    const db = firebase.database();
+    function db() { return firebase.database(); }
+    function messaging() { return firebase.messaging(); }
     let uid = null;
     let groupId = null;
     function prettyJson(obj) {
@@ -19,7 +19,7 @@ var pushNotifications;
     function writeUser() {
         uid = firebase.auth().currentUser.uid;
         console.info("My uid=", uid);
-        dbSet(db.ref(`/users/${uid}`), {
+        dbSet(db().ref(`/users/${uid}`), {
             publicFields: {
                 avatarImageUrl: `https://foo.bar/avatar`,
                 displayName: `Yoav Ziii`,
@@ -38,7 +38,7 @@ var pushNotifications;
             },
         });
         // Create group
-        let groupData = db.ref(`/gamePortal/groups`).push();
+        let groupData = db().ref(`/gamePortal/groups`).push();
         groupId = groupData.key;
         let groupPromise = dbSet(groupData, {
             participants: {
@@ -47,28 +47,28 @@ var pushNotifications;
             groupName: ``,
             createdOn: firebase.database.ServerValue.TIMESTAMP,
         });
-        messaging.onMessage(function (payload) {
+        messaging().onMessage(function (payload) {
             console.log("Message received when using the site (in foreground): ", payload);
             alert("Got notification, check the JS console");
         });
-        messaging.onTokenRefresh(function () {
+        messaging().onTokenRefresh(function () {
             console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
-            messaging.getToken()
+            messaging().getToken()
                 .then(function (refreshedToken) {
                 console.log('Token refreshed:', refreshedToken);
-                dbSet(db.ref(`/users/${uid}/privateFields/pushNotificationsToken`), refreshedToken);
+                dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), refreshedToken);
             });
         });
     }
     function getFcmToken() {
-        messaging.getToken()
+        messaging().getToken()
             .then(function (token) {
             console.log('Token:', token);
-            let fcmTokenPromise = dbSet(db.ref(`/users/${uid}/privateFields/pushNotificationsToken`), token);
+            let fcmTokenPromise = dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), token);
             // Wait for all DB write operations to finish.
             Promise.all([fcmTokenPromise]).then(() => {
                 console.log('Send notification to myself.');
-                let pushNotificationData = db.ref(`gamePortal/pushNotification`).push();
+                let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
                 dbSet(pushNotificationData, {
                     "fromUserId": uid,
                     "toUserId": uid,
@@ -87,7 +87,7 @@ var pushNotifications;
         });
     }
     function requestPermission() {
-        messaging.requestPermission()
+        messaging().requestPermission()
             .then(function () {
             console.log('Notification permission granted.');
         })
@@ -120,7 +120,7 @@ var pushNotifications;
             navigator.serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
                 // Registration was successful
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                messaging.useServiceWorker(registration);
+                messaging().useServiceWorker(registration);
                 firebaseLogin();
             }, function (err) {
                 // registration failed :(

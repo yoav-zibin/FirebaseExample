@@ -89,17 +89,7 @@ var pushNotifications;
             console.log('Unable to get permission to notify.', err);
         });
     }
-    function initFirebase() {
-        // Initialize Firebase
-        let config = {
-            apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
-            authDomain: "universalgamemaker.firebaseapp.com",
-            databaseURL: "https://universalgamemaker.firebaseio.com",
-            projectId: "universalgamemaker",
-            storageBucket: "universalgamemaker.appspot.com",
-            messagingSenderId: "144595629077"
-        };
-        firebase.initializeApp(config);
+    function firebaseLogin() {
         firebase.auth().signInAnonymously()
             .then(function (result) {
             console.info(result);
@@ -110,11 +100,22 @@ var pushNotifications;
         });
     }
     function login() {
+        // Initialize Firebase
+        let config = {
+            apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
+            authDomain: "universalgamemaker.firebaseapp.com",
+            databaseURL: "https://universalgamemaker.firebaseio.com",
+            projectId: "universalgamemaker",
+            storageBucket: "universalgamemaker.appspot.com",
+            messagingSenderId: "144595629077"
+        };
+        firebase.initializeApp(config);
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
                 // Registration was successful
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                initFirebase();
+                firebase.messaging().useServiceWorker(registration);
+                firebaseLogin();
             }, function (err) {
                 // registration failed :(
                 console.error('ServiceWorker registration failed: ', err);

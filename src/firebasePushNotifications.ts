@@ -95,18 +95,7 @@ module pushNotifications {
     });
   }
 
-  function initFirebase() {
-    // Initialize Firebase
-    let config = {
-      apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
-      authDomain: "universalgamemaker.firebaseapp.com",
-      databaseURL: "https://universalgamemaker.firebaseio.com",
-      projectId: "universalgamemaker",
-      storageBucket: "universalgamemaker.appspot.com",
-      messagingSenderId: "144595629077"
-    };
-    firebase.initializeApp(config);
-
+  function firebaseLogin() {
     firebase.auth().signInAnonymously()
       .then(function(result) {
         console.info(result);
@@ -118,12 +107,24 @@ module pushNotifications {
   }
 
   function login() {
+    // Initialize Firebase
+    let config = {
+      apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
+      authDomain: "universalgamemaker.firebaseapp.com",
+      databaseURL: "https://universalgamemaker.firebaseio.com",
+      projectId: "universalgamemaker",
+      storageBucket: "universalgamemaker.appspot.com",
+      messagingSenderId: "144595629077"
+    };
+    firebase.initializeApp(config);
+
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('firebase-messaging-sw.js').then(function(registration) {
+      (<any>navigator).serviceWorker.register('firebase-messaging-sw.js').then(function(registration: any) {
         // Registration was successful
         console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        initFirebase();
-      }, function(err) {
+        firebase.messaging().useServiceWorker(registration);
+        firebaseLogin();
+      }, function(err: any) {
         // registration failed :(
         console.error('ServiceWorker registration failed: ', err);
       });

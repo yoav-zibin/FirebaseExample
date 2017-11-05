@@ -14,7 +14,31 @@ firebase.initializeApp({
 // messages.
 const messaging = firebase.messaging();
 
+self.addEventListener('push', function(event) {
+  console.log('[Service Worker] Push Received.');
+  console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
 
+  const title = 'Push Codelab';
+  const options = {
+    body: 'Yay it works.',
+    icon: 'imgs/firebase-logo.png',
+    badge: 'imgs/firebase-logo.png'
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener('notificationclick', function(event) {
+  console.log('[Service Worker] Notification click Received.');
+
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow('https://developers.google.com/web/')
+  );
+});
+
+// Never called if I send notification with title&body!
+// Fucking crazy: https://github.com/firebase/quickstart-js/issues/71
 messaging.setBackgroundMessageHandler(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   // Customize notification here

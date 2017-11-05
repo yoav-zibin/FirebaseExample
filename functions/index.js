@@ -84,10 +84,11 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
     console.log(`No value in gamePortal/pushNotification/${pushNotificationId}`);
     return removePromise;
   }
-  console.log('Sending push notification:', data);
+  let fcmTokenPath = `/users/${data.toUserId}/privateFields/pushNotificationsToken`;
+  console.log('Sending push notification:', data, ' fcmTokenPath=', fcmTokenPath);
 
   // Get the list of device notification tokens.
-  return Promise.all([removePromise, admin.database().ref(`/users/${data.toUserId}/privateFields/pushNotificationsToken`).once('value')]).then(results => {
+  return Promise.all([removePromise, admin.database().ref(fcmTokenPath).once('value')]).then(results => {
     const tokenSnapshot = results[1];
     let token = tokenSnapshot.val();
     console.log('token=', token);
@@ -101,10 +102,10 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
         body: data.body,
       },
       data: {
-        fromUserId: data.fromUserId,
-        toUserId: data.toUserId,
-        groupId: data.groupId,
-        timestamp: data.timestamp,
+        fromUserId: String(data.fromUserId),
+        toUserId: String(data.toUserId),
+        groupId: String(data.groupId),
+        timestamp: String(data.timestamp),
       }
     };
 
@@ -124,5 +125,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
       });
       return Promise.all(tokensToRemove);
     });
+  }).catch((err)=> {
+    console.error("Error: ", err);
   });
 });

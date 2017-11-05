@@ -194,6 +194,6 @@ var pushNotifications;
         }
     }
     init();
-    document.getElementById('requestPermission').onclick = requestPermissionOrSendPushNotification();
+    document.getElementById('requestPermission').onclick = requestPermissionOrSendPushNotification;
 })(pushNotifications || (pushNotifications = {}));
 //# sourceMappingURL=firebasePushNotifications.js.map

@@ -96,6 +96,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
 
     // https://firebase.google.com/docs/cloud-messaging/concept-options
     // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.
+    // https://firebase.google.com/docs/cloud-messaging/http-server-ref
     const payload = {
       notification: {
         title: data.title,

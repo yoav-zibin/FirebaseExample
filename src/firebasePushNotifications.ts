@@ -213,6 +213,6 @@ module pushNotifications {
   }
 
   init();
-  document.getElementById('requestPermission').onclick = requestPermissionOrSendPushNotification();
+  document.getElementById('requestPermission').onclick = requestPermissionOrSendPushNotification;
 
 }  

@@ -30,7 +30,7 @@ data in WEB push notification:
 }
 */
 
-self.addEventListener('push', function(event) {
+self.addEventListener('push', function(/** @type {any} */event) {
   if (!event.data) {
     console.error("No event.data!, event=", event);
     return;
@@ -73,7 +73,7 @@ self.addEventListener('push', function(event) {
     clients.matchAll({
         type: "window",
         includeUncontrolled: true
-    }).then(function(clientList) {
+    }).then(function(/** @type {any[]} */clientList) {
         for (var i = 0; i < clientList.length; i++) {  
           var client = clientList[i];  
           if ("visible" === client.visibilityState) {
@@ -84,12 +84,14 @@ self.addEventListener('push', function(event) {
             return;
           }
         };
-        return self.registration.showNotification(payload.data.title, options);
+        /** @type {any} */
+        let selfAnyType = self;
+        return selfAnyType.registration.showNotification(payload.data.title, options);
     })
   );
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function(/** @type {any} */event) {
   let data = event.notification.data;
   console.log('[firebase-messaging-sw.js] Notification click Received. Notification data=', data);
 
@@ -108,7 +110,7 @@ self.addEventListener('notificationclick', function(event) {
     clients.matchAll({  
       type: "window"  
     })
-    .then(function(clientList) {  
+    .then(function(/** @type {any} */clientList) {  
       for (var i = 0; i < clientList.length; i++) {  
         var client = clientList[i];  
         if ('focus' in client) { 
@@ -130,7 +132,7 @@ self.addEventListener('notificationclick', function(event) {
 // Never called if I send notification with title&body,
 // and even if it is called, there is no way to show a notification and later handle notificationclick.
 // Fucking crazy: https://github.com/firebase/quickstart-js/issues/71
-messaging.setBackgroundMessageHandler(function(payload) {
+messaging.setBackgroundMessageHandler(function(/** @type {any} */payload) {
   console.log("[firebase-messaging-sw.js] setBackgroundMessageHandler: Received background message payload=", payload, " not doing anything in this method because we handle it in self.addEventListener('push', ...) above");
   // So, doing nothing because of these issues.
   /*const notificationTitle = 'Background Message Title';

@@ -10,7 +10,9 @@
         "outDir": "ts_output_readonly_do_NOT_change_manually/",
         "sourceMap": true,
         "noLib": false,
-        "newLine": "CRLF"
+        "newLine": "CRLF",
+        "allowJs": true,
+        "checkJs": true
     },
     "filesGlob": [
         "./src/*.ts",
@@ -31,12 +33,12 @@
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
     "files": [
+        "firebase-messaging-sw.js",
         "src/firebaseDbExample.ts",
         "src/firebaseRulesGenerator.ts",
         "src/firebasePushNotifications.ts",
-        "src/dragAndDropCanvasExample.ts",
         "src/dragAndDropHtmlExample.ts",
-        "typings/concrete.d.ts",
+        "typings/globals.d.ts",
         "typings/firebase.d.ts"
     ],
     "exclude": [

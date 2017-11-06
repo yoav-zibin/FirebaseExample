@@ -231,6 +231,8 @@ var firebaseRules;
             case "$pieceIndex": return getValidateIndex(parentKey, MAX_PIECES);
             case "$deckMemberIndex": return getValidateIndex(parentKey, MAX_IMAGES_IN_DECK);
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_GROUP);
+            //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
+            case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
             case "$groupId":
             case "$userId":
             case "$imageId":
@@ -260,6 +262,8 @@ var firebaseRules;
             // filter out $elementId.name because I added it later.
             if (parentKey == "$elementId")
                 filteredChildren = filteredChildren.filter((key) => key != "name");
+            // filter out pushNotificationsToken because it's deprecated.
+            filteredChildren = filteredChildren.filter((key) => key != "pushNotificationsToken");
             if (filteredChildren.length > 0) {
                 let quotedChildren = filteredChildren.map((val) => `'${val}'`).join(", ");
                 validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
@@ -510,9 +514,47 @@ var firebaseRules;
                         "friends": {
                             "$friendUserId": validateTrue(),
                         },
-                        // The token for sending this user push notifications using FCM (Firebase Cloud Messaging).
-                        // Push notifications will only be sent using cloud functions (so we can apply some filtering logic if needed).
-                        "pushNotificationsToken": validateOptionalString(1000),
+                        "pushNotificationsToken": validateRegex(''),
+                        // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
+                        // Push notifications will only be sent using cloud functions, after someone writes to /gamePortal/pushNotification/...
+                        // (so we can apply some filtering logic if needed).
+                        // Currently, the cloud function only sends one push notification using the fcmToken with the latest lastTimeReceived field.
+                        "fcmTokens": {
+                            "$fcmToken": {
+                                "createdOn": validateNow(),
+                                "lastTimeReceived": validateNow(),
+                                // Because of this issue:
+                                // https://github.com/firebase/quickstart-js/issues/71
+                                // The notification sent to web or native is different:
+                                // For native we send both title&body and data in payload:
+                                // {
+                                //   notification: {
+                                //     title: data.title,
+                                //     body: data.body,
+                                //   },
+                                //   data: {
+                                //     fromUserId: String(data.fromUserId),
+                                //     toUserId: String(data.toUserId),
+                                //     groupId: String(data.groupId),
+                                //     timestamp: String(data.timestamp),
+                                //   }
+                                // }
+                                // For web we send only data in payload:
+                                // {
+                                //   data: {
+                                //     title: data.title,
+                                //     body: data.body,
+                                //     fromUserId: String(data.fromUserId),
+                                //     toUserId: String(data.toUserId),
+                                //     groupId: String(data.groupId),
+                                //     timestamp: String(data.timestamp),
+                                //   }
+                                // }
+                                "platform": validateRegex("web|ios|android"),
+                                // "app" isn't used anywhere, I just added it for easier debugging :)
+                                "app": validateRegex("GamePortalAngular|GamePortalReact|GamePortalReactNative|GamePortalAndroid"),
+                            },
+                        },
                     },
                     // Contains fields that are private (only $userId can read), but others can add new fields if they’re new (so others can write as long as its new content)
                     "privateButAddable": {

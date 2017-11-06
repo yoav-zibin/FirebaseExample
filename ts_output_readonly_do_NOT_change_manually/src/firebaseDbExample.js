@@ -458,8 +458,6 @@ var main;
                 googleId: ``,
                 twitterId: ``,
                 githubId: ``,
-                //friends: {}, // Not needed: you can add it later.
-                pushNotificationsToken: ``,
             },
         });
         write(`/users/${uid}/publicFields/displayName`, `New name!`);

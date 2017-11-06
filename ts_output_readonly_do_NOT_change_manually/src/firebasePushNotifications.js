@@ -34,14 +34,13 @@ var pushNotifications;
                 googleId: ``,
                 twitterId: ``,
                 githubId: ``,
-                pushNotificationsToken: ``,
             },
         });
         writeGroup();
     }
     function gotFcmToken() {
         hasFcmToken = true;
-        document.getElementById('requestPermission').innerHTML = "Send push notification in 1 second";
+        document.getElementById('requestPermission').innerHTML = "Send push notification in 2 seconds (so you can test both getting a notification in the foreground and background)";
     }
     function writeUserIfNeeded() {
         uid = firebase.auth().currentUser.uid;
@@ -54,7 +53,7 @@ var pushNotifications;
                 return;
             }
             console.log("User already exists");
-            if (myUserInfo.privateFields && myUserInfo.privateFields.pushNotificationsToken) {
+            if (myUserInfo.privateFields && myUserInfo.privateFields.fcmTokens) {
                 gotFcmToken();
             }
             if (myUserInfo.privateButAddable && myUserInfo.privateButAddable.groups) {
@@ -85,22 +84,7 @@ var pushNotifications;
         messaging().useServiceWorker(registration);
         messaging().onMessage(function (payload) {
             console.log("Message received when using the site (in foreground): ", payload);
-            /* payload is:
-            {
-              "from": "144595629077",
-              "collapse_key": "do_not_collapse",
-              "data": {
-                "fromUserId": "Ikg7ctOMN0bWiOEoYca3Gm4pEWa2",
-                "groupId": "-Ky7jLs23EeJ5Dilt_tI",
-                "toUserId": "Ikg7ctOMN0bWiOEoYca3Gm4pEWa2",
-                "timestamp": "1509827591946"
-              },
-              "notification": {
-                "title": "title",
-                "body": "body"
-              }
-            }*/
-            alert("Got notification, check the JS console");
+            console.log("Careful! We handle push notifications in foreground, both here and inside the service worker (firebase-messaging-sw.js) in self.addEventListener('push', ...) , so careful of this case!");
         });
         messaging().onTokenRefresh(function () {
             console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
@@ -115,7 +99,12 @@ var pushNotifications;
     }
     function setFcmToken(token) {
         console.log('Token:', token);
-        dbSet(db().ref(`/users/${uid}/privateFields/pushNotificationsToken`), token);
+        dbSet(db().ref(`/users/${uid}/privateFields/fcmTokens/${token}`), {
+            "createdOn": firebase.database.ServerValue.TIMESTAMP,
+            "lastTimeReceived": firebase.database.ServerValue.TIMESTAMP,
+            "platform": "web",
+            "app": "GamePortalAngular",
+        });
         gotFcmToken();
     }
     function getFcmToken() {
@@ -144,8 +133,8 @@ var pushNotifications;
     }
     function requestPermissionOrSendPushNotification() {
         if (hasFcmToken) {
-            console.log('sendPushNotification in one second (so you will have time to switch to another tab)');
-            setTimeout(sendPushNotification, 1000);
+            console.log('sendPushNotification in 2 seconds (so you will have time to switch to another tab or close the browser)');
+            setTimeout(sendPushNotification, 2000);
             return;
         }
         console.log('Request permission to get push notifications.');

@@ -492,7 +492,6 @@ module main {
         twitterId: ``,
         githubId: ``,
         //friends: {}, // Not needed: you can add it later.
-        pushNotificationsToken: ``,
       },
       // privateButAddable: {chats: {}} // Not needed: you can add it later.
     });

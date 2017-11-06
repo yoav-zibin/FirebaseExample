@@ -84,31 +84,47 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
     console.log(`No value in gamePortal/pushNotification/${pushNotificationId}`);
     return removePromise;
   }
-  let fcmTokenPath = `/users/${data.toUserId}/privateFields/pushNotificationsToken`;
+  let fcmTokensPath = `/users/${data.toUserId}/privateFields/fcmTokens`;
   console.log('Sending push notification:', data, ' fcmTokenPath=', fcmTokenPath);
 
   // Get the list of device notification tokens.
-  return Promise.all([removePromise, admin.database().ref(fcmTokenPath).once('value')]).then(results => {
-    const tokenSnapshot = results[1];
-    let token = tokenSnapshot.val();
-    console.log('token=', token);
-    if (!token) return null;
+  return Promise.all([removePromise, admin.database().ref(fcmTokensPath).once('value')]).then(results => {
+    const tokensSnapshot = results[1];
+    let tokensWithData = tokensSnapshot.val();
+    console.log('tokensWithData=', tokensWithData);
+    if (!tokensWithData) return null;
+    // Find the tokens with the latest lastTimeReceived.
+    let tokens = Object.keys(tokensWithData);
+    tokens.sort((token1, token2) => tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived); // newest entries are at the beginning
+    let token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
+    let isWeb = tokensWithData[token].platform == "web";
 
     // https://firebase.google.com/docs/cloud-messaging/concept-options
     // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.
     // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-    const payload = {
-      notification: {
-        title: data.title,
-        body: data.body,
-      },
-      data: {
-        fromUserId: String(data.fromUserId),
-        toUserId: String(data.toUserId),
-        groupId: String(data.groupId),
-        timestamp: String(data.timestamp),
-      }
-    };
+    const payload = isWeb ?
+      {
+        data: {
+          title: data.title,
+          body: data.body,
+          fromUserId: String(data.fromUserId),
+          toUserId: String(data.toUserId),
+          groupId: String(data.groupId),
+          timestamp: String(data.timestamp),
+        }
+      } :
+      {
+        notification: {
+          title: data.title,
+          body: data.body,
+        },
+        data: {
+          fromUserId: String(data.fromUserId),
+          toUserId: String(data.toUserId),
+          groupId: String(data.groupId),
+          timestamp: String(data.timestamp),
+        }
+      };
 
     return admin.messaging().sendToDevice([token], payload).then(response => {
       // For each message check if there was an error.

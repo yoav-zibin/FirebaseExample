@@ -14,35 +14,59 @@ firebase.initializeApp({
 // messages.
 const messaging = firebase.messaging();
 
-self.addEventListener('push', function(event) {
-  console.log('[Service Worker] Push Received.');
-  console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
+/*
+data in push notification:
+{
+  "from": "144595629077",
+  "collapse_key": "do_not_collapse",
+  "data": {
+    "fromUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+    "groupId": "-KyGuWzhHowFyUhiisef",
+    "toUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+    "timestamp": "1509981653309",
+    "title": "title",
+    "body": "body"
+  },
+}
+*/
 
-  const title = 'Push Codelab';
+self.addEventListener('push', function(event) {
+  console.log(`[firebase-messaging-sw.js] Push Received with this data: "${event.data.text()}"`);
+  if (!event.data) return;
+  var data = event.data.json();
+  if (!data.title || !data.body) return;
+  
+  // See options in https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification
   const options = {
-    body: 'Yay it works.',
+    body: data.body,
     icon: 'imgs/firebase-logo.png',
-    badge: 'imgs/firebase-logo.png'
+    badge: 'imgs/firebase-logo.png',  // (the badge is only used on Android at the time of writing). see https://developers.google.com/web/fundamentals/codelabs/push-notifications/#notification_click
+    data: data, // So we can use the data in notificationclick handler.
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 self.addEventListener('notificationclick', function(event) {
-  console.log('[Service Worker] Notification click Received.');
+  console.log('[firebase-messaging-sw.js] Notification click Received. Notification data=', event.notification.data);
 
   event.notification.close();
 
+  // TODO: only open a new window if there isn't a window with your app that's already opened.
+  // https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification
+  // "This example opens the browser to the root of the site's origin, by focusing an existing same-origin tab if one exists, and otherwise opening a new one."
+  // TODO: make sure you handle the foreground case correctly, i.e., 
   event.waitUntil(
-    clients.openWindow('https://developers.google.com/web/')
+    clients.openWindow('https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification')
   );
 });
 
-// Never called if I send notification with title&body!
+// Never called if I send notification with title&body,
+// and even if it is called, there is no way to show a notification and later handle notificationclick.
 // Fucking crazy: https://github.com/firebase/quickstart-js/issues/71
 messaging.setBackgroundMessageHandler(function(payload) {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  // Customize notification here
-  const notificationTitle = 'Background Message Title';
+  console.log("[firebase-messaging-sw.js] setBackgroundMessageHandler: Received background message payload=', payload, ' not doing anything in this method because we handle it in self.addEventListener('push', ...) above");
+  // So, doing nothing because of these issues.
+  /*const notificationTitle = 'Background Message Title';
   const notificationOptions = {
     body: 'Background Message body.',
     icon: 'imgs/firebase-logo.png'
@@ -50,4 +74,5 @@ messaging.setBackgroundMessageHandler(function(payload) {
 
   return self.registration.showNotification(notificationTitle,
       notificationOptions);
+  */
 });

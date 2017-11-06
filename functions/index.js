@@ -85,7 +85,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
     return removePromise;
   }
   let fcmTokensPath = `/users/${data.toUserId}/privateFields/fcmTokens`;
-  console.log('Sending push notification:', data, ' fcmTokenPath=', fcmTokenPath);
+  console.log('Sending push notification:', data, ' fcmTokensPath=', fcmTokensPath);
 
   // Get the list of device notification tokens.
   return Promise.all([removePromise, admin.database().ref(fcmTokensPath).once('value')]).then(results => {
@@ -98,6 +98,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
     tokens.sort((token1, token2) => tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived); // newest entries are at the beginning
     let token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
     let isWeb = tokensWithData[token].platform == "web";
+    console.log('token=', token, 'isWeb=', isWeb);
 
     // https://firebase.google.com/docs/cloud-messaging/concept-options
     // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.

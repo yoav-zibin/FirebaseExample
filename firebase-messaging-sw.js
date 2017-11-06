@@ -111,6 +111,8 @@ self.addEventListener('notificationclick', function(/** @type {any} */event) {
           // Passing a message to the main JS thread.
           // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
           client.postMessage(data);
+          // https://stackoverflow.com/questions/30302636/clients-openwindow-not-allowed-to-open-a-window-on-a-serviceworker-google-c
+          // clients.openWindow() and windowClient.focus() are only allowed after clicking the notification (in Chrome 47 at least), and at most one of these methods can be called, for the duration of the click handler. This behavior was specified in https://github.com/slightlyoff/ServiceWorker/issues/602.
           return client.focus();  
         }
       }  

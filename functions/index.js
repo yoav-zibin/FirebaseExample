@@ -133,7 +133,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
       response.results.forEach((result, index) => {
         const error = result.error;
         if (error) {
-          console.error('Failure sending notification to', tokens[index], error);
+          console.warn('Failure sending notification to', tokens[index], error); // Actually happens, so just warning.
           // Cleanup the tokens who are not registered anymore.
           if (error.code === 'messaging/invalid-registration-token' ||
               error.code === 'messaging/registration-token-not-registered') {

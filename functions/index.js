@@ -13,7 +13,7 @@ admin.initializeApp(functions.config().firebase);
 // To init:
 // firebase init functions
 //
-// To deplot:
+// To deploy:
 // firebase deploy
 //
 // exports.helloWorld = functions.https.onRequest((request, response) => {
@@ -137,7 +137,7 @@ exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/
           // Cleanup the tokens who are not registered anymore.
           if (error.code === 'messaging/invalid-registration-token' ||
               error.code === 'messaging/registration-token-not-registered') {
-            tokensToRemove.push(tokenSnapshot.ref.remove());
+            tokensToRemove.push(admin.database().ref(fcmTokensPath + `/${token}`).remove());
           }
         }
       });

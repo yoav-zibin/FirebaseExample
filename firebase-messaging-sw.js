@@ -97,15 +97,8 @@ self.addEventListener('notificationclick', function(/** @type {any} */event) {
 
   event.notification.close();
 
-  // TODO: only open a new window if there isn't a window with your app that's already opened.
-  // https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification
   // "This example opens the browser to the root of the site's origin, by focusing an existing same-origin tab if one exists, and otherwise opening a new one."
-  // TODO: make sure you handle the foreground case correctly, i.e., 
-  event.waitUntil(
-    clients.openWindow('https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification')
-  );
-  // This looks to see if the current is already open and  
-  // focuses if it is  
+  // https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification
   event.waitUntil(
     clients.matchAll({  
       type: "window"  

@@ -81,6 +81,30 @@ var pushNotifications;
         });
     }
     function receivedPushNotificationInForeground(data) {
+        /*
+        firebase-messaging-sw (service worker) also sends other messages using postMessage, and we should ignore those.
+        So if we're missing any attribute, we exit.
+        E.g., it sends:
+        {
+          "firebase-messaging-msg-type": "push-msg-received",
+          "firebase-messaging-msg-data": {
+            "from": "144595629077",
+            "collapse_key": "do_not_collapse",
+            "data": {
+              "fromUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+              "groupId": "-KyGuWzhHowFyUhiisef",
+              "title": "title",
+              "body": "body",
+              "toUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+              "timestamp": "1510005889353"
+            }
+          }
+        }
+        */
+        if (!data.fromUserId || !data.toUserId || !data.groupId || !data.title || !data.body || !data.timestamp) {
+            console.log("Missing some fields in receivedPushNotificationInForeground, so it's probably an internal firebase-messaging-sw, so ignoring it. data=", data);
+            return;
+        }
         console.log("Here you can handle push notification in foreground, using data=", data);
     }
     function initMessaging(registration) {

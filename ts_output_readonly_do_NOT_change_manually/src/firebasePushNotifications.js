@@ -108,11 +108,11 @@ var pushNotifications;
         gotFcmToken();
     }
     function getFcmToken() {
-        messaging().getToken()
-            .then(function (token) {
+        let tokenPromise = messaging().getToken();
+        console.log("tokenPromise=", tokenPromise);
+        tokenPromise.then(function (token) {
             setFcmToken(token);
-        })
-            .catch(function (err) {
+        }, function (err) {
             console.log('Unable to retrieve refreshed token ', err);
         });
     }

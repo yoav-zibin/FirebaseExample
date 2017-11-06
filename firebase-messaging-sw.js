@@ -31,10 +31,17 @@ data in push notification:
 */
 
 self.addEventListener('push', function(event) {
+  if (!event.data) {
+    console.error("No event.data!, event=", event);
+    return;
+  }
   console.log(`[firebase-messaging-sw.js] Push Received with this data: "${event.data.text()}"`);
-  if (!event.data) return;
   var data = event.data.json();
-  if (!data.title || !data.body) return;
+  console.log("data=", data);
+  if (!data.title || !data.body) {
+    console.error("No title or body! data=", data);
+    return;
+  }
   
   // See options in https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification
   const options = {
@@ -44,6 +51,7 @@ self.addEventListener('push', function(event) {
     data: data, // So we can use the data in notificationclick handler.
   };
 
+  console.log("options=", options);
   event.waitUntil(self.registration.showNotification(data.title, options));
 });
 self.addEventListener('notificationclick', function(event) {

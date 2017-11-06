@@ -80,11 +80,13 @@ var pushNotifications;
             timestamp: firebase.database.ServerValue.TIMESTAMP,
         });
     }
+    function receivedPushNotificationInForeground(data) {
+        console.log("Here you can handle push notification in foreground, using data=", data);
+    }
     function initMessaging(registration) {
         messaging().useServiceWorker(registration);
         messaging().onMessage(function (payload) {
-            console.log("Message received when using the site (in foreground): ", payload);
-            console.log("Careful! We handle push notifications in foreground, both here and inside the service worker (firebase-messaging-sw.js) in self.addEventListener('push', ...) , so careful of this case!");
+            console.log("Do not use this handler! We take care of foreground in the service worker (firebase-messaging-sw.js) in self.addEventListener('push', ...)", payload);
         });
         messaging().onTokenRefresh(function () {
             console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
@@ -169,7 +171,11 @@ var pushNotifications;
         };
         firebase.initializeApp(config);
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
+            let serviceWorker = navigator.serviceWorker;
+            serviceWorker.addEventListener('message', (event) => {
+                receivedPushNotificationInForeground(event.data);
+            });
+            serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
                 // Registration was successful
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 initMessaging(registration);

@@ -15,7 +15,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 /*
-data in push notification:
+data in WEB push notification:
 {
   "from": "144595629077",
   "collapse_key": "do_not_collapse",
@@ -67,10 +67,31 @@ self.addEventListener('push', function(event) {
   };
 
   console.log("options=", options);
-  event.waitUntil(self.registration.showNotification(payload.data.title, options));
+  // If the app is in the foreground (with focus), then we handle it in main JS, see messaging().onMessage(function(payload: any) {...})
+  // Se we need to detect it.
+  event.waitUntil(
+    clients.matchAll({
+        type: "window",
+        includeUncontrolled: true
+    }).then(function(clientList) {
+        for (var i = 0; i < clientList.length; i++) {  
+          var client = clientList[i];  
+          if ("visible" === client.visibilityState) {
+            console.log('client=', client, ' in foreground, so not showing notification');
+            // Passing a message to the main JS thread.
+            // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+            client.postMessage(payload.data);
+            return;
+          }
+        };
+        return self.registration.showNotification(payload.data.title, options);
+    })
+  );
 });
+
 self.addEventListener('notificationclick', function(event) {
-  console.log('[firebase-messaging-sw.js] Notification click Received. Notification data=', event.notification.data);
+  let data = event.notification.data;
+  console.log('[firebase-messaging-sw.js] Notification click Received. Notification data=', data);
 
   event.notification.close();
 
@@ -81,13 +102,36 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     clients.openWindow('https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification')
   );
+  // This looks to see if the current is already open and  
+  // focuses if it is  
+  event.waitUntil(
+    clients.matchAll({  
+      type: "window"  
+    })
+    .then(function(clientList) {  
+      for (var i = 0; i < clientList.length; i++) {  
+        var client = clientList[i];  
+        if ('focus' in client) { 
+          console.log('client=', client, ' can be focused, so not opening a new window');
+          // Passing a message to the main JS thread.
+          // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+          client.postMessage(data);
+          return client.focus();  
+        }
+      }  
+      if (clients.openWindow) {
+        return clients.openWindow(`firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`);
+      }
+    })
+  );
+
 });
 
 // Never called if I send notification with title&body,
 // and even if it is called, there is no way to show a notification and later handle notificationclick.
 // Fucking crazy: https://github.com/firebase/quickstart-js/issues/71
 messaging.setBackgroundMessageHandler(function(payload) {
-  console.log("[firebase-messaging-sw.js] setBackgroundMessageHandler: Received background message payload=', payload, ' not doing anything in this method because we handle it in self.addEventListener('push', ...) above");
+  console.log("[firebase-messaging-sw.js] setBackgroundMessageHandler: Received background message payload=", payload, " not doing anything in this method because we handle it in self.addEventListener('push', ...) above");
   // So, doing nothing because of these issues.
   /*const notificationTitle = 'Background Message Title';
   const notificationOptions = {

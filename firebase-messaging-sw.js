@@ -36,23 +36,38 @@ self.addEventListener('push', function(event) {
     return;
   }
   console.log(`[firebase-messaging-sw.js] Push Received with this data: "${event.data.text()}"`);
-  var data = event.data.json();
-  console.log("data=", data);
-  if (!data.title || !data.body) {
-    console.error("No title or body! data=", data);
+  /*
+  payload is
+  {
+    "from": "144595629077",
+    "collapse_key": "do_not_collapse",
+    "data": {
+      "fromUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+      "groupId": "-KyGuWzhHowFyUhiisef",
+      "title": "title",
+      "body": "body",
+      "toUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
+      "timestamp": "1509989690668"
+    }
+  }
+  */
+  var payload = event.data.json();
+  console.log("payload=", payload);
+  if (!payload || !payload.data || !payload.data.title || !payload.data.body) {
+    console.error("No title or body! payload=", payload);
     return;
   }
   
   // See options in https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification
   const options = {
-    body: data.body,
+    body: payload.data.body,
     icon: 'imgs/firebase-logo.png',
     badge: 'imgs/firebase-logo.png',  // (the badge is only used on Android at the time of writing). see https://developers.google.com/web/fundamentals/codelabs/push-notifications/#notification_click
-    data: data, // So we can use the data in notificationclick handler.
+    data: payload.data, // So we can use the data in notificationclick handler.
   };
 
   console.log("options=", options);
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(self.registration.showNotification(payload.data.title, options));
 });
 self.addEventListener('notificationclick', function(event) {
   console.log('[firebase-messaging-sw.js] Notification click Received. Notification data=', event.notification.data);

@@ -41,7 +41,7 @@ var pushNotifications;
     }
     function gotFcmToken() {
         hasFcmToken = true;
-        document.getElementById('requestPermission').innerHTML = "Send push notification";
+        document.getElementById('requestPermission').innerHTML = "Send push notification in 1 second";
     }
     function writeUserIfNeeded() {
         uid = firebase.auth().currentUser.uid;
@@ -144,7 +144,8 @@ var pushNotifications;
     }
     function requestPermissionOrSendPushNotification() {
         if (hasFcmToken) {
-            sendPushNotification();
+            console.log('sendPushNotification in one second (so you will have time to switch to another tab)');
+            setTimeout(sendPushNotification, 1000);
             return;
         }
         console.log('Request permission to get push notifications.');

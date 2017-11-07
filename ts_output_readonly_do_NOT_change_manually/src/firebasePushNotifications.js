@@ -40,7 +40,7 @@ var pushNotifications;
     }
     function gotFcmToken() {
         hasFcmToken = true;
-        document.getElementById('requestPermission').innerHTML = "Send push notification in 2 seconds (so you can test both getting a notification in the foreground and background)";
+        document.getElementById('requestPermission').innerHTML = "Send push notification in 2 seconds (so you can test both getting a notification in the foreground and background). I'll also send another message after the window is closed.";
     }
     function writeUserIfNeeded() {
         uid = firebase.auth().currentUser.uid;
@@ -53,21 +53,36 @@ var pushNotifications;
                 return;
             }
             console.log("User already exists");
-            if (myUserInfo.privateFields && myUserInfo.privateFields.fcmTokens) {
-                gotFcmToken();
-            }
             if (myUserInfo.privateButAddable && myUserInfo.privateButAddable.groups) {
                 console.log("Group already exists");
-                groupId = Object.keys(myUserInfo.privateButAddable.groups)[0];
+                setGroupId(Object.keys(myUserInfo.privateButAddable.groups)[0]);
                 return;
             }
             writeGroup();
         });
     }
+    function setGroupId(_groupId) {
+        if (!uid)
+            throw Error("Missing uid!");
+        if (groupId)
+            throw Error("groupId was already set!");
+        groupId = _groupId;
+        console.log("Update the FCM token every time the app starts");
+        getFcmToken();
+        console.log("For testing purposes, setting up onDisconnect so we'll send a push notification when the tab is closed.");
+        db().ref(`gamePortal/pushNotification`).push().onDisconnect().set({
+            "fromUserId": uid,
+            "toUserId": uid,
+            "groupId": groupId,
+            "timestamp": firebase.database.ServerValue.TIMESTAMP,
+            "title": "Tab closed title. Testing body in Hebrew",
+            "body": "בדיקה שעברית עובדת",
+        });
+    }
     function writeGroup() {
         console.log("Create group");
         let groupData = db().ref(`/gamePortal/groups`).push();
-        groupId = groupData.key;
+        setGroupId(groupData.key);
         let groupPromise = dbSet(groupData, {
             participants: {
                 [uid]: { participantIndex: 0 },
@@ -134,16 +149,17 @@ var pushNotifications;
         gotFcmToken();
     }
     function getFcmToken() {
-        let tokenPromise = messaging().getToken();
-        console.log("tokenPromise=", tokenPromise);
-        tokenPromise.then(function (token) {
+        console.log("getFcmToken");
+        messaging().getToken().then(function (token) {
             setFcmToken(token);
         }, function (err) {
             console.log('Unable to retrieve refreshed token ', err);
         });
     }
+    let notificationCounter = 0;
     function sendPushNotification() {
-        console.log('Send notification to myself.');
+        notificationCounter++;
+        console.log('Send notification to myself. notificationCounter=', notificationCounter);
         let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
         dbSet(pushNotificationData, {
             "fromUserId": uid,
@@ -153,8 +169,8 @@ var pushNotifications;
             // Push notification message fields, see
             // https://firebase.google.com/docs/cloud-messaging/http-server-ref
             // https://firebase.google.com/docs/cloud-messaging/js/first-message
-            "title": "title",
-            "body": "body",
+            "title": "title" + notificationCounter,
+            "body": "body" + notificationCounter,
         });
     }
     function requestPermissionOrSendPushNotification() {

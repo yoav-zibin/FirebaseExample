@@ -215,7 +215,7 @@ var pushNotifications;
             serviceWorker.addEventListener('message', (event) => {
                 receivedPushNotificationInForeground(event.data);
             });
-            serviceWorker.register('firebase-messaging-sw.js').then(function (registration) {
+            serviceWorker.register('https://yoav-zibin.github.io/FirebaseExample/firebase-messaging-sw.js').then(function (registration) {
                 // Registration was successful
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 initMessaging(registration);

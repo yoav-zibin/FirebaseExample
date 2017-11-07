@@ -65,8 +65,9 @@ self.addEventListener('push', function (/** @type {any} */ event) {
     // Se we need to detect it.
     event.waitUntil(clients.matchAll({
         type: "window",
-        includeUncontrolled: true
+        includeUncontrolled: true,
     }).then(function (/** @type {any[]} */ clientList) {
+        console.log('clientList.length=', clientList.length);
         for (var i = 0; i < clientList.length; i++) {
             var client = clientList[i];
             if ("visible" === client.visibilityState) {
@@ -90,13 +91,15 @@ self.addEventListener('notificationclick', function (/** @type {any} */ event) {
     // "This example opens the browser to the root of the site's origin, by focusing an existing same-origin tab if one exists, and otherwise opening a new one."
     // https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification
     event.waitUntil(clients.matchAll({
-        type: "window"
+        type: "window",
+        includeUncontrolled: true,
     })
-        .then(function (/** @type {any} */ clientList) {
+        .then(function (/** @type {any[]} */ clientList) {
+        console.log('clientList.length=', clientList.length);
         for (var i = 0; i < clientList.length; i++) {
             var client = clientList[i];
             if ('focus' in client) {
-                console.log('client=', client, ' can be focused, so not opening a new window');
+                console.log('client=', client, ' can be focused, so not opening a new window and just focusing on the existing window');
                 // Passing a message to the main JS thread.
                 // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
                 client.postMessage(data);

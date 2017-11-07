@@ -70,13 +70,14 @@ self.addEventListener('push', function(/** @type {any} */event) {
   // If the app is in the foreground (with focus), then we handle it in main JS, see messaging().onMessage(function(payload: any) {...})
   // Se we need to detect it.
   event.waitUntil(
-    clients.matchAll({
-        type: "window",
-        includeUncontrolled: true
+    clients.matchAll({ // https://developer.mozilla.org/en-US/docs/Web/API/Clients/matchAll
+        type: "window", // Sets the type of clients you want matched. Available values are window, worker, sharedworker, and all. The default is all.
+        includeUncontrolled: true, // if set to true, the matching operation will return all service worker clients who share the same origin as the current service worker. Otherwise, it returns only the service worker clients controlled by the current service worker. The default is false.
     }).then(function(/** @type {any[]} */clientList) {
+        console.log('clientList.length=', clientList.length);
         for (var i = 0; i < clientList.length; i++) {  
           var client = clientList[i];  
-          if ("visible" === client.visibilityState) {
+          if ("visible" === client.visibilityState) { // Indicates the visibility of the current client. This value can be one of hidden, visible, prerender, or unloaded. https://developer.mozilla.org/en-US/docs/Web/API/WindowClient
             console.log('client=', client, ' in foreground, so not showing notification');
             // Passing a message to the main JS thread.
             // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
@@ -101,13 +102,15 @@ self.addEventListener('notificationclick', function(/** @type {any} */event) {
   // https://developers.google.com/web/updates/2015/03/push-notifications-on-the-open-web#opening_a_url_when_the_user_clicks_a_notification
   event.waitUntil(
     clients.matchAll({  
-      type: "window"  
+      type: "window", // Sets the type of clients you want matched. Available values are window, worker, sharedworker, and all. The default is all.
+      includeUncontrolled: true, // if set to true, the matching operation will return all service worker clients who share the same origin as the current service worker. Otherwise, it returns only the service worker clients controlled by the current service worker. The default is false. 
     })
-    .then(function(/** @type {any} */clientList) {  
+    .then(function(/** @type {any[]} */clientList) {  
+      console.log('clientList.length=', clientList.length);
       for (var i = 0; i < clientList.length; i++) {  
         var client = clientList[i];  
         if ('focus' in client) { 
-          console.log('client=', client, ' can be focused, so not opening a new window');
+          console.log('client=', client, ' can be focused, so not opening a new window and just focusing on the existing window');
           // Passing a message to the main JS thread.
           // https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
           client.postMessage(data);

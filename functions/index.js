@@ -65,9 +65,16 @@ functions.database.ref('/gamePortal/recentlyConnected')
   return event.data.adminRef.update(updates);
 });
 
+exports.sendNotifications = 
+functions.database.ref('/users/{userId}/privateFields/email').onWrite(event => {
+  const userId = event.params.userId;
+  let data = event.data.val();
+  console.log('Email added: userId=', userId, 'data=', data);
+});
 
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
-exports.sendNotifications = functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWrite(event => {
+exports.sendNotifications =
+functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWrite(event => {
   let removePromise = event.data.adminRef.remove();
   const pushNotificationId = event.params.pushNotificationId;
   // "fromUserId": validateMyUid(),

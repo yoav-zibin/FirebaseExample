@@ -71,7 +71,8 @@ functions.database.ref('/gamePortal/recentlyConnected')
 // To decode, use decodeURIComponent, e.g.,
 // decodeURIComponent("%25%2E%23%24%2F%5B%5D") returns "%.#$/[]"
 function encodeAsFirebaseKey(str: string) {
-  return str.replace(/\%/g, '%25')
+  return str.toLowerCase() // Always search the indices with lower-case strings.
+    .replace(/\%/g, '%25')
     .replace(/\./g, '%2E')
     .replace(/\#/g, '%23')
     .replace(/\$/g, '%24')
@@ -84,6 +85,7 @@ function handlerForIndex(field: string) {
     const userId = event.params.userId;
     let data = event.data.val();
     console.log('Field ', field, ' added/updated for userId=', userId, 'data=', data);
+    if (!data || data == 'anonymous.user@gmail.com') return null;
     let encodedData = encodeAsFirebaseKey(data);
     return admin.database().ref(`gamePortal/userIdIndices/${field}/${encodedData}/${userId}`).set(admin.database.ServerValue.TIMESTAMP);
   };

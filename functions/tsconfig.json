@@ -1,0 +1,42 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "removeComments": false,
+        "rootDir": ".",
+        "outDir": ".",
+        "sourceMap": true,
+        "noLib": false,
+        "newLine": "CRLF",
+        "allowJs": true,
+        "checkJs": true
+    },
+    "filesGlob": [
+    ],
+    "formatCodeOptions": {
+        "indentSize": 2,
+        "tabSize": 2,
+        "newLineCharacter": "\r\n",
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    },
+    "files": [
+        "index.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    }
+}

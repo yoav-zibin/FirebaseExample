@@ -21,8 +21,8 @@ admin.initializeApp(functions.config().firebase);
 // https://firebase.google.com/docs/functions/database-events
 exports.deleteOldEntriesOnRecentlyConnected =
     functions.database.ref('/gamePortal/recentlyConnected')
-        .onWrite((event) => {
-        function getSortedKeys(original) {
+        .onWrite(event => {
+        function getSortedKeys(/** @type {object} */ original) {
             let keys = Object.keys(original);
             // Filter users with duplicate entries.
             keys.sort((key1, key2) => original[key2].timestamp - original[key1].timestamp); // newest entries are at the beginning
@@ -65,8 +65,8 @@ exports.deleteOldEntriesOnRecentlyConnected =
 // encodeAsFirebaseKey("%.#$/[]") returns "%25%2E%23%24%2F%5B%5D"
 // To decode, use decodeURIComponent, e.g.,
 // decodeURIComponent("%25%2E%23%24%2F%5B%5D") returns "%.#$/[]"
-function encodeAsFirebaseKey(str) {
-    return str.replace(/\%/g, '%25')
+function encodeAsFirebaseKey(/** @type {string} */ string) {
+    return string.replace(/\%/g, '%25')
         .replace(/\./g, '%2E')
         .replace(/\#/g, '%23')
         .replace(/\$/g, '%24')
@@ -74,8 +74,8 @@ function encodeAsFirebaseKey(str) {
         .replace(/\[/g, '%5B')
         .replace(/\]/g, '%5D');
 }
-function handlerForIndex(field) {
-    return (event) => {
+function handlerForIndex(/** @type {string} */ field) {
+    return (/** @type {any} */ event) => {
         const userId = event.params.userId;
         let data = event.data.val();
         console.log('Field ', field, ' added/updated for userId=', userId, 'data=', data);
@@ -84,7 +84,7 @@ function handlerForIndex(field) {
     };
 }
 function handlerForDisplayNameIndex() {
-    return (event) => {
+    return (/** @type {any} */ event) => {
         const userId = event.params.userId;
         let data = '' + event.data.val();
         console.log('DisplayName added/updated for userId=', userId, 'data=', data);
@@ -94,7 +94,7 @@ function handlerForDisplayNameIndex() {
         return Promise.all(promises);
     };
 }
-function createIndex(field) {
+function createIndex(/** @type {string} */ field) {
     return functions.database.ref('/users/{userId}/privateFields/' + field).onWrite(handlerForIndex(field));
 }
 exports.emailIndex = createIndex("email");
@@ -107,7 +107,7 @@ exports.displayNameIndex =
     functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handlerForDisplayNameIndex());
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
 exports.sendNotifications =
-    functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWrite((event) => {
+    functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWrite(event => {
         let removePromise = event.data.adminRef.remove();
         const pushNotificationId = event.params.pushNotificationId;
         // "fromUserId": validateMyUid(),
@@ -167,8 +167,9 @@ exports.sendNotifications =
                         timestamp: String(data.timestamp),
                     }
                 };
-            return admin.messaging().sendToDevice([token], payload).then((response) => {
+            return admin.messaging().sendToDevice([token], payload).then(response => {
                 // For each message check if there was an error.
+                /** @type {Promise[]} */
                 const tokensToRemove = [];
                 response.results.forEach((result, index) => {
                     const error = result.error;

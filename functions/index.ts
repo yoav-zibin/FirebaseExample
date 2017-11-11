@@ -116,29 +116,13 @@ functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handl
 
 
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
-exports.sendNotifications =
-functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWrite((event: any) => {
-  let removePromise = event.data.adminRef.remove();
-  const pushNotificationId = event.params.pushNotificationId;
-  // "fromUserId": validateMyUid(),
-  // "toUserId": validateUserId(),
-  // "groupId": validateGroupId(), // The two users must be together in some group.
-  // "timestamp": validateNow(),
-  // // Push notification message fields, see
-  // // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-  // // https://firebase.google.com/docs/cloud-messaging/js/first-message
-  // "title": validateMandatoryString(300),
-  // "body": validateMandatoryString(300),
-  let data = event.data.val();
-  if (!data) {
-    console.log(`No value in gamePortal/pushNotification/${pushNotificationId}`);
-    return removePromise;
-  }
-  let fcmTokensPath = `/users/${data.toUserId}/privateFields/fcmTokens`;
-  console.log('Sending push notification:', data, ' fcmTokensPath=', fcmTokensPath);
+function sendPushToUser(
+  toUserId: string, senderUid: string, senderName: string, body: string, timestamp: string, groupId: string) {
+  console.log('Sending push notification:', toUserId, senderUid, senderName, body, timestamp, groupId);
+  let fcmTokensPath = `/users/${toUserId}/privateFields/fcmTokens`;
 
   // Get the list of device notification tokens.
-  return Promise.all([removePromise, admin.database().ref(fcmTokensPath).once('value')]).then(results => {
+  return Promise.all([admin.database().ref(fcmTokensPath).once('value')]).then(results => {
     const tokensSnapshot = results[1];
     let tokensWithData = tokensSnapshot.val();
     console.log('tokensWithData=', tokensWithData);
@@ -147,38 +131,36 @@ functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWri
     let tokens = Object.keys(tokensWithData);
     tokens.sort((token1, token2) => tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived); // newest entries are at the beginning
     let token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
-    let isWeb = tokensWithData[token].platform == "web";
-    console.log('token=', token, 'isWeb=', isWeb);
+    let tokenData = tokensWithData[token];
+    console.log('token=', token, 'tokenData=', tokenData);
 
     // https://firebase.google.com/docs/cloud-messaging/concept-options
     // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.
+    // Push notification message fields, see
     // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-    const payload = isWeb ?
-      {
-        priority: "high", // By default, notification messages are sent with high priority, and data messages are sent with normal priority. 
-        data: {
-          title: data.title,
-          body: data.body,
-          fromUserId: String(data.fromUserId),
-          toUserId: String(data.toUserId),
-          groupId: String(data.groupId),
-          timestamp: String(data.timestamp),
-        }
-      } :
+    // https://firebase.google.com/docs/cloud-messaging/js/first-message
+    // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
+    const payload: any = 
       {
         priority: "high", // By default, notification messages are sent with high priority, and data messages are sent with normal priority. 
         notification: {
-          title: data.title,
-          body: data.body,
+          title: senderName,
+          body: body,
         },
         data: {
-          fromUserId: String(data.fromUserId),
-          toUserId: String(data.toUserId),
-          groupId: String(data.groupId),
-          timestamp: String(data.timestamp),
+          // Must be only strings in these key-value pairs
+          fromUserId: String(senderUid),
+          toUserId: String(toUserId),
+          groupId: String(groupId),
+          timestamp: String(timestamp),
         }
       };
-
+    if (tokenData.platform == "web") {
+      payload.notification.click_action = 
+        // GamePortalAngular|GamePortalReact
+        `https://yoav-zibin.github.io/${tokenData.app}/?groupId=${groupId}`;
+    }
+     
     return admin.messaging().sendToDevice([token], payload).then((response: any) => {
       // For each message check if there was an error.
       const tokensToRemove: Promise<any>[] = [];
@@ -197,5 +179,41 @@ functions.database.ref('gamePortal/pushNotification/{pushNotificationId}').onWri
     });
   }).catch((err)=> {
     console.error("Error: ", err);
+  });
+}
+
+exports.sendNotifications =
+functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWrite((event: any) => {
+  let messageData = event.data.val();
+  if (!messageData) {
+    console.log(`No message`);
+    return null;
+  }
+  let senderUid: string = String(messageData.senderUid);
+  let body: string = String(messageData.message);
+  let timestamp: string = String(messageData.timestamp);
+  const groupId: string = String(event.params.groupId);
+  const messageId: string = String(event.params.messageId);
+  console.log('Got chat message! senderUid=', senderUid,
+    ' body=', body, ' timestamp=', timestamp, ' groupId=', groupId, ' messageId=', messageId);
+
+  // Get sender name and participants
+  return Promise.all([
+    admin.database().ref(`/users/${senderUid}/publicFields/displayName`).once('value'),
+    admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
+  ]).then(results => {
+    const senderName = results[0].val();
+    const participants = results[1].val();
+    console.log('senderName=', senderName, ' participants=', participants);
+    // Send push to all participants except the sender (but we include the sender for "TEST_SEND_PUSH_NOTIFICATION")
+    let targetUserIds = Object.keys(participants);
+    if (!body.startsWith("TEST_SEND_PUSH_NOTIFICATION")) {
+      targetUserIds = targetUserIds.filter((userId) => userId != senderUid); 
+    }
+    let promises: Promise<any>[] = [];
+    for (let toUserId of targetUserIds) {
+      promises.push(sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupId));
+    }
+    return Promise.all(promises);
   });
 });

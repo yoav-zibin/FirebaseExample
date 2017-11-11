@@ -493,7 +493,6 @@ module main {
         githubId: ``,
         //friends: {}, // Not needed: you can add it later.
       },
-      // privateButAddable: {chats: {}} // Not needed: you can add it later.
     });
     write(`/users/${uid}/publicFields/displayName`, `New name!`);
 

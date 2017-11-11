@@ -11,11 +11,7 @@ var pushNotifications;
     function dbSet(ref, writeVal) {
         let writeValJson = prettyJson(writeVal);
         console.log(`Writing path=`, ref.toString(), ` writeVal=`, writeValJson, `...`);
-        let promise = ref.set(writeVal);
-        promise.then(() => {
-            console.log(`Writing path=`, ref.toString(), ` succeeded.`);
-        });
-        return promise;
+        ref.set(writeVal);
     }
     function writeUser() {
         let myUserPath = `/users/${uid}`;
@@ -70,20 +66,13 @@ var pushNotifications;
         console.log("Update the FCM token every time the app starts");
         getFcmToken();
         console.log("For testing purposes, setting up onDisconnect so we'll send a push notification when the tab is closed.");
-        db().ref(`gamePortal/pushNotification`).push().onDisconnect().set({
-            "fromUserId": uid,
-            "toUserId": uid,
-            "groupId": groupId,
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-            "title": "Tab closed title. Testing body in Hebrew",
-            "body": "בדיקה שעברית עובדת",
-        });
+        sendPushNotification(true);
     }
     function writeGroup() {
         console.log("Create group");
         let groupData = db().ref(`/gamePortal/groups`).push();
         setGroupId(groupData.key);
-        let groupPromise = dbSet(groupData, {
+        dbSet(groupData, {
             participants: {
                 [uid]: { participantIndex: 0 },
             },
@@ -95,37 +84,10 @@ var pushNotifications;
             timestamp: firebase.database.ServerValue.TIMESTAMP,
         });
     }
-    function receivedPushNotificationInForeground(data) {
-        /*
-        firebase-messaging-sw (service worker) also sends other messages using postMessage, and we should ignore those.
-        So if we're missing any attribute, we exit.
-        E.g., it sends:
-        {
-          "firebase-messaging-msg-type": "push-msg-received",
-          "firebase-messaging-msg-data": {
-            "from": "144595629077",
-            "collapse_key": "do_not_collapse",
-            "data": {
-              "fromUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
-              "groupId": "-KyGuWzhHowFyUhiisef",
-              "title": "title",
-              "body": "body",
-              "toUserId": "gB1U37z4WxRLIJ7u5SyyILMqu883",
-              "timestamp": "1510005889353"
-            }
-          }
-        }
-        */
-        if (!data.fromUserId || !data.toUserId || !data.groupId || !data.title || !data.body || !data.timestamp) {
-            console.log("Missing some fields in receivedPushNotificationInForeground, so it's probably an internal firebase-messaging-sw, so ignoring it. data=", data);
-            return;
-        }
-        console.log("Here you can handle push notification in foreground, using data=", data);
-    }
     function initMessaging(registration) {
         messaging().useServiceWorker(registration);
         messaging().onMessage(function (payload) {
-            console.log("Do not use this handler! We take care of foreground in the service worker (firebase-messaging-sw.js) in self.addEventListener('push', ...)", payload);
+            console.log("Here you can handle push notification in foreground, using payload=", payload);
         });
         messaging().onTokenRefresh(function () {
             console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
@@ -157,26 +119,22 @@ var pushNotifications;
         });
     }
     let notificationCounter = 0;
-    function sendPushNotification() {
+    function sendPushNotification(onDisconnect) {
         notificationCounter++;
         console.log('Send notification to myself. notificationCounter=', notificationCounter);
-        let pushNotificationData = db().ref(`gamePortal/pushNotification`).push();
-        dbSet(pushNotificationData, {
-            "fromUserId": uid,
-            "toUserId": uid,
-            "groupId": groupId,
+        let messageData = db().ref(`gamePortal/groups/${groupId}/messages`).push();
+        if (onDisconnect)
+            messageData = messageData.onDisconnect();
+        dbSet(messageData, {
+            "senderUid": uid,
+            "message": "TEST_SEND_PUSH_NOTIFICATION" + notificationCounter,
             "timestamp": firebase.database.ServerValue.TIMESTAMP,
-            // Push notification message fields, see
-            // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-            // https://firebase.google.com/docs/cloud-messaging/js/first-message
-            "title": "title" + notificationCounter,
-            "body": "body" + notificationCounter,
         });
     }
     function requestPermissionOrSendPushNotification() {
         if (hasFcmToken) {
             console.log('sendPushNotification in 2 seconds (so you will have time to switch to another tab or close the browser)');
-            setTimeout(sendPushNotification, 2000);
+            setTimeout(() => sendPushNotification(false), 2000);
             return;
         }
         console.log('Request permission to get push notifications.');
@@ -212,9 +170,6 @@ var pushNotifications;
         firebase.initializeApp(config);
         if ('serviceWorker' in navigator) {
             let serviceWorker = navigator.serviceWorker;
-            serviceWorker.addEventListener('message', (event) => {
-                receivedPushNotificationInForeground(event.data);
-            });
             serviceWorker.register('https://yoav-zibin.github.io/FirebaseExample/firebase-messaging-sw.js').then(function (registration) {
                 // Registration was successful
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);

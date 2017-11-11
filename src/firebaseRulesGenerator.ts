@@ -282,7 +282,6 @@ module firebaseRules {
       case "$recentlyConnectedId":
       case "$signalId":
       case "$drawingId":
-      case "$pushNotificationId":
         return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
     }
     throw new Error("Illegal parentKey=" + parentKey);
@@ -573,8 +572,7 @@ module firebaseRules {
             "pushNotificationsToken": validateRegex(''), // DEPRECATED: use fcmTokens below.
 
             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
-            // Push notifications will only be sent using cloud functions, after someone writes to /gamePortal/pushNotification/...
-            // (so we can apply some filtering logic if needed).
+            // Push notifications will only be sent using cloud functions, after someone writes to /gamePortal/groups/$groupId/messages/...
             // Currently, the cloud function only sends one push notification using the fcmToken with the latest lastTimeReceived field.
             "fcmTokens": {
               "$fcmToken": {
@@ -678,22 +676,6 @@ module firebaseRules {
               "stars4Count": validateInteger(0, 1000000000),
               "stars5Count": validateInteger(0, 1000000000),
             },
-          },
-        },
-        "pushNotification": {
-          "$pushNotificationId": {
-            // Anyone can add a new value.
-            // Cloud functions will send the actual push notifications, and delete values.
-            ".write": "!data.exists()",
-            "fromUserId": validateMyUid(),
-            "toUserId": validateUserId(),
-            "groupId": validateGroupId(), // The two users must be together in some group.
-            "timestamp": validateNow(),
-            // Push notification message fields, see
-            // https://firebase.google.com/docs/cloud-messaging/http-server-ref
-            // https://firebase.google.com/docs/cloud-messaging/js/first-message
-            "title": validateMandatoryString(300),
-            "body": validateMandatoryString(300),
           },
         },
         // All groups of users (2-10 users).

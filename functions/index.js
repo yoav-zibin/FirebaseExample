@@ -113,8 +113,7 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
     console.log('Sending push notification:', toUserId, senderUid, senderName, body, timestamp, groupId);
     let fcmTokensPath = `/users/${toUserId}/privateFields/fcmTokens`;
     // Get the list of device notification tokens.
-    return Promise.all([admin.database().ref(fcmTokensPath).once('value')]).then(results => {
-        const tokensSnapshot = results[1];
+    return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot) => {
         let tokensWithData = tokensSnapshot.val();
         console.log('tokensWithData=', tokensWithData);
         if (!tokensWithData)
@@ -132,7 +131,6 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
         // https://firebase.google.com/docs/cloud-messaging/js/first-message
         // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
         const payload = {
-            priority: "high",
             notification: {
                 title: senderName,
                 body: body,
@@ -156,12 +154,15 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
             response.results.forEach((result, index) => {
                 const error = result.error;
                 if (error) {
-                    console.warn('Failure sending notification to', tokens[index], error); // Actually happens, so just warning.
+                    console.warn('Failure sending notification to', token, error); // Actually happens, so just warning.
                     // Cleanup the tokens who are not registered anymore.
                     if (error.code === 'messaging/invalid-registration-token' ||
                         error.code === 'messaging/registration-token-not-registered') {
                         tokensToRemove.push(admin.database().ref(fcmTokensPath + `/${token}`).remove());
                     }
+                }
+                else {
+                    console.log('Success sending push to ', token);
                 }
             });
             return Promise.all(tokensToRemove);

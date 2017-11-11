@@ -85,6 +85,7 @@ var pushNotifications;
         });
     }
     function initMessaging(registration) {
+        console.log('Init push messaging');
         messaging().useServiceWorker(registration);
         messaging().onMessage(function (payload) {
             console.log("Here you can handle push notification in foreground, using payload=", payload);

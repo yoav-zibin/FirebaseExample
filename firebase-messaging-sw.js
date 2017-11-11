@@ -9,3 +9,12 @@ importScripts('https://www.gstatic.com/firebasejs/3.9.0/firebase-messaging.js');
 firebase.initializeApp({
   'messagingSenderId': '144595629077'
 });
+self.addEventListener('push', function(/** @type {any} */event) {
+  // Just for logging, no need to do anything in this method.
+  console.log("[firebase-messaging-sw.js] Push Received with this data: ", event);
+});
+
+firebase.messaging().setBackgroundMessageHandler(function(/** @type {any} */payload) {
+  // Just for logging, no need to do anything in this method.
+  console.log("[firebase-messaging-sw.js] setBackgroundMessageHandler: Received background message payload=", payload);
+});

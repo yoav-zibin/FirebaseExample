@@ -107,6 +107,7 @@ module pushNotifications {
   }
 
   function initMessaging(registration: any) {
+    console.log('Init push messaging');
     messaging().useServiceWorker(registration);
 
     messaging().onMessage(function(payload: PushNotificationPayload) {

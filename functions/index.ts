@@ -120,10 +120,8 @@ function sendPushToUser(
   toUserId: string, senderUid: string, senderName: string, body: string, timestamp: string, groupId: string) {
   console.log('Sending push notification:', toUserId, senderUid, senderName, body, timestamp, groupId);
   let fcmTokensPath = `/users/${toUserId}/privateFields/fcmTokens`;
-
   // Get the list of device notification tokens.
-  return Promise.all([admin.database().ref(fcmTokensPath).once('value')]).then(results => {
-    const tokensSnapshot = results[1];
+  return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
     let tokensWithData = tokensSnapshot.val();
     console.log('tokensWithData=', tokensWithData);
     if (!tokensWithData) return null;
@@ -142,7 +140,6 @@ function sendPushToUser(
     // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
     const payload: any = 
       {
-        priority: "high", // By default, notification messages are sent with high priority, and data messages are sent with normal priority. 
         notification: {
           title: senderName,
           body: body,
@@ -167,17 +164,19 @@ function sendPushToUser(
       response.results.forEach((result: any, index: number) => {
         const error = result.error;
         if (error) {
-          console.warn('Failure sending notification to', tokens[index], error); // Actually happens, so just warning.
+          console.warn('Failure sending notification to', token, error); // Actually happens, so just warning.
           // Cleanup the tokens who are not registered anymore.
           if (error.code === 'messaging/invalid-registration-token' ||
               error.code === 'messaging/registration-token-not-registered') {
             tokensToRemove.push(admin.database().ref(fcmTokensPath + `/${token}`).remove());
           }
+        } else {
+          console.log('Success sending push to ', token);
         }
       });
       return Promise.all(tokensToRemove);
     });
-  }).catch((err)=> {
+  }).catch((err: any)=> {
     console.error("Error: ", err);
   });
 }

@@ -604,7 +604,6 @@ var firebaseRules;
                             },
                         },
                     },
-                    // Added by cloud functions (todo: implement it).
                     "starsSummary": {
                         ".read": ANYONE,
                         "$reviewedGameSpecId": {

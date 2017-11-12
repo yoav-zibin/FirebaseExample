@@ -204,4 +204,33 @@ exports.sendNotifications =
             return Promise.all(promises);
         });
     });
+exports.starsSummary =
+    functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{reviewerUserId}/stars')
+        .onWrite((event) => {
+        console.log(`Updating reviews!`);
+        // stars are between 1 to 5 (inclusive)
+        const oldStars = event.data.previous.val();
+        const newStars = event.data.val();
+        if (!oldStars && !newStars) {
+            console.log(`No oldStars nor newStars`);
+            return null;
+        }
+        const reviewedGameSpecId = String(event.params.reviewedGameSpecId);
+        console.log(`Updating reviews for reviewedGameSpecId=${reviewedGameSpecId} from oldStars=${oldStars} to newStars=${newStars}`);
+        const starsSummaryPath = `gamePortal/gameSpec/starsSummary/${reviewedGameSpecId}`;
+        const starsRef = admin.database().ref(starsSummaryPath);
+        return starsRef.transaction(function (starsSummary) {
+            console.log(`starsSummary before: `, JSON.stringify(starsSummary));
+            if (oldStars && starsSummary && starsSummary[oldStars] > 0) {
+                starsSummary[oldStars]--;
+            }
+            if (newStars) {
+                if (!starsSummary)
+                    starsSummary = {};
+                starsSummary[newStars] = (starsSummary[newStars] || 0) + 1;
+            }
+            console.log(`starsSummary after: `, JSON.stringify(starsSummary));
+            return starsSummary;
+        });
+    });
 //# sourceMappingURL=index.js.map

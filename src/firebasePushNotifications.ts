@@ -111,6 +111,7 @@ module pushNotifications {
     messaging().useServiceWorker(registration);
 
     messaging().onMessage(function(payload: PushNotificationPayload) {
+      // TODO: students, show in-app notification here
       console.log("Here you can handle push notification in foreground, using payload=", payload);
     });
 

@@ -88,6 +88,7 @@ var pushNotifications;
         console.log('Init push messaging');
         messaging().useServiceWorker(registration);
         messaging().onMessage(function (payload) {
+            // TODO: students, show in-app notification here
             console.log("Here you can handle push notification in foreground, using payload=", payload);
         });
         messaging().onTokenRefresh(function () {

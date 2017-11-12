@@ -233,6 +233,7 @@ var firebaseRules;
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_GROUP);
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
             case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
+            case "$fieldValue": return validate(`${parentKey}.matches(/^.{1,200}$/)`);
             case "$groupId":
             case "$userId":
             case "$imageId":
@@ -657,7 +658,31 @@ var firebaseRules;
                         },
                     },
                 },
+                "userIdIndices": {
+                    // The $fieldValue in displayName index contains both the full displayName,
+                    // and also each part of the displayName (broken by white spaces, i.e., first name, middle name, last name, etc).
+                    "displayName": getUserIdIndex(),
+                    // The $fieldValue in the indices below is exactly the value stored in the user's /privateFields/XXX.
+                    "email": getUserIdIndex(),
+                    "phoneNumber": getUserIdIndex(),
+                    "facebookId": getUserIdIndex(),
+                    "googleId": getUserIdIndex(),
+                    "twitterId": getUserIdIndex(),
+                    "githubId": getUserIdIndex(),
+                }
             },
+        };
+    }
+    function getUserIdIndex() {
+        return {
+            // $fieldValue is encoded so that these special characters ("%.#$/[]")
+            // are encoded using "%<ASCII value>", e.g., "]" is encoded as "%5D".
+            // You can decode the string using decodeURIComponent, e.g.,
+            // decodeURIComponent("%25%2E%23%24%2F%5B%5D") returns "%.#$/[]"
+            "$fieldValue": {
+                ".read": ANYONE,
+                "$userId": validateNow(),
+            }
         };
     }
     function init() {

@@ -87,10 +87,12 @@ var webRTC;
             console.log("Got signals=", signals);
             if (!signals)
                 return;
+            let signalIds = Object.keys(signals);
+            signalIds.sort((signalId1, signalId2) => signals[signalId1].timestamp - signals[signalId2].timestamp); // oldest entries are at the beginning
             let updates = {};
-            for (let signalKey of Object.keys(signals)) {
-                updates[signalKey] = null;
-                receivedMessage(signals[signalKey]);
+            for (let signalId of signalIds) {
+                updates[signalId] = null;
+                receivedMessage(signals[signalId]);
             }
             db().ref(path).update(updates);
         });

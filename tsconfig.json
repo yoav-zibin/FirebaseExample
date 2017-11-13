@@ -35,6 +35,7 @@
     "files": [
         "firebase-messaging-sw.js",
         "src/firebaseDbExample.ts",
+        "src/firebaseWebRTC.ts",
         "src/firebaseRulesGenerator.ts",
         "src/firebasePushNotifications.ts",
         "src/dragAndDropHtmlExample.ts",

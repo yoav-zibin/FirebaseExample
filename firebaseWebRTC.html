@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  video {
+    max-width: 100%;
+    width: 320px;
+  }
+  </style>
+</head>
+<body>
+  My user ID: <input id="myUserId"><br>
+  <hr>
+  Enter user ID you want to call<input id="targetUserId">
+  <button id="callUser">Call!</button>
+  
+  <span>
+    <h3>Remote video</h3>
+    <video id="remotevideo" autoplay/>
+  </span>
+  <span>
+    <h3>Local video</h3>
+    <video id="localvideo" autoplay/>
+  </span>
+
+  <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="ts_output_readonly_do_NOT_change_manually/src/firebaseWebRTC.js"></script>
+</body>
+</html>

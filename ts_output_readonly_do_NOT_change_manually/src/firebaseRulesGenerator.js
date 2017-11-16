@@ -143,6 +143,10 @@ var firebaseRules;
             "cardVisibility": {
                 "$participantIndex": validateTrue(),
             },
+            // If the piece is rotatable (has rotatableDegrees), then you
+            // can set the current rotation of the piece in degrees.
+            // TODO: add validation.
+            "rotationDegrees": validateNumber(0, 360),
             // If the piece is drawable, this is the current drawing.
             // A drawing is made out of many lines.
             "drawing": {
@@ -262,6 +266,8 @@ var firebaseRules;
             // filter out $elementId.name because I added it later.
             if (parentKey == "$elementId")
                 filteredChildren = filteredChildren.filter((key) => key != "name");
+            // filter out rotationDegrees because I added it later.
+            filteredChildren = filteredChildren.filter((key) => key != "rotationDegrees");
             // filter out pushNotificationsToken because it's deprecated.
             filteredChildren = filteredChildren.filter((key) => key != "pushNotificationsToken");
             if (filteredChildren.length > 0) {

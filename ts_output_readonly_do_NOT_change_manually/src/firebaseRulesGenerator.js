@@ -145,7 +145,6 @@ var firebaseRules;
             },
             // If the piece is rotatable (has rotatableDegrees), then you
             // can set the current rotation of the piece in degrees.
-            // TODO: add validation.
             "rotationDegrees": validateNumber(0, 360),
             // If the piece is drawable, this is the current drawing.
             // A drawing is made out of many lines.
@@ -266,10 +265,9 @@ var firebaseRules;
             // filter out $elementId.name because I added it later.
             if (parentKey == "$elementId")
                 filteredChildren = filteredChildren.filter((key) => key != "name");
-            // filter out rotationDegrees because I added it later.
-            filteredChildren = filteredChildren.filter((key) => key != "rotationDegrees");
+            // filter out rotationDegrees and supportsWebRTC because I added those later.
             // filter out pushNotificationsToken because it's deprecated.
-            filteredChildren = filteredChildren.filter((key) => key != "pushNotificationsToken");
+            filteredChildren = filteredChildren.filter((key) => ["supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
             if (filteredChildren.length > 0) {
                 let quotedChildren = filteredChildren.map((val) => `'${val}'`).join(", ");
                 validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
@@ -496,6 +494,11 @@ var firebaseRules;
                         // and if it becomes false while the user is still connected,
                         // then the user should set it back to true.
                         "isConnected": validateBoolean(),
+                        // Whether the user supports WebRTC or not, e.g.,
+                        // browsers on iPhones don't support WebRTC.
+                        // Set to true iff:
+                        // ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].some((item)=>item in window)
+                        "supportsWebRTC": validateBoolean(),
                         // The timestamp when the user last disconnected from firebase.
                         // You can convert it to a date in JS using:
                         // new Date(1506721603537)
@@ -572,14 +575,21 @@ var firebaseRules;
                             },
                         },
                         // WebRTC require signalling between two users. 
-                        // Any user can add signals, and only $userId could delete them (after reading the signal).
-                        // TODO: invent a protocol for initiating WebRTC.
+                        // Only show video&audio option if the two users have true in privateFields/supportsWebRTC
+                        // See https://www.html5rocks.com/en/tutorials/webrtc/basics/
+                        // Any user can add signals, and only $userId can delete them (after reading the signal).
+                        // The first message is from the caller and it has signalType='WannaTalk',
+                        // then the receiver replies with signalType='YesLetsTalk' or signalType='Nope'.
+                        // These signalTypes don't have any signalData.
+                        // Then the caller and receiver exchange signalTypes 'sdp' and 'candidate'.
+                        // The signalData for 'sdp' is the description you get in the callback for createOffer and createAnswer.
+                        // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
                         "signal": {
                             "$signalId": {
                                 ".write": "!data.exists()",
                                 "addedByUid": validateMyUid(),
                                 "timestamp": validateNow(),
-                                // The actual signal.
+                                "signalType": validateRegex("WannaTalk|YesLetsTalk|Nope|sdp|candidate"),
                                 "signalData": validateMandatoryString(10000),
                             },
                         },
@@ -681,7 +691,7 @@ var firebaseRules;
     }
     function getUserIdIndex() {
         return {
-            // $fieldValue is encoded so that these special characters ("%.#$/[]")
+            // $fieldValue is encoded so that these special characters (".#$/[]")
             // are encoded using "%<ASCII value>", e.g., "]" is encoded as "%5D".
             // You can decode the string using decodeURIComponent, e.g.,
             // decodeURIComponent("%25%2E%23%24%2F%5B%5D") returns "%.#$/[]"

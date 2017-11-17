@@ -69,16 +69,17 @@ var webRTC;
         firebase.initializeApp(config);
         firebaseLogin();
     }
-    function sendMessage(msg) {
+    function sendMessage(signalType, signalData) {
         if (!targetUserId)
             throw new Error("Missing targetUserId");
         let ref = db().ref(`users/${targetUserId}/privateButAddable/signal`).push();
-        let signalData = {
+        let signalMsg = {
             addedByUid: uid,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
-            signalData: msg,
+            signalData: signalData,
+            signalType: signalType,
         };
-        dbSet(ref, signalData);
+        dbSet(ref, signalMsg);
     }
     function listenToMessages() {
         let path = `users/${uid}/privateButAddable/signal`;
@@ -136,7 +137,7 @@ var webRTC;
     function gotDescription(desc) {
         console.log("gotDescription: ", desc);
         pc.setLocalDescription(desc);
-        sendMessage(JSON.stringify({ "sdp": desc }));
+        sendMessage("sdp", desc);
     }
     // run start(true) to initiate a call
     function start(isCaller) {
@@ -146,7 +147,7 @@ var webRTC;
         pc.onicecandidate = function (evt) {
             console.log("onicecandidate: ", evt);
             if (evt.candidate) {
-                sendMessage(JSON.stringify({ "candidate": evt.candidate }));
+                sendMessage("candidate", evt.candidate);
             }
         };
         // once remote stream arrives, show it in the remote video element
@@ -170,23 +171,24 @@ var webRTC;
         }, (err) => { console.error("Error in getUserMedia: ", err); });
     }
     const ONE_MINUTE_MILLIS = 60 * 1000;
-    function receivedMessage(signalData) {
-        console.log("receivedMessage signalData=", signalData);
+    function receivedMessage(signalMsg) {
+        console.log("receivedMessage signalMsg=", signalMsg);
         const now = new Date().getTime();
-        if (now - ONE_MINUTE_MILLIS > signalData.timestamp) {
+        if (now - ONE_MINUTE_MILLIS > signalMsg.timestamp) {
             console.warn("Ignoring signal because it's more than a minute old");
             return;
         }
         if (!pc) {
-            targetUserId = signalData.addedByUid;
+            targetUserId = signalMsg.addedByUid;
             start(false);
         }
-        var signal = JSON.parse(signalData.signalData);
-        if (signal.sdp) {
-            pc.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => { console.log("setRemoteDescription success"); }, (err) => { console.error("Error in setRemoteDescription: ", err); });
+        var signalType = signalMsg.signalType;
+        var signalData = signalMsg.signalData;
+        if (signalType == 'sdp') {
+            pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(() => { console.log("setRemoteDescription success"); }, (err) => { console.error("Error in setRemoteDescription: ", err); });
         }
-        else {
-            pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).then(() => { console.log("addIceCandidate success"); }, (err) => { console.error("Error in addIceCandidate: ", err); });
+        else if (signalType == 'candidate') {
+            pc.addIceCandidate(new RTCIceCandidate(signalData)).then(() => { console.log("addIceCandidate success"); }, (err) => { console.error("Error in addIceCandidate: ", err); });
         }
     }
     init();

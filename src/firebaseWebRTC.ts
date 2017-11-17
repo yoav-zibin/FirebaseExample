@@ -82,20 +82,22 @@ module webRTC {
   // We send messages to a user by writing SignalData to
   // users/$userId/privateButAddable/signal/$signalId
   // And the target user will read the signals and delete them after reading them.
-  interface SignalData {
+  interface SignalMsg {
     addedByUid: string;
     timestamp: any;
+    signalType: string;
     signalData: string;
   }
-  function sendMessage(msg: string) {
+  function sendMessage(signalType: string, signalData: string) {
     if (!targetUserId) throw new Error("Missing targetUserId");
     let ref = db().ref(`users/${targetUserId}/privateButAddable/signal`).push();
-    let signalData: SignalData = {
+    let signalMsg: SignalMsg = {
       addedByUid: uid,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
-      signalData: msg,
+      signalData: signalData,
+      signalType: signalType,
     };
-    dbSet(ref, signalData);
+    dbSet(ref, signalMsg);
   }
   function listenToMessages() {
     let path = `users/${uid}/privateButAddable/signal`;
@@ -158,7 +160,7 @@ module webRTC {
   function gotDescription(desc: any) {
     console.log("gotDescription: ", desc);
     pc.setLocalDescription(desc);
-    sendMessage(JSON.stringify({ "sdp": desc }));
+    sendMessage("sdp", desc);
   }
   // run start(true) to initiate a call
   function start(isCaller: boolean) {
@@ -169,7 +171,7 @@ module webRTC {
     pc.onicecandidate = function (evt: any) {
       console.log("onicecandidate: ", evt);
       if (evt.candidate) {
-        sendMessage(JSON.stringify({ "candidate": evt.candidate }));
+        sendMessage("candidate", evt.candidate);
       }
     };
 
@@ -204,26 +206,27 @@ module webRTC {
   }
   
   const ONE_MINUTE_MILLIS = 60 * 1000;
-  function receivedMessage(signalData: SignalData) {
-    console.log("receivedMessage signalData=", signalData);
+  function receivedMessage(signalMsg: SignalMsg) {
+    console.log("receivedMessage signalMsg=", signalMsg);
     const now = new Date().getTime();
-    if (now - ONE_MINUTE_MILLIS > signalData.timestamp) {
+    if (now - ONE_MINUTE_MILLIS > signalMsg.timestamp) {
       console.warn("Ignoring signal because it's more than a minute old");
       return;
     }
     if (!pc) {
-      targetUserId = signalData.addedByUid;
+      targetUserId = signalMsg.addedByUid;
       start(false);
     }
 
-    var signal = JSON.parse(signalData.signalData);
-    if (signal.sdp) {
-      pc.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(
+    var signalType = signalMsg.signalType
+    var signalData: any = signalMsg.signalData;
+    if (signalType == 'sdp') {
+      pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(
         () => { console.log("setRemoteDescription success"); }, 
         (err: any) => { console.error("Error in setRemoteDescription: ", err); }
       );
-    } else {
-      pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).then(
+    } else if (signalType == 'candidate') {
+      pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
         () => { console.log("addIceCandidate success"); }, 
         (err: any) => { console.error("Error in addIceCandidate: ", err); }
       );

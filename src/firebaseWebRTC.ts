@@ -220,12 +220,12 @@ module webRTC {
 
     var signalType = signalMsg.signalType
     var signalData: any = JSON.parse(signalMsg.signalData);
-    if (signalType == 'sdp') {
+    if (signalType == "sdp") {
       pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(
         () => { console.log("setRemoteDescription success"); }, 
         (err: any) => { console.error("Error in setRemoteDescription: ", err); }
       );
-    } else if (signalType == 'candidate') {
+    } else if (signalType == "candidate") {
       pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
         () => { console.log("addIceCandidate success"); }, 
         (err: any) => { console.error("Error in addIceCandidate: ", err); }

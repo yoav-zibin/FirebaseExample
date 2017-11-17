@@ -88,13 +88,13 @@ module webRTC {
     signalType: string;
     signalData: string;
   }
-  function sendMessage(signalType: string, signalData: string) {
+  function sendMessage(signalType: string, signalData: any) {
     if (!targetUserId) throw new Error("Missing targetUserId");
     let ref = db().ref(`users/${targetUserId}/privateButAddable/signal`).push();
     let signalMsg: SignalMsg = {
       addedByUid: uid,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
-      signalData: signalData,
+      signalData: JSON.stringify(signalData),
       signalType: signalType,
     };
     dbSet(ref, signalMsg);
@@ -219,7 +219,7 @@ module webRTC {
     }
 
     var signalType = signalMsg.signalType
-    var signalData: any = signalMsg.signalData;
+    var signalData: any = JSON.parse(signalMsg.signalData);
     if (signalType == 'sdp') {
       pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(
         () => { console.log("setRemoteDescription success"); }, 

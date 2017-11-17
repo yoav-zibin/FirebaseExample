@@ -76,7 +76,7 @@ var webRTC;
         let signalMsg = {
             addedByUid: uid,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
-            signalData: signalData,
+            signalData: JSON.stringify(signalData),
             signalType: signalType,
         };
         dbSet(ref, signalMsg);
@@ -183,7 +183,7 @@ var webRTC;
             start(false);
         }
         var signalType = signalMsg.signalType;
-        var signalData = signalMsg.signalData;
+        var signalData = JSON.parse(signalMsg.signalData);
         if (signalType == 'sdp') {
             pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(() => { console.log("setRemoteDescription success"); }, (err) => { console.error("Error in setRemoteDescription: ", err); });
         }

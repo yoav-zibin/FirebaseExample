@@ -146,7 +146,7 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
         if (tokenData.platform == "web") {
             payload.notification.click_action =
                 // GamePortalAngular|GamePortalReact
-                `https://yoav-zibin.github.io/${tokenData.app}/?groupId=${groupId}`;
+                `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
         }
         return admin.messaging().sendToDevice([token], payload).then((response) => {
             // For each message check if there was an error.

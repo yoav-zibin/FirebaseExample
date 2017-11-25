@@ -218,8 +218,8 @@ module webRTC {
       start(false);
     }
 
-    var signalType = signalMsg.signalType
-    var signalData: any = JSON.parse(signalMsg.signalData);
+    let signalType = signalMsg.signalType
+    let signalData: any = JSON.parse(signalMsg.signalData);
     if (signalType == "sdp") {
       pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(
         () => { console.log("setRemoteDescription success"); }, 

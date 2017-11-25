@@ -155,7 +155,7 @@ function sendPushToUser(
     if (tokenData.platform == "web") {
       payload.notification.click_action = 
         // GamePortalAngular|GamePortalReact
-        `https://yoav-zibin.github.io/${tokenData.app}/?groupId=${groupId}`;
+        `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
     }
      
     return admin.messaging().sendToDevice([token], payload).then((response: any) => {

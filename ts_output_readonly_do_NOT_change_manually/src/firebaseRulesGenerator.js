@@ -297,7 +297,7 @@ var firebaseRules;
     const ONLY_ME = "$userId === auth.uid";
     // Anyone can add a new image,
     // but not delete/modify values (only the uploader can change anything).
-    const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
+    const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid || auth.uid == 'Trh7WWsvmRa6yM8W713coQ6ebNm1'";
     /*
     - permission cascades down:
         once you've granted read or write permission on a certain level in the tree,

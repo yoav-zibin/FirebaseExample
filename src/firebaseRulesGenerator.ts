@@ -440,14 +440,14 @@ module firebaseRules {
             // can shuffle the deck, but you can take a piece from anywhere in the deck.
             "elementKind": validateRegex("standard|toggable|dice|card|cardsDeck|piecesDeck"),
 
-            // In some game, pieces can be rotated, e.g., Blokus.
+            // In some game, pieces can be rotated, e.g., Blokus, Dominoes.
             // Note that different pieces can be rotated by different degrees.
             // E.g.,
             // * a piece that looks like a long line can only rotate my multiples of 180 degrees.
             // * a piece that looks like the letter L can rotate my multiples of 90 degrees.
             // * a piece that looks like a square cannot rotate (i.e., by multiples of 360 degrees).
             // (If the piece can't rotate at all, use rotatableDegrees=360)
-            // If a piece can rotate, then it must be a standard elementKind (to simplify GamePortal UI).
+            // If a piece can rotate, then it must be a standard|toggable|card elementKind (to simplify GamePortal UI).
             "rotatableDegrees": validateNumber(1, 360),
 
             "deckElements": {
@@ -474,7 +474,7 @@ module firebaseRules {
               // isDrawable only for elementKind of standard|card
               " && (newData.child('isDrawable').val() === false || newData.child('elementKind').val().matches(/^standard|card$/)) " +
               // If the piece can rotate, then it must be standard.
-              " && (newData.child('rotatableDegrees').val() === 360 || newData.child('elementKind').val() === 'standard') " +
+              " && (newData.child('rotatableDegrees').val() === 360 || newData.child('elementKind').val().matches(/^standard|card|toggable$/)) " +
               // All element kinds (including decks) should have at least one image.
               " && newData.child('images/0').exists() " +
               ' && (' +

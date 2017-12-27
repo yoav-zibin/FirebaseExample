@@ -8,7 +8,7 @@ module firebaseRules {
   function getRulesJson(): string {
     let rules: any = getRules();
     addValidateNoOther('', rules);
-    return prettyJson({"rules": rules});
+    return rules;
   }
 
   function addValidate(rule: Rule, exp: string): Rule {
@@ -33,8 +33,13 @@ module firebaseRules {
     return validate(`newData.isString() && newData.val().length >= ${minLengthInclusive} && newData.val().length < ${maxLengthExclusive}`);
   }
 
+  const BEFORE_REGEX = `newData.isString() && newData.val().matches(/^`;
+  const AFTER_REGEX = `$/)`;
   function validateRegex(pattern: string): Rule {
-    return validate(`newData.isString() && newData.val().matches(/^${pattern}$/)`);
+    return validate(`${BEFORE_REGEX}${pattern}${AFTER_REGEX}`);
+  }
+  function getRegexPattern(validateStr: string): string {
+    return beginsWith(validateStr, BEFORE_REGEX) && endsWith(validateStr, AFTER_REGEX) ? validateStr.substring(BEFORE_REGEX.length, validateStr.length - AFTER_REGEX.length) : '';
   }
 
   function validElementImageProp(prop: string) {
@@ -115,12 +120,13 @@ module firebaseRules {
     return validateNewDataIdExists("gamePortal/groups/");
   }
 
+  const VALIDATE_NOW = "newData.isNumber() && newData.val() == now";
   function validateNow(): Rule {
     return validate(
       // messages cannot be added in the past or the future
       // clients must use firebase.database.ServerValue.TIMESTAMP
       // to ensure accurate timestamps
-      "newData.isNumber() && newData.val() == now");
+      VALIDATE_NOW);
   }
 
   function validateBoolean(): Rule {
@@ -183,7 +189,7 @@ module firebaseRules {
       // If the piece is drawable, this is the current drawing.
       // A drawing is made out of many lines.
       "drawing": {
-        "$drawingId": {
+        "$lineId": {
           "userId": validateMyUid(),
           "timestamp": validateNow(),
           "color": validateColor(),
@@ -244,6 +250,9 @@ module firebaseRules {
     return result;
   }
 
+  function beginsWith(str: string, searchStr: string) {
+    return str.substr(0, searchStr.length) === searchStr;
+  }
   function endsWith(str: string, searchStr: string) {
     return str.substr(str.length - searchStr.length,
                        searchStr.length) === searchStr;
@@ -285,9 +294,9 @@ module firebaseRules {
       case "$gameSpecId": 
       case "$messageId":
       case "$matchId":
-      case "$recentlyConnectedId":
-      case "$signalId":
-      case "$drawingId":
+      case "$recentlyConnectedEntryId":
+      case "$signalEntryId":
+      case "$lineId":
         return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
     }
     throw new Error("Illegal parentKey=" + parentKey);
@@ -645,8 +654,8 @@ module firebaseRules {
             // Then the caller and receiver exchange signalTypes 'sdp' and 'candidate'.
             // The signalData for 'sdp' is the description you get in the callback for createOffer and createAnswer.
             // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
-            "signal": {
-              "$signalId": {
+            "signal": { // // TODO: should be "signals".
+              "$signalEntryId": {
                 ".write": "!data.exists()",
                 "addedByUid": validateMyUid(),
                 "timestamp": validateNow(),
@@ -663,14 +672,14 @@ module firebaseRules {
         // (When a user connects he should add himself, and there is a cloud function that deletes old entries.)
         "recentlyConnected": {
           ".read": ANYONE,
-          "$recentlyConnectedId": {
+          "$recentlyConnectedEntryId": {
             // Anyone can add a new value (deleting values is done using cloud functions).
             ".write": "!data.exists()",
             "userId": validateMyUid(),
             "timestamp": validateNow(),
           },
         },
-        "gameSpec": {
+        "gameSpec": { // TODO: should be gamesReviews
           // Added by the user
           "reviews": {
             "$reviewedGameSpecId": {
@@ -685,7 +694,8 @@ module firebaseRules {
               },
             },
           },
-          "starsSummary": {
+          // Set by cloud functions
+          "starsSummary": { // TODO: should be starsSummaries
             ".read": ANYONE,
             "$reviewedGameSpecId": {
               "stars1Count": validateInteger(0, 1000000000),
@@ -767,10 +777,91 @@ module firebaseRules {
     }
   }
 
+  function getTsType(key: string, rules: any) {
+    if (typeof rules == "string") throw new Error("Internal err!");
+    if (getNonSpecialKeys(rules).length == 0) {
+      let v = rules[".validate"] || '';
+      // validateRegex("web|ios|android")
+      let regex = getRegexPattern(v);
+      if (regex && regex.match(/^(\w+[|])+\w+$/)) {
+        return "'" + regex.split('|').join("'|'") + "'";
+      }
+      return v.indexOf(VALIDATE_NOW) >= 0 ? "number/*firebase.database.ServerValue.TIMESTAMP*/" : v.indexOf('isNumber') >= 0 ? "number" : v.indexOf('isBoolean') >= 0 ? "boolean" : "string";
+    }
+
+    // I used the string "images" twice: once for all images (with $imageId) and once for an element images (with $imageIndex)
+    if (key == "images" && rules["$imageIndex"]) return "ElementImages";
+    //Image already exists: parentKey=$imageIndex old parentKey=$imageId
+    if (key == "$imageIndex" && rules["imageId"]) return "ElementImage";
+    if (key == "$reviewedGameSpecId") {
+      return rules["$reviewerUserId"] ? "StarReviewsForGame" : "StarsSummaryForGame";
+    }
+    if (key == "$reviewerUserId") return "StarReview";
+    if (key == "gameSpec") return "GamesReviews";
+
+    if (key == "pieces" && rules["$pieceIndex"]  && rules["$pieceIndex"]["currentState"]) return "PiecesState";
+    if (key == "$pieceIndex" && rules["currentState"]) return "PieceState";
+
+    if (key == "groups" && rules["$memberOfGroupId"]) return "GroupMemberships";
+    if (key == "$memberOfGroupId") return "GroupMembership";
+
+    // Make camel case
+    let k = key.charAt(0) == '$' ? key.substr(1) : key;
+    // Remove Index / Id from the suffix
+    if (endsWith(k, 'Index')) k = k.substring(0, k.length - 'Index'.length);
+    if (endsWith(k, 'Id')) k = k.substring(0, k.length - 'Id'.length);
+
+    return k.charAt(0).toUpperCase() + k.substr(1) + (rules["$fieldValue"] ? "Index" : "");
+  }
+
+  let types: string[] = [];
+  let interfaceDefinitions: any = {};
+  function createTypeScriptTypes(parentKey: string, rules: any): void {
+    if (typeof rules == "string") return;
+    if (typeof rules != "object") {
+      throw new Error("rules can either be a string or object, but it was: rules=" + rules);
+    }
+    let keys = getNonSpecialKeys(rules);
+    // Remove $other
+    if (keys.indexOf('$other') >= 0) keys.splice(keys.indexOf('$other'), 1);
+
+    // recurse
+    for (let key of keys) {
+      createTypeScriptTypes(key, rules[key]);
+    }
+
+    // Add type
+    if (keys.length == 0) return;
+    let fields: string[] = [];
+    if (keys.length > 0 && keys[0].charAt(0) == '$') {
+      let repeatedField = keys[0];
+      fields.push(`[${repeatedField.substr(1)}: string]: ${getTsType(repeatedField, rules[repeatedField])};`);
+    } else {
+      for (let key of keys) {
+        fields.push(`${key}: ${getTsType(key, rules[key])};`);
+      }
+    }
+    let interfaceName = getTsType(parentKey, rules);
+    let interfaceDefinition = `  interface ${interfaceName} {\n    ${fields.join('\n    ')}\n  }`;
+    if (interfaceDefinitions[interfaceName] == interfaceDefinition) {
+      // already saw this definition.
+      return;
+    }
+    if (interfaceDefinitions[interfaceName]) {
+      console.error(`interfaceName=${interfaceName} already exists: parentKey=${parentKey} old definition=${interfaceDefinitions[interfaceName]} rules=${prettyJson(rules)}`);
+    }
+    interfaceDefinitions[interfaceName] = interfaceDefinition;
+    types.push(interfaceDefinition);
+  }
+
   function init() {
-    let r = getRulesJson();
+    let rules = getRulesJson();
     //console.log(r);
-    (<HTMLTextAreaElement>document.getElementById('firebaseRulesTextarea')).value = r;
+    (<HTMLTextAreaElement>document.getElementById('firebaseRulesTextarea')).value = prettyJson({"rules": rules});
+    types.push("declare namespace fbr { // fbr stands for Fire Base Rules");
+    createTypeScriptTypes("firebaseDb", rules);
+    types.push("}");
+    (<HTMLTextAreaElement>document.getElementById('firebaseTypesTextarea')).value = types.join('\n\n');
   }
   init();
 }

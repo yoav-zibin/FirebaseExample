@@ -288,7 +288,7 @@ declare namespace firebase.database {
 }
 
 declare namespace firebase.database.ServerValue {
-  var TIMESTAMP: Object;
+  var TIMESTAMP: number; // TODO(yzibin): I know it's technically not a number but this object , {.sv: "timestamp"} , but for treating writes&reads from firebase similarly, I pretend it's a number.
 }
 
 declare namespace firebase.messaging {

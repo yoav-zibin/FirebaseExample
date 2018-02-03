@@ -249,5 +249,8 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
 exports.resizeImage =
 functions.database.ref('gameBuilder/images')
 .onWrite((event: any) => {
-  
+  const obj = event.data;
+  console.log(obj);
+  // const file =
+
 });

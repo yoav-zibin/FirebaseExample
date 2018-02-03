@@ -6,7 +6,7 @@ admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-// To install: 
+// To install:
 // npm install -g firebase-tools
 // firebase login
 //
@@ -60,7 +60,7 @@ functions.database.ref('/gamePortal/recentlyConnected')
       updates[key] = null;
     }
   }
-  
+
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);
 });
@@ -111,7 +111,7 @@ exports.facebookIdIndex = createIndex("facebookId");
 exports.googleIdIndex = createIndex("googleId");
 exports.twitterIdIndex = createIndex("twitterId");
 exports.githubIdIndex = createIndex("githubId");
-exports.displayNameIndex = 
+exports.displayNameIndex =
 functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handlerForDisplayNameIndex());
 
 
@@ -138,7 +138,7 @@ function sendPushToUser(
     // https://firebase.google.com/docs/cloud-messaging/http-server-ref
     // https://firebase.google.com/docs/cloud-messaging/js/first-message
     // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
-    const payload: any = 
+    const payload: any =
       {
         notification: {
           title: senderName,
@@ -153,11 +153,11 @@ function sendPushToUser(
         }
       };
     if (tokenData.platform == "web") {
-      payload.notification.click_action = 
+      payload.notification.click_action =
         // GamePortalAngular|GamePortalReact
         `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
     }
-     
+
     return admin.messaging().sendToDevice([token], payload).then((response: any) => {
       // For each message check if there was an error.
       const tokensToRemove: Promise<any>[] = [];
@@ -207,7 +207,7 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
     // Send push to all participants except the sender (but we include the sender for "TEST_SEND_PUSH_NOTIFICATION")
     let targetUserIds = Object.keys(participants);
     if (!body.startsWith("TEST_SEND_PUSH_NOTIFICATION")) {
-      targetUserIds = targetUserIds.filter((userId) => userId != senderUid); 
+      targetUserIds = targetUserIds.filter((userId) => userId != senderUid);
     }
     let promises: Promise<any>[] = [];
     for (let toUserId of targetUserIds) {
@@ -244,4 +244,10 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
       console.log(`starsSummary after: `, JSON.stringify(starsSummary));
       return starsSummary;
     });
+});
+
+exports.resizeImage =
+functions.database.ref('gameBuilder/images')
+.onWrite((event: any) => {
+  
 });

@@ -1,6 +1,12 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const mkdirp = require('mkdirp-promise');
+const gcs = require('@google-cloud/storage')();
+const spawn = require('child-process-promise').spawn;
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
@@ -247,10 +253,34 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
 });
 
 exports.resizeImage =
-functions.database.ref('gameBuilder/images')
-.onWrite((event: any) => {
-  const obj = event.data;
-  console.log(obj);
-  // const file =
+functions.storage.object().onChange.onChange((event:any) => {
+  const object = event.data; // The Storage object.
+  const fileBucket = object.bucket; // The Storage bucket that contains the file.
+  const filePath = object.name; // File path in the bucket.
+  const resourceState = object.resourceState; // The resourceState is 'exists' or 'not_exists' (for file/folder deletions).
+  const metageneration = object.metageneration; // Number of times metadata has been generated. New objects have a value of 1.
+
+  // Resizing variables
+  const baseFileName = path.basename(filePath, path.extname(filePath));
+  const fileDir = path.dirname(filePath);
+  const resizeFilePath = path.normalize(path.format({dir: fileDir, name: baseFileName}));
+  const tempLocalFile = path.join(os.tmpdir(), filePath);
+  const tempLocalDir = path.dirname(tempLocalFile);
+  const tempLocalResizeFile = path.join(os.tmpdir(), resizeFilePath);
+
+  // Exit if this is a move or deletion event.
+ if (resourceState === 'not_exists') {
+  console.log('This is a deletion event.');
+  return;
+ }
+
+// Exit if file exists but is not new and is only being triggered
+// because of a metadata change.
+if (resourceState === 'exists' && metageneration > 1) {
+  console.log('This is a metadata change event.');
+  return;
+}
+
+
 
 });

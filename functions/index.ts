@@ -268,19 +268,40 @@ functions.storage.object().onChange.onChange((event:any) => {
   const tempLocalDir = path.dirname(tempLocalFile);
   const tempLocalResizeFile = path.join(os.tmpdir(), resizeFilePath);
 
-  // Exit if this is a move or deletion event.
- if (resourceState === 'not_exists') {
-  console.log('This is a deletion event.');
-  return;
- }
+    // Exit if this is a move or deletion event.
+   if (resourceState === 'not_exists') {
+    console.log('This is a deletion event.');
+    return;
+   }
 
-// Exit if file exists but is not new and is only being triggered
-// because of a metadata change.
-if (resourceState === 'exists' && metageneration > 1) {
-  console.log('This is a metadata change event.');
-  return;
-}
+  // Exit if file exists but is not new and is only being triggered
+  // because of a metadata change.
+  if (resourceState === 'exists' && metageneration > 1) {
+    console.log('This is a metadata change event.');
+    return;
+  }
+  // Resize image
+  const bucket = gcs.bucket(fileBucket);
 
-
+  // Create the temp directory where the storage file will be downloaded.
+  return mkdirp(tempLocalDir).then(() => {
+    // Download file from bucket.
+    return bucket.file(filePath).download({destination: tempLocalFile});
+  }).then(() => {
+    console.log('The file has been downloaded to ',
+        tempLocalFile);
+    // Resize the image using ImageMagick.
+    const args = [tempLocalFile, '-resize', '400x400', tempLocalResizeFile];  //TODO: Confirm desired image size
+    return spawn('convert', args);
+  }).then(() => {
+    console.log('Resized image created at ', tempLocalResizeFile);
+    // Uploading the JPEG image.
+    return bucket.upload(tempLocalResizeFile, {destination: resizeFilePath});
+  }).then(() => {
+    console.log('JPEG image uploaded to Storage at ', resizeFilePath);
+    // Once the image has been converted delete the local files to free up disk space.
+    fs.unlinkSync(tempLocalResizeFile);
+    fs.unlinkSync(tempLocalFile);
+  });
 
 });

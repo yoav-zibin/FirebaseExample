@@ -1,12 +1,7 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const mkdirp = require('mkdirp-promise');
-const gcs = require('@google-cloud/storage')();
 const spawn = require('child-process-promise').spawn;
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
 admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
@@ -253,55 +248,24 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
 });
 
 exports.resizeImage =
-functions.storage.object().onChange.onChange((event:any) => {
-  const object = event.data; // The Storage object.
-  const fileBucket = object.bucket; // The Storage bucket that contains the file.
-  const filePath = object.name; // File path in the bucket.
-  const resourceState = object.resourceState; // The resourceState is 'exists' or 'not_exists' (for file/folder deletions).
-  const metageneration = object.metageneration; // Number of times metadata has been generated. New objects have a value of 1.
+functions.storage.object().onChange.onChange(async (event:any) => {
+  console.log("Resizing the image");
+  // Extract file data
+  const path = event.data.name;
+  const bucket = event.data.bucket;
+  const [imgType, uid, id] = path.split("/");
 
-  // Resizing variables
-  const baseFileName = path.basename(filePath, path.extname(filePath));
-  const fileDir = path.dirname(filePath);
-  const resizeFilePath = path.normalize(path.format({dir: fileDir, name: baseFileName}));
-  const tempLocalFile = path.join(os.tmpdir(), filePath);
-  const tempLocalDir = path.dirname(tempLocalFile);
-  const tempLocalResizeFile = path.join(os.tmpdir(), resizeFilePath);
+  if(imgType !== "upload") return;
 
-    // Exit if this is a move or deletion event.
-   if (resourceState === 'not_exists') {
-    console.log('This is a deletion event.');
-    return;
-   }
+  // Download file into tmp directory
+  const tmpFilePath = `/tmp/${id}.jpg`;
+  const file = bucket.file(path);
+  console.log("Downloading image to: ", tmpFilePath);
+  await file.download({ destination : tmpFilePath});
 
-  // Exit if file exists but is not new and is only being triggered
-  // because of a metadata change.
-  if (resourceState === 'exists' && metageneration > 1) {
-    console.log('This is a metadata change event.');
-    return;
-  }
-  // Resize image
-  const bucket = gcs.bucket(fileBucket);
-
-  // Create the temp directory where the storage file will be downloaded.
-  return mkdirp(tempLocalDir).then(() => {
-    // Download file from bucket.
-    return bucket.file(filePath).download({destination: tempLocalFile});
-  }).then(() => {
-    console.log('The file has been downloaded to ',
-        tempLocalFile);
-    // Resize the image using ImageMagick.
-    const args = [tempLocalFile, '-resize', '400x400', tempLocalResizeFile];  //TODO: Confirm desired image size
-    return spawn('convert', args);
-  }).then(() => {
-    console.log('Resized image created at ', tempLocalResizeFile);
-    // Uploading the JPEG image.
-    return bucket.upload(tempLocalResizeFile, {destination: resizeFilePath});
-  }).then(() => {
-    console.log('JPEG image uploaded to Storage at ', resizeFilePath);
-    // Once the image has been converted delete the local files to free up disk space.
-    fs.unlinkSync(tempLocalResizeFile);
-    fs.unlinkSync(tempLocalFile);
-  });
+  // Resize it and upload it to cloud storage
+  console.log("Resizing image and uploading to cloud storage...");
+  await spawn('convert', [tmpFilePath, '-thumbnail', '900x900>', tmpFilePath]);
+  await bucket.upload(tmpFilePath, { destination: `resized/${uid}/${id}.jpg`, public: true});
 
 });

@@ -279,23 +279,27 @@ exports.starsSummary =
     });
 exports.resizeImage =
     functions.storage.object().onChange(function (event) { return __awaiter(_this, void 0, void 0, function () {
-        var filePath, bucket, resourceState, metageneration, contentType, metadata, fileName, tempDir, tempFilePath, tempThumb, temp50, temp70, filePath70, filePath50, thumbnailPath;
+        var JPEG_EXTENSION, filePath, bucket, resourceState, metageneration, contentType, metadata, file, fileName, extension, thumbFileName, tempDir, tempFilePath, tempThumb, temp50, temp70, filePath70, filePath50, thumbnailPath;
         return __generator(this, function (_a) {
+            JPEG_EXTENSION = '.jpg';
             filePath = event.data.name;
             bucket = gcs.bucket(event.data.bucket);
             resourceState = event.data.resourceState;
             metageneration = event.data.metageneration;
             contentType = event.data.contentType;
             metadata = { contentType: contentType };
-            fileName = path.basename(filePath);
+            file = path.basename(filePath);
+            fileName = file.split(".")[0];
+            extension = "." + file.split(".")[1];
+            thumbFileName = fileName + JPEG_EXTENSION;
             tempDir = os.tmpdir();
-            tempFilePath = path.join(tempDir, fileName);
-            tempThumb = path.join(tempDir, fileName + "_thumb");
-            temp50 = path.join(tempDir, fileName + "_50");
-            temp70 = path.join(tempDir, fileName + "_70");
-            filePath70 = path.join('quality70', fileName);
-            filePath50 = path.join('quality50', fileName);
-            thumbnailPath = path.join('thumbnail', fileName);
+            tempFilePath = path.join(tempDir, file);
+            tempThumb = path.join(tempDir, fileName + "_thumb" + JPEG_EXTENSION);
+            temp50 = path.join(tempDir, path.format({ name: fileName + "_50", ext: extension }));
+            temp70 = path.join(tempDir, path.format({ name: fileName + "_70", ext: extension }));
+            filePath70 = path.join('quality70', file);
+            filePath50 = path.join('quality50', file);
+            thumbnailPath = path.join('thumbnail', thumbFileName);
             // Exit if this is a move or deletion event.
             if (resourceState === 'not_exists') {
                 console.log('This is a deletion event.');
@@ -312,11 +316,14 @@ exports.resizeImage =
                 console.log("Already processed this file.");
                 return [2 /*return*/, null];
             }
-            console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
+            console.log("Resizing the image with path: ", filePath, ", name: ", file, " and extension: ", extension);
             console.log("Download path: ", tempFilePath);
-            console.log("File50 path: ", filePath50);
-            console.log("File70 path: ", filePath70);
-            console.log("Thumbnail path: ", thumbnailPath);
+            console.log("Temp 50 path: ", temp50);
+            console.log("Temp 70 path: ", temp70);
+            console.log("Temp thumb path: ", tempThumb);
+            console.log("File50 GCS path: ", filePath50);
+            console.log("File70 GCS path: ", filePath70);
+            console.log("Thumbnail GCS path: ", thumbnailPath);
             // Download file from GCS to tempFilePath
             // and chain together promises for the 3 file resizings
             return [2 /*return*/, bucket.file(filePath).download({
@@ -339,7 +346,7 @@ exports.resizeImage =
                     return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempThumb]);
                 }).then(function () {
                     console.log("Uploading thumbnail");
-                    return bucket.upload(tempThumb, { destination: thumbnailPath, metadata: metadata });
+                    return bucket.upload(tempThumb, { destination: thumbnailPath });
                 }).then(function () {
                     console.log("Unlinking temp files");
                     fs.unlinkSync(tempFilePath);

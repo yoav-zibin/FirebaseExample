@@ -260,18 +260,19 @@ functions.storage.object().onChange(async (event:any) => {
   const metageneration = event.data.metageneration;
   const contentType = event.data.contentType; // File content type.
   const metadata = { contentType: contentType };
-  const fileName = path.basename(filePath); // file name
-  console.log("File name is", fileName);
+  const fileName = path.basename(filePath);
 
-  // Paths for generated images
-  const tempFilePath = path.join(os.tmpdir(), fileName);
+  // Temporary paths for images
+  const tempDir = os.tmpdir();
+  const tempFilePath = path.join(tempDir, fileName); //where the file will be downloaded
+  const tempThumb = path.join(tempDir, fileName + "_thumb");
+  const temp50 = path.join(tempDir, fileName + "_50");
+  const temp70 = path.join(tempDir, fileName + "_70");
+
+  // Paths in GCS for upload
   const filePath70 = path.join('quality70', fileName);
   const filePath50 = path.join('quality50', fileName);
   const thumbnailPath = path.join('thumbnail', fileName);
-  console.log("Download path: ", tempFilePath);
-  console.log("File50 path: ", filePath50);
-  console.log("File70 path: ", filePath70);
-  console.log("Thumbnail path: ", thumbnailPath);
 
   // Exit if we have already processed the image
   if(filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')){
@@ -291,6 +292,10 @@ functions.storage.object().onChange(async (event:any) => {
   }
 
   console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
+  console.log("Download path: ", tempFilePath);
+  console.log("File50 path: ", filePath50);
+  console.log("File70 path: ", filePath70);
+  console.log("Thumbnail path: ", thumbnailPath);
 
   // Download file from GCS to tempFilePath
   // and chain together promises for the 3 file resizings
@@ -298,23 +303,29 @@ functions.storage.object().onChange(async (event:any) => {
     destination: tempFilePath
   }).then(() => {
     console.log('Image downloaded locally to', tempFilePath);
-    console.log('Converting image to thumbnail');
-    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempFilePath]);
-  }).then(() => {
-    console.log("Uploading thumbnail");
-    return bucket.upload(tempFilePath, { destination: thumbnailPath, metadata: metadata });
-}).then(()=>{
     console.log("Converting image to quality70");
-    return spawn('convert', [tempFilePath, '-quality', '70', tempFilePath]);
-}).then(()=>{
+    return spawn('convert', [tempFilePath, '-quality', '70', temp70]);
+  }).then(() => {
     console.log("Uploading quality70 image");
-    return bucket.upload(tempFilePath, { destination: filePath70, metadata: metadata });
-}).then(()=>{
-  console.log("Converting image to quality50");
-    return spawn('convert', [tempFilePath, '-quality', '50', tempFilePath]);
-}).then(()=>{
-  console.log("Uploading quality50 image");
-    return bucket.upload(tempFilePath, { destination: filePath50, metadata: metadata });
-}).then(() => fs.unlinkSync(tempFilePath));
+    return bucket.upload(temp70, { destination: filePath70, metadata: metadata });
+  }).then(()=>{
+    console.log("Converting image to quality50");
+    return spawn('convert', [tempFilePath, '-quality', '50', temp50]);
+  }).then(()=>{
+    console.log("Uploading quality50 image");
+    return bucket.upload(temp50, { destination: filePath50, metadata: metadata });
+  }).then(()=>{
+    console.log('Converting image to thumbnail');
+    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempThumb]);
+  }).then(()=>{
+    console.log("Uploading thumbnail");
+    return bucket.upload(tempThumb, { destination: thumbnailPath, metadata: metadata });
+  }).then(() => {
+    console.log("Unlinking temp files");
+    fs.unlinkSync(tempFilePath);
+    fs.unlinkSync(tempThumb);
+    fs.unlinkSync(temp70);
+    fs.unlinkSync(temp50);
+  });
 
 });

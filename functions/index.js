@@ -279,7 +279,7 @@ exports.starsSummary =
     });
 exports.resizeImage =
     functions.storage.object().onChange(function (event) { return __awaiter(_this, void 0, void 0, function () {
-        var filePath, bucket, resourceState, metageneration, contentType, metadata, fileName, tempFilePath, filePath70, filePath50, thumbnailPath;
+        var filePath, bucket, resourceState, metageneration, contentType, metadata, fileName, tempDir, tempFilePath, tempThumb, temp50, temp70, filePath70, filePath50, thumbnailPath;
         return __generator(this, function (_a) {
             filePath = event.data.name;
             bucket = gcs.bucket(event.data.bucket);
@@ -288,15 +288,14 @@ exports.resizeImage =
             contentType = event.data.contentType;
             metadata = { contentType: contentType };
             fileName = path.basename(filePath);
-            console.log("File name is", fileName);
-            tempFilePath = path.join(os.tmpdir(), fileName);
+            tempDir = os.tmpdir();
+            tempFilePath = path.join(tempDir, fileName);
+            tempThumb = path.join(tempDir, fileName + "_thumb");
+            temp50 = path.join(tempDir, fileName + "_50");
+            temp70 = path.join(tempDir, fileName + "_70");
             filePath70 = path.join('quality70', fileName);
             filePath50 = path.join('quality50', fileName);
             thumbnailPath = path.join('thumbnail', fileName);
-            console.log("Download path: ", tempFilePath);
-            console.log("File50 path: ", filePath50);
-            console.log("File70 path: ", filePath70);
-            console.log("Thumbnail path: ", thumbnailPath);
             // Exit if we have already processed the image
             if (filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')) {
                 console.log("Already processed this file.");
@@ -313,6 +312,10 @@ exports.resizeImage =
                 console.log('This is a metadata change event.');
                 return [2 /*return*/, null];
             }
+            console.log("Download path: ", tempFilePath);
+            console.log("File50 path: ", filePath50);
+            console.log("File70 path: ", filePath70);
+            console.log("Thumbnail path: ", thumbnailPath);
             console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
             // Download file from GCS to tempFilePath
             // and chain together promises for the 3 file resizings
@@ -320,23 +323,30 @@ exports.resizeImage =
                     destination: tempFilePath
                 }).then(function () {
                     console.log('Image downloaded locally to', tempFilePath);
-                    console.log('Converting image to thumbnail');
-                    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempFilePath]);
-                }).then(function () {
-                    console.log("Uploading thumbnail");
-                    return bucket.upload(tempFilePath, { destination: thumbnailPath, metadata: metadata });
-                }).then(function () {
                     console.log("Converting image to quality70");
-                    return spawn('convert', [tempFilePath, '-quality', '70', tempFilePath]);
+                    return spawn('convert', [tempFilePath, '-quality', '70', temp70]);
                 }).then(function () {
                     console.log("Uploading quality70 image");
-                    return bucket.upload(tempFilePath, { destination: filePath70, metadata: metadata });
+                    return bucket.upload(temp70, { destination: filePath70, metadata: metadata });
                 }).then(function () {
                     console.log("Converting image to quality50");
-                    return spawn('convert', [tempFilePath, '-quality', '50', tempFilePath]);
+                    return spawn('convert', [tempFilePath, '-quality', '50', temp50]);
                 }).then(function () {
                     console.log("Uploading quality50 image");
-                    return bucket.upload(tempFilePath, { destination: filePath50, metadata: metadata });
-                }).then(function () { return fs.unlinkSync(tempFilePath); })];
+                    return bucket.upload(temp50, { destination: filePath50, metadata: metadata });
+                }).then(function () {
+                    console.log('Converting image to thumbnail');
+                    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempThumb]);
+                }).then(function () {
+                    console.log("Uploading thumbnail");
+                    return bucket.upload(tempThumb, { destination: thumbnailPath, metadata: metadata });
+                }).then(function () {
+                    console.log("Unlinking temp files");
+                    fs.unlinkSync(tempFilePath);
+                    fs.unlinkSync(tempThumb);
+                    fs.unlinkSync(temp70);
+                    fs.unlinkSync(temp50);
+                    console.log("FINISHED");
+                })];
         });
     }); });

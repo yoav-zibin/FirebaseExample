@@ -274,11 +274,6 @@ functions.storage.object().onChange(async (event:any) => {
   const filePath50 = path.join('quality50', fileName);
   const thumbnailPath = path.join('thumbnail', fileName);
 
-  // Exit if we have already processed the image
-  if(filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')){
-    console.log("Already processed this file.");
-    return null;
-  }
     // Exit if this is a move or deletion event.
   if (resourceState === 'not_exists') {
     console.log('This is a deletion event.');
@@ -288,6 +283,12 @@ functions.storage.object().onChange(async (event:any) => {
   // because of a metadata change.
   if (resourceState === 'exists' && metageneration > 1) {
     console.log('This is a metadata change event.');
+    return null;
+  }
+
+  // Exit if we have already processed the image
+  if(filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')){
+    console.log("Already processed this file.");
     return null;
   }
 

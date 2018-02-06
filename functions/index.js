@@ -296,11 +296,6 @@ exports.resizeImage =
             filePath70 = path.join('quality70', fileName);
             filePath50 = path.join('quality50', fileName);
             thumbnailPath = path.join('thumbnail', fileName);
-            // Exit if we have already processed the image
-            if (filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')) {
-                console.log("Already processed this file.");
-                return [2 /*return*/, null];
-            }
             // Exit if this is a move or deletion event.
             if (resourceState === 'not_exists') {
                 console.log('This is a deletion event.');
@@ -312,11 +307,16 @@ exports.resizeImage =
                 console.log('This is a metadata change event.');
                 return [2 /*return*/, null];
             }
+            // Exit if we have already processed the image
+            if (filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')) {
+                console.log("Already processed this file.");
+                return [2 /*return*/, null];
+            }
+            console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
             console.log("Download path: ", tempFilePath);
             console.log("File50 path: ", filePath50);
             console.log("File70 path: ", filePath70);
             console.log("Thumbnail path: ", thumbnailPath);
-            console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
             // Download file from GCS to tempFilePath
             // and chain together promises for the 3 file resizings
             return [2 /*return*/, bucket.file(filePath).download({
@@ -346,7 +346,6 @@ exports.resizeImage =
                     fs.unlinkSync(tempThumb);
                     fs.unlinkSync(temp70);
                     fs.unlinkSync(temp50);
-                    console.log("FINISHED");
                 })];
         });
     }); });

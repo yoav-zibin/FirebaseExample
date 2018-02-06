@@ -1,7 +1,11 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const gcs = require('@google-cloud/storage')();
 const spawn = require('child-process-promise').spawn;
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
@@ -248,24 +252,69 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
 });
 
 exports.resizeImage =
-functions.storage.object().onChange.onChange(async (event:any) => {
-  console.log("Resizing the image");
+functions.storage.object().onChange(async (event:any) => {
   // Extract file data
-  const path = event.data.name;
-  const bucket = event.data.bucket;
-  const [imgType, uid, id] = path.split("/");
+  const filePath = event.data.name;
+  const bucket = gcs.bucket(event.data.bucket);
+  const resourceState = event.data.resourceState;
+  const metageneration = event.data.metageneration;
+  const contentType = event.data.contentType; // File content type.
+  const metadata = { contentType: contentType };
+  const fileName = path.basename(filePath); // file name
+  console.log("File name is", fileName);
 
-  if(imgType !== "upload") return;
+  // Paths for generated images
+  const tempFilePath = path.join(os.tmpdir(), fileName);
+  const filePath70 = path.join('quality70', fileName);
+  const filePath50 = path.join('quality50', fileName);
+  const thumbnailPath = path.join('thumbnail', fileName);
+  console.log("Download path: ", tempFilePath);
+  console.log("File50 path: ", filePath50);
+  console.log("File70 path: ", filePath70);
+  console.log("Thumbnail path: ", thumbnailPath);
 
-  // Download file into tmp directory
-  const tmpFilePath = `/tmp/${id}.jpg`;
-  const file = bucket.file(path);
-  console.log("Downloading image to: ", tmpFilePath);
-  await file.download({ destination : tmpFilePath});
+  // Exit if we have already processed the image
+  if(filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')){
+    console.log("Already processed this file.");
+    return null;
+  }
+    // Exit if this is a move or deletion event.
+  if (resourceState === 'not_exists') {
+    console.log('This is a deletion event.');
+    return null;
+  }
+  // Exit if file exists but is not new and is only being triggered
+  // because of a metadata change.
+  if (resourceState === 'exists' && metageneration > 1) {
+    console.log('This is a metadata change event.');
+    return null;
+  }
 
-  // Resize it and upload it to cloud storage
-  console.log("Resizing image and uploading to cloud storage...");
-  await spawn('convert', [tmpFilePath, '-thumbnail', '900x900>', tmpFilePath]);
-  await bucket.upload(tmpFilePath, { destination: `resized/${uid}/${id}.jpg`, public: true});
+  console.log("Resizing the image with path: ", filePath, " and filename: ", fileName);
+
+  // Download file from GCS to tempFilePath
+  // and chain together promises for the 3 file resizings
+  return bucket.file(filePath).download({
+    destination: tempFilePath
+  }).then(() => {
+    console.log('Image downloaded locally to', tempFilePath);
+    console.log('Converting image to thumbnail');
+    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempFilePath]);
+  }).then(() => {
+    console.log("Uploading thumbnail");
+    return bucket.upload(tempFilePath, { destination: thumbnailPath, metadata: metadata });
+}).then(()=>{
+    console.log("Converting image to quality70");
+    return spawn('convert', [tempFilePath, '-quality', '70', tempFilePath]);
+}).then(()=>{
+    console.log("Uploading quality70 image");
+    return bucket.upload(tempFilePath, { destination: filePath70, metadata: metadata });
+}).then(()=>{
+  console.log("Converting image to quality50");
+    return spawn('convert', [tempFilePath, '-quality', '50', tempFilePath]);
+}).then(()=>{
+  console.log("Uploading quality50 image");
+    return bucket.upload(tempFilePath, { destination: filePath50, metadata: metadata });
+}).then(() => fs.unlinkSync(tempFilePath));
 
 });

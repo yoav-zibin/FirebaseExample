@@ -1,0 +1,112 @@
+[debug] [2018-02-05T23:27:26.130Z] ----------------------------------------------------------------------
+[debug] [2018-02-05T23:27:26.132Z] Command:       /Users/mattoor/.nvm/versions/node/v7.9.0/bin/node /Users/mattoor/.nvm/versions/node/v7.9.0/bin/firebase deploy --only functions:resizeImage
+[debug] [2018-02-05T23:27:26.132Z] CLI Version:   3.17.4
+[debug] [2018-02-05T23:27:26.132Z] Platform:      darwin
+[debug] [2018-02-05T23:27:26.132Z] Node Version:  v7.9.0
+[debug] [2018-02-05T23:27:26.133Z] Time:          Mon Feb 05 2018 18:27:26 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:26.133Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-02-05T23:27:26.141Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-02-05T23:27:26.141Z] > authorizing via signed-in user
+[debug] [2018-02-05T23:27:26.143Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/testproject-cb8bd  
+  
+ Mon Feb 05 2018 18:27:26 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:26.449Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:26.450Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/testproject-cb8bd/tokens  
+  
+ Mon Feb 05 2018 18:27:26 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:26.761Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'testproject-cb8bd'...
+[info] 
+[info] i  deploying functions
+[debug] [2018-02-05T23:27:27.000Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "dependencies": {
+    "child-process-promise": "^2.2.1",
+    "firebase-admin": "~5.4.0",
+    "firebase-functions": "^0.7.0"
+  },
+  "private": true
+}
+[info] i  functions: ensuring necessary APIs are enabled...
+[debug] [2018-02-05T23:27:27.001Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/cloudfunctions.googleapis.com/projectSettings/testproject-cb8bd?view=CONSUMER_VIEW  
+  
+ Mon Feb 05 2018 18:27:27 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:27.002Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/runtimeconfig.googleapis.com/projectSettings/testproject-cb8bd?view=CONSUMER_VIEW  
+  
+ Mon Feb 05 2018 18:27:27 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:27.756Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:27.762Z] <<< HTTP RESPONSE 200
+[info] ✔  functions: all necessary APIs are enabled
+[debug] [2018-02-05T23:27:27.763Z] >>> HTTP REQUEST GET https://appengine.googleapis.com/v1/apps/testproject-cb8bd  
+  
+ Mon Feb 05 2018 18:27:27 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:27.764Z] >>> HTTP REQUEST GET https://apikeys.googleapis.com/v1/projects/testproject-cb8bd/apiKeys  
+  
+ Mon Feb 05 2018 18:27:27 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:28.167Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:28.170Z] <<< HTTP RESPONSE 200
+[info] i  functions: preparing functions directory for uploading...
+[debug] [2018-02-05T23:27:28.172Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/testproject-cb8bd/configs  
+  
+ Mon Feb 05 2018 18:27:28 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:28.358Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:28.360Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/testproject-cb8bd/configs/testproject/variables  
+  
+ Mon Feb 05 2018 18:27:28 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:28.526Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:28.527Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/testproject-cb8bd/configs/testproject/variables/key  
+  
+ Mon Feb 05 2018 18:27:28 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:28.528Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/testproject-cb8bd/configs/testproject/variables/id  
+  
+ Mon Feb 05 2018 18:27:28 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:28.985Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:28.987Z] <<< HTTP RESPONSE 200
+[info] i  functions: packaged functions (37.75 KB) for uploading
+[debug] [2018-02-05T23:27:29.274Z] >>> HTTP REQUEST GET https://www.googleapis.com/storage/v1/b/staging.testproject-cb8bd.appspot.com  
+  
+ Mon Feb 05 2018 18:27:29 GMT-0500 (EST)
+[debug] [2018-02-05T23:27:29.598Z] <<< HTTP RESPONSE 200
+[debug] [2018-02-05T23:27:29.599Z] >>> HTTP REQUEST POST https://www.googleapis.com/upload/storage/v1/b/staging.testproject-cb8bd.appspot.com/o?uploadType=media&name=firebase-functions-source  
+ ReadStream {
+  _readableState: 
+   ReadableState {
+     objectMode: false,
+     highWaterMark: 65536,
+     buffer: BufferList { head: [Object], tail: [Object], length: 1 },
+     length: 38653,
+     pipes: null,
+     pipesCount: 0,
+     flowing: null,
+     ended: true,
+     endEmitted: false,
+     reading: false,
+     sync: false,
+     needReadable: false,
+     emittedReadable: true,
+     readableListening: false,
+     resumeScheduled: false,
+     defaultEncoding: 'utf8',
+     ranOut: false,
+     awaitDrain: 0,
+     readingMore: false,
+     decoder: null,
+     encoding: null },
+  readable: true,
+  domain: null,
+  _events: { end: [Function] },
+  _eventsCount: 1,
+  _maxListeners: undefined,
+  path: '/var/folders/gv/5l_rq2l9205fwkdpy6c0pbsc0000gn/T/firebase-functions-36642j9AqXKsiEVuP.zip',
+  fd: 19,
+  flags: 'r',
+  mode: 438,
+  start: undefined,
+  end: undefined,
+  autoClose: true,
+  pos: undefined,
+  bytesRead: 38653 } 
+ Mon Feb 05 2018 18:27:29 GMT-0500 (EST)

@@ -1,11 +1,52 @@
 'use strict';
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var _this = this;
+var functions = require('firebase-functions');
+var admin = require('firebase-admin');
+var gcs = require('@google-cloud/storage')();
+var spawn = require('child-process-promise').spawn;
+var os = require('os');
+var path = require('path');
+var fs = require('fs');
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-// To install: 
+// To install:
 // npm install -g firebase-tools
 // firebase login
 //
@@ -21,25 +62,26 @@ admin.initializeApp(functions.config().firebase);
 // https://firebase.google.com/docs/functions/database-events
 exports.deleteOldEntriesOnRecentlyConnected =
     functions.database.ref('/gamePortal/recentlyConnected')
-        .onWrite((event) => {
+        .onWrite(function (event) {
         function getSortedKeys(original) {
-            let keys = Object.keys(original);
+            var keys = Object.keys(original);
             // Filter users with duplicate entries.
-            keys.sort((key1, key2) => original[key2].timestamp - original[key1].timestamp); // newest entries are at the beginning
+            keys.sort(function (key1, key2) { return original[key2].timestamp - original[key1].timestamp; }); // newest entries are at the beginning
             return keys;
         }
-        let maxEntries = 20;
+        var maxEntries = 20;
         if (!event.data.exists()) {
             console.log('deleteOldEntriesOnRecentlyConnected: no data');
             return null;
         }
-        const original = event.data.val();
-        let updates = {};
-        let keys = getSortedKeys(original);
-        let userIds = {};
-        for (let key of keys) {
-            let recentlyConnectedEntry = original[key];
-            let userId = recentlyConnectedEntry.userId;
+        var original = event.data.val();
+        var updates = {};
+        var keys = getSortedKeys(original);
+        var userIds = {};
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var key = keys_1[_i];
+            var recentlyConnectedEntry = original[key];
+            var userId = recentlyConnectedEntry.userId;
             if (userIds[userId]) {
                 updates[key] = null;
                 delete original[key];
@@ -53,7 +95,8 @@ exports.deleteOldEntriesOnRecentlyConnected =
             // Removes the newest 20 entries from the end (the ones we want to keep).
             keys.splice(keys.length - maxEntries, maxEntries);
             // Delete everything else.
-            for (let key of keys) {
+            for (var _a = 0, keys_2 = keys; _a < keys_2.length; _a++) {
+                var key = keys_2[_a];
                 updates[key] = null;
             }
         }
@@ -76,24 +119,24 @@ function encodeAsFirebaseKey(str) {
         .replace(/\]/g, '%5D');
 }
 function handlerForIndex(field) {
-    return (event) => {
-        const userId = event.params.userId;
-        let data = event.data.val();
+    return function (event) {
+        var userId = event.params.userId;
+        var data = event.data.val();
         console.log('Field ', field, ' added/updated for userId=', userId, 'data=', data);
         if (!data || data == 'anonymous.user@gmail.com')
             return null;
-        let encodedData = encodeAsFirebaseKey(data);
-        return admin.database().ref(`gamePortal/userIdIndices/${field}/${encodedData}/${userId}`).set(admin.database.ServerValue.TIMESTAMP);
+        var encodedData = encodeAsFirebaseKey(data);
+        return admin.database().ref("gamePortal/userIdIndices/" + field + "/" + encodedData + "/" + userId).set(admin.database.ServerValue.TIMESTAMP);
     };
 }
 function handlerForDisplayNameIndex() {
-    return (event) => {
-        const userId = event.params.userId;
-        let data = '' + event.data.val();
+    return function (event) {
+        var userId = event.params.userId;
+        var data = '' + event.data.val();
         console.log('DisplayName added/updated for userId=', userId, 'data=', data);
-        let splitDisplayName = data.split(/\s+/, 4);
+        var splitDisplayName = data.split(/\s+/, 4);
         splitDisplayName.push(data);
-        let promises = splitDisplayName.map(name => admin.database().ref(`gamePortal/userIdIndices/displayName/${encodeAsFirebaseKey(name)}/${userId}`).set(admin.database.ServerValue.TIMESTAMP));
+        var promises = splitDisplayName.map(function (name) { return admin.database().ref("gamePortal/userIdIndices/displayName/" + encodeAsFirebaseKey(name) + "/" + userId).set(admin.database.ServerValue.TIMESTAMP); });
         return Promise.all(promises);
     };
 }
@@ -111,18 +154,18 @@ exports.displayNameIndex =
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
 function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupId) {
     console.log('Sending push notification:', toUserId, senderUid, senderName, body, timestamp, groupId);
-    let fcmTokensPath = `/users/${toUserId}/privateFields/fcmTokens`;
+    var fcmTokensPath = "/users/" + toUserId + "/privateFields/fcmTokens";
     // Get the list of device notification tokens.
-    return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot) => {
-        let tokensWithData = tokensSnapshot.val();
+    return admin.database().ref(fcmTokensPath).once('value').then(function (tokensSnapshot) {
+        var tokensWithData = tokensSnapshot.val();
         console.log('tokensWithData=', tokensWithData);
         if (!tokensWithData)
             return null;
         // Find the tokens with the latest lastTimeReceived.
-        let tokens = Object.keys(tokensWithData);
-        tokens.sort((token1, token2) => tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived); // newest entries are at the beginning
-        let token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
-        let tokenData = tokensWithData[token];
+        var tokens = Object.keys(tokensWithData);
+        tokens.sort(function (token1, token2) { return tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived; }); // newest entries are at the beginning
+        var token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
+        var tokenData = tokensWithData[token];
         console.log('token=', token, 'tokenData=', tokenData);
         // https://firebase.google.com/docs/cloud-messaging/concept-options
         // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.
@@ -130,35 +173,35 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
         // https://firebase.google.com/docs/cloud-messaging/http-server-ref
         // https://firebase.google.com/docs/cloud-messaging/js/first-message
         // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
-        const payload = {
+        var payload = {
             notification: {
                 title: senderName,
-                body: body,
+                body: body
             },
             data: {
                 // Must be only strings in these key-value pairs
                 fromUserId: String(senderUid),
                 toUserId: String(toUserId),
                 groupId: String(groupId),
-                timestamp: String(timestamp),
+                timestamp: String(timestamp)
             }
         };
         if (tokenData.platform == "web") {
             payload.notification.click_action =
                 // GamePortalAngular|GamePortalReact
-                `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
+                "https://yoav-zibin.github.io/" + tokenData.app + "/play/" + groupId;
         }
-        return admin.messaging().sendToDevice([token], payload).then((response) => {
+        return admin.messaging().sendToDevice([token], payload).then(function (response) {
             // For each message check if there was an error.
-            const tokensToRemove = [];
-            response.results.forEach((result, index) => {
-                const error = result.error;
+            var tokensToRemove = [];
+            response.results.forEach(function (result, index) {
+                var error = result.error;
                 if (error) {
                     console.warn('Failure sending notification to', token, error); // Actually happens, so just warning.
                     // Cleanup the tokens who are not registered anymore.
                     if (error.code === 'messaging/invalid-registration-token' ||
                         error.code === 'messaging/registration-token-not-registered') {
-                        tokensToRemove.push(admin.database().ref(fcmTokensPath + `/${token}`).remove());
+                        tokensToRemove.push(admin.database().ref(fcmTokensPath + ("/" + token)).remove());
                     }
                 }
                 else {
@@ -167,38 +210,39 @@ function sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupI
             });
             return Promise.all(tokensToRemove);
         });
-    }).catch((err) => {
+    })["catch"](function (err) {
         console.error("Error: ", err);
     });
 }
 exports.sendNotifications =
-    functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWrite((event) => {
-        let messageData = event.data.val();
+    functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWrite(function (event) {
+        var messageData = event.data.val();
         if (!messageData) {
-            console.log(`No message`);
+            console.log("No message");
             return null;
         }
-        let senderUid = String(messageData.senderUid);
-        let body = String(messageData.message);
-        let timestamp = String(messageData.timestamp);
-        const groupId = String(event.params.groupId);
-        const messageId = String(event.params.messageId);
+        var senderUid = String(messageData.senderUid);
+        var body = String(messageData.message);
+        var timestamp = String(messageData.timestamp);
+        var groupId = String(event.params.groupId);
+        var messageId = String(event.params.messageId);
         console.log('Got chat message! senderUid=', senderUid, ' body=', body, ' timestamp=', timestamp, ' groupId=', groupId, ' messageId=', messageId);
         // Get sender name and participants
         return Promise.all([
-            admin.database().ref(`/users/${senderUid}/publicFields/displayName`).once('value'),
-            admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
-        ]).then(results => {
-            const senderName = results[0].val();
-            const participants = results[1].val();
+            admin.database().ref("/users/" + senderUid + "/publicFields/displayName").once('value'),
+            admin.database().ref("/gamePortal/groups/" + groupId + "/participants").once('value'),
+        ]).then(function (results) {
+            var senderName = results[0].val();
+            var participants = results[1].val();
             console.log('senderName=', senderName, ' participants=', participants);
             // Send push to all participants except the sender (but we include the sender for "TEST_SEND_PUSH_NOTIFICATION")
-            let targetUserIds = Object.keys(participants);
+            var targetUserIds = Object.keys(participants);
             if (!body.startsWith("TEST_SEND_PUSH_NOTIFICATION")) {
-                targetUserIds = targetUserIds.filter((userId) => userId != senderUid);
+                targetUserIds = targetUserIds.filter(function (userId) { return userId != senderUid; });
             }
-            let promises = [];
-            for (let toUserId of targetUserIds) {
+            var promises = [];
+            for (var _i = 0, targetUserIds_1 = targetUserIds; _i < targetUserIds_1.length; _i++) {
+                var toUserId = targetUserIds_1[_i];
                 promises.push(sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupId));
             }
             return Promise.all(promises);
@@ -206,21 +250,21 @@ exports.sendNotifications =
     });
 exports.starsSummary =
     functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{reviewerUserId}/stars')
-        .onWrite((event) => {
-        console.log(`Updating reviews!`);
+        .onWrite(function (event) {
+        console.log("Updating reviews!");
         // stars are between 1 to 5 (inclusive)
-        const oldStars = event.data.previous.val();
-        const newStars = event.data.val();
+        var oldStars = event.data.previous.val();
+        var newStars = event.data.val();
         if (!oldStars && !newStars) {
-            console.log(`No oldStars nor newStars`);
+            console.log("No oldStars nor newStars");
             return null;
         }
-        const reviewedGameSpecId = String(event.params.reviewedGameSpecId);
-        console.log(`Updating reviews for reviewedGameSpecId=${reviewedGameSpecId} from oldStars=${oldStars} to newStars=${newStars}`);
-        const starsSummaryPath = `gamePortal/gameSpec/starsSummary/${reviewedGameSpecId}`;
-        const starsRef = admin.database().ref(starsSummaryPath);
+        var reviewedGameSpecId = String(event.params.reviewedGameSpecId);
+        console.log("Updating reviews for reviewedGameSpecId=" + reviewedGameSpecId + " from oldStars=" + oldStars + " to newStars=" + newStars);
+        var starsSummaryPath = "gamePortal/gameSpec/starsSummary/" + reviewedGameSpecId;
+        var starsRef = admin.database().ref(starsSummaryPath);
         return starsRef.transaction(function (starsSummary) {
-            console.log(`starsSummary before: `, JSON.stringify(starsSummary));
+            console.log("starsSummary before: ", JSON.stringify(starsSummary));
             if (oldStars && starsSummary && starsSummary[oldStars] > 0) {
                 starsSummary[oldStars]--;
             }
@@ -229,8 +273,86 @@ exports.starsSummary =
                     starsSummary = {};
                 starsSummary[newStars] = (starsSummary[newStars] || 0) + 1;
             }
-            console.log(`starsSummary after: `, JSON.stringify(starsSummary));
+            console.log("starsSummary after: ", JSON.stringify(starsSummary));
             return starsSummary;
         });
     });
-//# sourceMappingURL=index.js.map
+exports.resizeImage =
+    functions.storage.object().onChange(function (event) { return __awaiter(_this, void 0, void 0, function () {
+        var JPEG_EXTENSION, filePath, bucket, resourceState, metageneration, contentType, metadata, file, fileName, extension, thumbFileName, tempDir, tempFilePath, tempThumb, temp50, temp70, filePath70, filePath50, thumbnailPath;
+        return __generator(this, function (_a) {
+            JPEG_EXTENSION = '.jpg';
+            filePath = event.data.name;
+            bucket = gcs.bucket(event.data.bucket);
+            resourceState = event.data.resourceState;
+            metageneration = event.data.metageneration;
+            contentType = event.data.contentType;
+            metadata = { contentType: contentType };
+            file = path.basename(filePath);
+            fileName = file.split(".")[0];
+            extension = "." + file.split(".")[1];
+            thumbFileName = fileName + JPEG_EXTENSION;
+            tempDir = os.tmpdir();
+            tempFilePath = path.join(tempDir, file);
+            tempThumb = path.join(tempDir, fileName + "_thumb" + JPEG_EXTENSION);
+            temp50 = path.join(tempDir, path.format({ name: fileName + "_50", ext: extension }));
+            temp70 = path.join(tempDir, path.format({ name: fileName + "_70", ext: extension }));
+            filePath70 = path.join('quality70', file);
+            filePath50 = path.join('quality50', file);
+            thumbnailPath = path.join('thumbnail', thumbFileName);
+            // Exit if this is a move or deletion event.
+            if (resourceState === 'not_exists') {
+                console.log('This is a deletion event.');
+                return [2 /*return*/, null];
+            }
+            // Exit if file exists but is not new and is only being triggered
+            // because of a metadata change.
+            if (resourceState === 'exists' && metageneration > 1) {
+                console.log('This is a metadata change event.');
+                return [2 /*return*/, null];
+            }
+            // Exit if we have already processed the image
+            if (filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')) {
+                console.log("Already processed this file.");
+                return [2 /*return*/, null];
+            }
+            console.log("Resizing the image with path: ", filePath, ", name: ", file, " and extension: ", extension);
+            console.log("Download path: ", tempFilePath);
+            console.log("Temp 50 path: ", temp50);
+            console.log("Temp 70 path: ", temp70);
+            console.log("Temp thumb path: ", tempThumb);
+            console.log("File50 GCS path: ", filePath50);
+            console.log("File70 GCS path: ", filePath70);
+            console.log("Thumbnail GCS path: ", thumbnailPath);
+            // Download file from GCS to tempFilePath
+            // and chain together promises for the 3 file resizings
+            return [2 /*return*/, bucket.file(filePath).download({
+                    destination: tempFilePath
+                }).then(function () {
+                    console.log('Image downloaded locally to', tempFilePath);
+                    console.log("Converting image to quality70");
+                    return spawn('convert', [tempFilePath, '-quality', '70', temp70]);
+                }).then(function () {
+                    console.log("Uploading quality70 image");
+                    return bucket.upload(temp70, { destination: filePath70, metadata: metadata });
+                }).then(function () {
+                    console.log("Converting image to quality50");
+                    return spawn('convert', [tempFilePath, '-quality', '50', temp50]);
+                }).then(function () {
+                    console.log("Uploading quality50 image");
+                    return bucket.upload(temp50, { destination: filePath50, metadata: metadata });
+                }).then(function () {
+                    console.log('Converting image to thumbnail');
+                    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempThumb]);
+                }).then(function () {
+                    console.log("Uploading thumbnail");
+                    return bucket.upload(tempThumb, { destination: thumbnailPath });
+                }).then(function () {
+                    console.log("Unlinking temp files");
+                    fs.unlinkSync(tempFilePath);
+                    fs.unlinkSync(tempThumb);
+                    fs.unlinkSync(temp70);
+                    fs.unlinkSync(temp50);
+                })];
+        });
+    }); });

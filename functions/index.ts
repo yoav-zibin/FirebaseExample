@@ -1,12 +1,17 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const gcs = require('@google-cloud/storage')();
+const spawn = require('child-process-promise').spawn;
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-// To install: 
+// To install:
 // npm install -g firebase-tools
 // firebase login
 //
@@ -60,7 +65,7 @@ functions.database.ref('/gamePortal/recentlyConnected')
       updates[key] = null;
     }
   }
-  
+
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);
 });
@@ -111,7 +116,7 @@ exports.facebookIdIndex = createIndex("facebookId");
 exports.googleIdIndex = createIndex("googleId");
 exports.twitterIdIndex = createIndex("twitterId");
 exports.githubIdIndex = createIndex("githubId");
-exports.displayNameIndex = 
+exports.displayNameIndex =
 functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handlerForDisplayNameIndex());
 
 
@@ -138,7 +143,7 @@ function sendPushToUser(
     // https://firebase.google.com/docs/cloud-messaging/http-server-ref
     // https://firebase.google.com/docs/cloud-messaging/js/first-message
     // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
-    const payload: any = 
+    const payload: any =
       {
         notification: {
           title: senderName,
@@ -153,11 +158,11 @@ function sendPushToUser(
         }
       };
     if (tokenData.platform == "web") {
-      payload.notification.click_action = 
+      payload.notification.click_action =
         // GamePortalAngular|GamePortalReact
         `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
     }
-     
+
     return admin.messaging().sendToDevice([token], payload).then((response: any) => {
       // For each message check if there was an error.
       const tokensToRemove: Promise<any>[] = [];
@@ -207,7 +212,7 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
     // Send push to all participants except the sender (but we include the sender for "TEST_SEND_PUSH_NOTIFICATION")
     let targetUserIds = Object.keys(participants);
     if (!body.startsWith("TEST_SEND_PUSH_NOTIFICATION")) {
-      targetUserIds = targetUserIds.filter((userId) => userId != senderUid); 
+      targetUserIds = targetUserIds.filter((userId) => userId != senderUid);
     }
     let promises: Promise<any>[] = [];
     for (let toUserId of targetUserIds) {
@@ -244,4 +249,91 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
       console.log(`starsSummary after: `, JSON.stringify(starsSummary));
       return starsSummary;
     });
+});
+
+exports.resizeImage =
+functions.storage.object().onChange(async (event:any) => {
+  // Extract file data
+  const JPEG_EXTENSION = '.jpg';
+  const filePath = event.data.name;
+  const bucket = gcs.bucket(event.data.bucket);
+  const resourceState = event.data.resourceState;
+  const metageneration = event.data.metageneration;
+  const contentType = event.data.contentType; // File content type.
+  const metadata = { contentType: contentType };
+  const file = path.basename(filePath); // File name, like dog.png
+  const fileName = file.split(".")[0]; // dog
+  const extension = "." + file.split(".")[1]; // .png
+  const thumbFileName = fileName + JPEG_EXTENSION; // dog.jpg
+
+  // Temporary paths for images
+  const tempDir = os.tmpdir();
+  const tempFilePath = path.join(tempDir, file); //where the file will be downloaded
+  const tempThumb = path.join(tempDir, fileName + "_thumb" + JPEG_EXTENSION);
+  const temp50 = path.join(tempDir, path.format( { name: fileName + "_50" , ext: extension} ));
+  const temp70 = path.join(tempDir, path.format( { name: fileName + "_70" , ext: extension} ));
+
+  // Paths in GCS for upload
+  const filePath70 = path.join('quality70', file);
+  const filePath50 = path.join('quality50', file);
+  const thumbnailPath = path.join('thumbnail', thumbFileName);
+
+    // Exit if this is a move or deletion event.
+  if (resourceState === 'not_exists') {
+    console.log('This is a deletion event.');
+    return null;
+  }
+  // Exit if file exists but is not new and is only being triggered
+  // because of a metadata change.
+  if (resourceState === 'exists' && metageneration > 1) {
+    console.log('This is a metadata change event.');
+    return null;
+  }
+
+  // Exit if we have already processed the image
+  if(filePath.includes('quality70') || filePath.includes('quality50') || filePath.includes('thumbnail')){
+    console.log("Already processed this file.");
+    return null;
+  }
+
+  console.log("Resizing the image with path: ", filePath, ", name: ", file, " and extension: ", extension);
+  console.log("Download path: ", tempFilePath);
+  console.log("Temp 50 path: ", temp50);
+  console.log("Temp 70 path: ", temp70);
+  console.log("Temp thumb path: ", tempThumb);
+  console.log("File50 GCS path: ", filePath50);
+  console.log("File70 GCS path: ", filePath70);
+  console.log("Thumbnail GCS path: ", thumbnailPath);
+
+  // Download file from GCS to tempFilePath
+  // and chain together promises for the 3 file resizings
+  return bucket.file(filePath).download({
+    destination: tempFilePath
+  }).then(() => {
+    console.log('Image downloaded locally to', tempFilePath);
+    console.log("Converting image to quality70");
+    return spawn('convert', [tempFilePath, '-quality', '70', temp70]);
+  }).then(() => {
+    console.log("Uploading quality70 image");
+    return bucket.upload(temp70, { destination: filePath70, metadata: metadata });
+  }).then(()=>{
+    console.log("Converting image to quality50");
+    return spawn('convert', [tempFilePath, '-quality', '50', temp50]);
+  }).then(()=>{
+    console.log("Uploading quality50 image");
+    return bucket.upload(temp50, { destination: filePath50, metadata: metadata });
+  }).then(()=>{
+    console.log('Converting image to thumbnail');
+    return spawn('convert', [tempFilePath, '-thumbnail', '200x200>', tempThumb]);
+  }).then(()=>{
+    console.log("Uploading thumbnail");
+    return bucket.upload(tempThumb, { destination: thumbnailPath });
+  }).then(() => {
+    console.log("Unlinking temp files");
+    fs.unlinkSync(tempFilePath);
+    fs.unlinkSync(tempThumb);
+    fs.unlinkSync(temp70);
+    fs.unlinkSync(temp50);
+  });
+
 });

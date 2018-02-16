@@ -8,6 +8,11 @@ var firebaseRules;
         addValidateNoOther('', rules);
         return rules;
     }
+    function setReadWrite(rule, read, write) {
+        rule[".read"] = read;
+        rule[".write"] = write;
+        return rule;
+    }
     function addValidate(rule, exp) {
         rule[".validate"] += " && (" + exp + ")";
         return rule;
@@ -276,7 +281,7 @@ var firebaseRules;
                 filteredChildren = filteredChildren.filter((key) => key != "name");
             // filter out rotationDegrees and supportsWebRTC because I added those later.
             // filter out pushNotificationsToken because it's deprecated.
-            filteredChildren = filteredChildren.filter((key) => ["supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
+            filteredChildren = filteredChildren.filter((key) => ["screenShootImageId", "supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
             if (filteredChildren.length > 0) {
                 let quotedChildren = filteredChildren.map((val) => `'${val}'`).join(", ");
                 validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
@@ -451,6 +456,7 @@ var firebaseRules;
                         "gameName": validateMandatoryString(100),
                         "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
                         "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
+                        "screenShootImageId": setReadWrite(validateOptionalString(1000), "true", "true"),
                         "wikipediaUrl": validateSecureUrl(),
                         // Optional tutorial video (it can be an empty string).
                         "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),

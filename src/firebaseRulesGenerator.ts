@@ -11,6 +11,12 @@ module firebaseRules {
     return rules;
   }
 
+  function setReadWrite(rule: Rule, read: string, write: string): Rule {
+    rule[".read"] = read;
+    rule[".write"] = write;
+    return rule;
+  }
+
   function addValidate(rule: Rule, exp: string): Rule {
     rule[".validate"] += " && (" + exp + ")";
     return rule;
@@ -319,7 +325,7 @@ module firebaseRules {
       if (parentKey == "$elementId") filteredChildren = filteredChildren.filter((key) => key != "name"); 
       // filter out rotationDegrees and supportsWebRTC because I added those later.
       // filter out pushNotificationsToken because it's deprecated.
-      filteredChildren = filteredChildren.filter((key) => ["supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
+      filteredChildren = filteredChildren.filter((key) => ["screenShootImageId", "supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
 
       if (filteredChildren.length > 0) {
         let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
@@ -506,6 +512,7 @@ module firebaseRules {
             "gameName": validateMandatoryString(100), // It's ok if the gameName is not unique.
             "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
             "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
+            "screenShootImageId": setReadWrite(validateOptionalString(1000), "true", "true"), // TODO: remove the read/write
             "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
             // Optional tutorial video (it can be an empty string).
             "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),

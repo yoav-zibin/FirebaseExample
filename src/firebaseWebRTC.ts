@@ -145,7 +145,7 @@ module webRTC {
   navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
 
   function setVideoStream(isLocal: boolean, stream: any) {
-    let video = <HTMLVideoElement> document.getElementById(isLocal ? 'localvideo' : 'remotevideo');
+    let video: any = <HTMLVideoElement> document.getElementById(isLocal ? 'localvideo' : 'remotevideo');
     if ('srcObject' in video) {
       video.srcObject = stream;
     } else if (window.URL) {

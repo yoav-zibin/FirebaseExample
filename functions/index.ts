@@ -60,6 +60,7 @@ functions.database.ref('/gamePortal/recentlyConnected')
       updates[key] = null;
     }
   }
+
   
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);

@@ -37,7 +37,7 @@ module webRTC {
   }
 
   function writeUserIfNeeded() {
-    uid = firebase.auth().currentUser.uid;
+    uid = 'uid' + Math.floor(100000 * Math.random());
     console.info("My uid=", uid);
     listenToMessages();
     (<HTMLInputElement>document.getElementById('myUserId')).value = uid;
@@ -54,25 +54,18 @@ module webRTC {
   }
 
   function firebaseLogin() {
-    firebase.auth().signInAnonymously()
-      .then(function(result) {
-        console.info(result);
-        writeUserIfNeeded();
-      })
-      .catch(function(error) {
-        console.error(`Failed auth: `, error);
-      });
+    writeUserIfNeeded();
   }
 
   function init() {
     // Initialize Firebase
-    let config = {
-      apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
-      authDomain: "universalgamemaker.firebaseapp.com",
-      databaseURL: "https://universalgamemaker.firebaseio.com",
-      projectId: "universalgamemaker",
-      storageBucket: "universalgamemaker.appspot.com",
-      messagingSenderId: "144595629077"
+    var config = {
+      apiKey: "AIzaSyC2p0MXPE-yIQjnNztbxlK2on7EAMnBO54",
+      authDomain: "mytest-a0c11.firebaseapp.com",
+      databaseURL: "https://mytest-a0c11.firebaseio.com",
+      projectId: "mytest-a0c11",
+      storageBucket: "mytest-a0c11.appspot.com",
+      messagingSenderId: "212624241094"
     };
     firebase.initializeApp(config);
     firebaseLogin();
@@ -144,8 +137,8 @@ module webRTC {
   let nav: any = navigator;
   navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
 
-  function setVideoStream(isLocal: boolean, stream: any) {
-    let video = <HTMLVideoElement> document.getElementById(isLocal ? 'localvideo' : 'remotevideo');
+  function setVideoStream(isLocal: number, stream: any) {
+    let video: any = <HTMLVideoElement> document.getElementById(isLocal===0 ? 'localvideo' : 'remotevideo'+ isLocal.toString());
     if ('srcObject' in video) {
       video.srcObject = stream;
     } else if (window.URL) {
@@ -163,7 +156,9 @@ module webRTC {
     sendMessage("sdp", desc);
   }
   // run start(true) to initiate a call
+  let count: number = 0;
   function start(isCaller: boolean) {
+    count++;
     console.log("start: isCaller=", isCaller);
     pc = new RTCPeerConnection(configuration);
 
@@ -178,7 +173,7 @@ module webRTC {
     // once remote stream arrives, show it in the remote video element
     pc.onaddstream = function (evt: any) {
       console.log("onaddstream: ", evt);
-      setVideoStream(false, evt.stream);
+      setVideoStream(count, evt.stream);
     };
 
     // get the local stream, show it in the local video element and send it
@@ -187,7 +182,7 @@ module webRTC {
     .then(
       function (stream: any) {
         console.log("getUserMedia response: ", stream);
-        setVideoStream(true, stream);
+        setVideoStream(0, stream);
         pc.addStream(stream);
 
         if (isCaller) {

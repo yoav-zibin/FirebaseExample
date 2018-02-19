@@ -138,13 +138,16 @@ module webRTC {
   navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
 
   function setVideoStream(isLocal: number, stream: any) {
-    let video: any = <HTMLVideoElement> document.getElementById(isLocal===0 ? 'localvideo' : 'remotevideo'+ isLocal.toString());
+    let video: any = <HTMLVideoElement> document.getElementById(isLocal === 0 ? 'localvideo' : 'remotevideo'+ isLocal.toString());
     if ('srcObject' in video) {
       video.srcObject = stream;
     } else if (window.URL) {
       video.src = window.URL.createObjectURL(stream);
     } else {
       video.src = stream;
+    }
+    if (isLocal !== 0) {
+      count++;
     }
   }
   
@@ -156,9 +159,8 @@ module webRTC {
     sendMessage("sdp", desc);
   }
   // run start(true) to initiate a call
-  let count: number = 0;
+  let count: number = 1;
   function start(isCaller: boolean) {
-    count++;
     console.log("start: isCaller=", isCaller);
     pc = new RTCPeerConnection(configuration);
 

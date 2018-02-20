@@ -291,6 +291,7 @@ module firebaseRules {
       //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
       case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
       case "$fieldValue": return validate(`${parentKey}.matches(/^.{1,200}$/)`);
+      case "$phoneNumber": return validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
       
       
       case "$groupId": 
@@ -325,7 +326,8 @@ module firebaseRules {
       if (parentKey == "$elementId") filteredChildren = filteredChildren.filter((key) => key != "name"); 
       // filter out rotationDegrees and supportsWebRTC because I added those later.
       // filter out pushNotificationsToken because it's deprecated.
-      filteredChildren = filteredChildren.filter((key) => ["screenShootImageId", "supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
+      // TODO: clean this up.
+      filteredChildren = filteredChildren.filter((key) => ["screenShootImageId", "newContacts", "supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
 
       if (filteredChildren.length > 0) {
         let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
@@ -597,6 +599,14 @@ module firebaseRules {
               "$friendUserId": validateTrue(),
             },
 
+            // The user writes to newContacts a comma separated list of phone numbers,
+            // which kicks a cloud function that updates the mapping in contacts.
+            "newContacts": validateOptionalString(100),
+            // contacts maps phone numbers to userIds
+            "contacts": {
+              "$phoneNumber": validateUserId(),
+            },
+
             "pushNotificationsToken": validateRegex(''), // DEPRECATED: use fcmTokens below.
 
             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
@@ -713,7 +723,7 @@ module firebaseRules {
             },
           },
         },
-        // All groups of users (2-10 users).
+        // All groups of users (1-10 users).
         "groups": {
           "$groupId": {
             // Anyone can create a group, but only the participants can read/modify it

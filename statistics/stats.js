@@ -1,5 +1,4 @@
 // Radhika Mattoo, rm3485@nyu.edu
-
 const admin = require("firebase-admin");
 const gcs = require('@google-cloud/storage')();
 const imagemagick = require('imagemagick');
@@ -104,17 +103,16 @@ function getGameData(){
   return game_data;
 }
 
-function convertBoardImage(board_file, board_ext){
+function convertBoardImage(board_file, board_ext, game){
     let filename = path.basename(board_file, board_ext);
     filename += ".jpg";
     let outpath = "./images/boardToJPG/" + game.replace(/ /g, '');
     let finalpath = path.join(outpath, filename);
-    mkdirp(outpath, (err) =>{
-      if(err) throw err;
-      imagemagick.convert([board_file, finalpath], (err, stdout) =>{
-        if (err) throw err;
-        console.log("Converted image");
-      });
+
+    return Jimp.read(board_file).then((img) =>{
+      return img.write(finalpath);
+    }).catch((err) =>{
+      return err;
     });
 }
 
@@ -169,7 +167,7 @@ function getGameSize(board_file, board_ext, nonboard_files, game, destination_pa
   // add new or old board image
   if(board_ext != '.jpg'){
     // add newly generated image
-    let filename = path.basename(board_file, board_ext);
+    let filename = path.basename(board_file, board_ext, game);
     filename += ".jpg";
     let outpath = "./images/boardToJPG/" + game.replace(/ /g, '');
     let finalpath = path.join(outpath, filename);
@@ -178,7 +176,8 @@ function getGameSize(board_file, board_ext, nonboard_files, game, destination_pa
     // add old image
     size_sum += getFilesizeInBytes(board_file);
   }
-  return bytesToSize(size_sum);
+  // return bytesToSize(size_sum);
+  return size_sum;
 }
 
 function generateStats(){
@@ -207,17 +206,18 @@ function generateStats(){
       }
       stats[count] = {};
       stats[count]['game'] = game;
-      stats[count]['original'] = bytesToSize(size_sum);
+      // stats[count]['original'] = bytesToSize(size_sum);
+      stats[count]['original'] = size_sum;
 
       if(board_ext != ".jpg"){
-        convertBoardImage(board_file, board_ext);
+        promises.push(convertBoardImage(board_file, board_ext, game));
       }
 
       // convert non-board images to q70
       let quality = 70;
       let compress = false;
       let destination_path = "./images/q70/uncompressed/";
-      convertNonBoardImages(nonboard_files, destination_path , quality, promises, compress);
+      convertNonBoardImages(nonboard_files, destination_path , quality, promises, compress, game);
 
       // compress non-board images to q70
       compress = true;
@@ -288,10 +288,10 @@ function bytesToSize(bytes) {
 }
 
 function main(){
-  downloadDatabase();
+  // downloadDatabase();
   // downloadImages();
   // getGameData();
-  // generateStats();
+  generateStats();
   // admin.app().delete();
 }
 

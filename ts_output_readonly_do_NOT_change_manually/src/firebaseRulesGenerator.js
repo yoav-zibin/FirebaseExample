@@ -95,8 +95,8 @@ var firebaseRules;
     function validateMyUid() {
         return validate("newData.isString() && newData.val() === auth.uid");
     }
-    function validateUserId() {
-        return validateNewDataIdExists("users/");
+    function validateGamePortalUserId() {
+        return validateNewDataIdExists("gamePortal/gamePortalusers/");
     }
     function validateMatchId() {
         return validateNewDataIdExists("gamePortal/matches/");
@@ -237,12 +237,8 @@ var firebaseRules;
     }
     function getValidateForParentKey(parentKey) {
         switch (parentKey) {
-            case "$friendUserId":
-            case "$participantUserId":
-            case "$reviewerUserId":
-                return validateIdValueExists("users/", parentKey);
+            case "$participantUserId": return validateIdValueExists("gamePortal/gamePortalUsers/", parentKey);
             case "$deckMemberElementId": return validateIdValueExists("gameBuilder/elements/", parentKey);
-            case "$reviewedGameSpecId": return validateIdValueExists("gameBuilder/gameSpecs/", parentKey);
             case "$matchMembershipId": return validateIdValueExists("gamePortal/matches/", parentKey);
             case "$imageIndex": return getValidateIndex(parentKey, MAX_IMAGES_IN_ELEMENT);
             case "$pieceIndex": return getValidateIndex(parentKey, MAX_PIECES);
@@ -250,7 +246,6 @@ var firebaseRules;
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_MATCH);
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
             case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
-            case "$fieldValue": return validate(`${parentKey}.matches(/^.{1,200}$/)`);
             case "$phoneNumber": return validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
             case "$gameBuilderUserId":
             case "$gamePortalUserId":
@@ -259,7 +254,6 @@ var firebaseRules;
             case "$gameSpecId":
             case "$messageId":
             case "$matchId":
-            case "$recentlyConnectedEntryId":
             case "$signalEntryId":
             case "$lineId":
                 return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
@@ -542,7 +536,7 @@ var firebaseRules;
                             "newContacts": validateOptionalString(100),
                             // contacts maps phone numbers to userIds
                             "contacts": {
-                                "$phoneNumber": validateUserId(),
+                                "$phoneNumber": validateGamePortalUserId(),
                             },
                             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
                             // Push notifications will only be sent using cloud functions, after someone writes to
@@ -679,7 +673,7 @@ var firebaseRules;
             k = k.substring(0, k.length - 'Index'.length);
         if (endsWith(k, 'Id'))
             k = k.substring(0, k.length - 'Id'.length);
-        return k.charAt(0).toUpperCase() + k.substr(1) + (rules["$fieldValue"] ? "Index" : "");
+        return k.charAt(0).toUpperCase() + k.substr(1);
     }
     let types = [];
     let interfaceDefinitions = {};

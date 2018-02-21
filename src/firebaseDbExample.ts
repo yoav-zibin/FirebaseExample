@@ -97,6 +97,14 @@ module main {
 
 
   function runGameBuilderTest() {
+    write(`/gameBuilder/gameBuilderUsers/${uid}`, {
+      avatarImageUrl: `https://foo.bar/avatar`,
+      displayName: `Yoav Ziii`,
+      lastSeen: firebase.database.ServerValue.TIMESTAMP,
+      email: `yoav.zibin@yooo.goo`,
+      createdOn: firebase.database.ServerValue.TIMESTAMP,
+    });
+
     canRead(`/gameBuilder/images`);
     canRead(`/gameBuilder/gameSpecs`);
     canRead(`/gameBuilder/images/boardImage${idSuffix}`);
@@ -119,6 +127,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 100,
       height: 100,
+      name: `standard elementName`,
       images: [
         {imageId: `blokus_L_element${idSuffix}`},
       ],
@@ -128,7 +137,7 @@ module main {
       deckElements: [],
       isDrawable: true,
     });
-
+   
     // Create a toggable element
     addImage(`reversiWhite`, 100, 100, false);
     addImage(`reversiBlack`, 100, 100, false);
@@ -138,6 +147,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 100,
       height: 100,
+      name: `toggable elementName`,
       images: [
         {imageId: `reversiWhite${idSuffix}`},
         {imageId: `reversiBlack${idSuffix}`},
@@ -162,6 +172,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 100,
       height: 100,
+      name: `dice elementName`,
       images: [
         {imageId: `diceSide1${idSuffix}`},
         {imageId: `diceSide2${idSuffix}`},
@@ -187,6 +198,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 100,
       height: 100,
+      name: `card1 elementName`,
       images: [
         {imageId: `publicFace${idSuffix}`},
         {imageId: `privateFace1${idSuffix}`},
@@ -203,6 +215,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 100,
       height: 100,
+      name: `card2 elementName`,
       images: [
         {imageId: `publicFace${idSuffix}`},
         {imageId: `privateFace2${idSuffix}`},
@@ -222,6 +235,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 200,
       height: 200,
+      name: `cardsDeck elementName`,
       images: [
         {imageId: `deckArea${idSuffix}`},
       ],
@@ -240,6 +254,7 @@ module main {
       createdOn: firebase.database.ServerValue.TIMESTAMP,
       width: 200,
       height: 200,
+      name: `piecesDeck elementName`,
       images: [
         {imageId: `deckArea${idSuffix}`},
       ],
@@ -255,6 +270,7 @@ module main {
 
     addImage(`gameIcon50x50`, 50, 50, false);
     addImage(`gameIcon512x512`, 512, 512, false);
+
     write(`/gameBuilder/gameSpecs/gameSpec${idSuffix}`, {
       uploaderEmail: `yoav@goo.bar`,
       uploaderUid: uid,
@@ -262,6 +278,7 @@ module main {
       gameName: `Chess!`,
       gameIcon50x50: `gameIcon50x50${idSuffix}`,
       gameIcon512x512: `gameIcon512x512${idSuffix}`,
+      screenShootImageId: `deckArea${idSuffix}`,
       wikipediaUrl: `https://en.wikipedia.org/wiki/Chess`,
       tutorialYoutubeVideo: ``,
       board: {
@@ -276,7 +293,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -286,7 +304,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: 0,
         },
@@ -296,7 +315,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: 0,
         },
@@ -306,7 +326,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -316,7 +337,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: 3,
         },
@@ -326,7 +348,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: 3,
         },
@@ -336,7 +359,8 @@ module main {
             x: -99.9,
             y: 99.9,
             zDepth: 10000000000000000,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -346,7 +370,8 @@ module main {
             x: 5.9,
             y: 19.9,
             zDepth: 1,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -356,7 +381,8 @@ module main {
             x: 5.9,
             y: 19.9,
             zDepth: 1,
-            currentImageIndex: 1
+            currentImageIndex: 1,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -366,7 +392,8 @@ module main {
             x: 5.9,
             y: 19.9,
             zDepth: 1,
-            currentImageIndex: 5
+            currentImageIndex: 5,
+            rotationDegrees: 360,
           },
           deckPieceIndex: -1,
         },
@@ -375,62 +402,45 @@ module main {
   }
 
   function runGamePortalTest() {
-
-    write(`/gamePortal/recentlyConnected/${idSuffix}`, {
-      userId: uid,
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-    });
-    cannotWrite(`/gamePortal/recentlyConnected/${idSuffix}`, null);
-    
-    cannotWrite(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    cannotWrite(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       addedByUid: uid,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
     });
-    cannotWrite(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    cannotWrite(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       addedByUid: uid,
     });
-    cannotWrite(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    cannotWrite(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       timestamp: firebase.database.ServerValue.TIMESTAMP,
     });
-    write(`/gamePortal/groups/groupId${idSuffix}`, {
+    write(`/gamePortal/matches/matchId${idSuffix}`, {
       participants: {
-        [uid]: {participantIndex: 0},
+        [uid]: {participantIndex: 0, pingOpponents: firebase.database.ServerValue.TIMESTAMP},
         // TODO: add other users ids.
       },
-      groupName: ``,
       createdOn: firebase.database.ServerValue.TIMESTAMP,
-      // Not needed (and doesn't help anyway because firebase trims empty objects recursively):
-      // messages: {},
+      lastUpdatedOn: firebase.database.ServerValue.TIMESTAMP,
+      gameSpecId: `gameSpec${idSuffix}`,
     });
-    cannotWrite(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    cannotWrite(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       addedByUid: uid,
     });
-    cannotWrite(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    cannotWrite(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       timestamp: firebase.database.ServerValue.TIMESTAMP,
     });
-    write(`/users/${uid}/privateButAddable/groups/groupId${idSuffix}`, {
+    write(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/matchId${idSuffix}`, {
       addedByUid: uid,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
     });
 
-    write(`/gamePortal/groups/groupId${idSuffix}/messages/messageId${idSuffix}`, {
-      senderUid: uid,
-      message: `message`,
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-    });
-    
-    write(`/gamePortal/groups/groupId${idSuffix}/matches/matchId${idSuffix}`, {
-      gameSpecId: `gameSpec${idSuffix}`,
-      createdOn: firebase.database.ServerValue.TIMESTAMP,
-      lastUpdatedOn: firebase.database.ServerValue.TIMESTAMP,
-      pieces: [
+    write(`/gamePortal/matches/matchId${idSuffix}/pieces`, [
         {
           currentState: 
             {
               x: -99.9,
               y: 99.9,
               zDepth: 10000000000000000,
-              currentImageIndex: 0
+              currentImageIndex: 0,
+              rotationDegrees: 360,
             },
         },
         {
@@ -439,29 +449,22 @@ module main {
               x: -99.9,
               y: 99.9,
               zDepth: 10000000000000000,
-              currentImageIndex: 1
+              currentImageIndex: 1,
+              rotationDegrees: 360,
             },
         },
         // etc
-      ]
-    });
+      ]);
     // Updating a specific piece
-    write(`/gamePortal/groups/groupId${idSuffix}/matches/matchId${idSuffix}/lastUpdatedOn`, firebase.database.ServerValue.TIMESTAMP);
-    write(`/gamePortal/groups/groupId${idSuffix}/matches/matchId${idSuffix}/pieces/1/currentState`, 
+    write(`/gamePortal/matches/matchId${idSuffix}/lastUpdatedOn`, firebase.database.ServerValue.TIMESTAMP);
+    write(`/gamePortal/matches/matchId${idSuffix}/pieces/1/currentState`, 
     {
         x: 9.9,
         y: 42.9,
         zDepth: 23,
-        currentImageIndex: 0
+        currentImageIndex: 0,
+        rotationDegrees: 360,
     });
-    
-    // Adding a review
-    write(`/gamePortal/gameSpec/reviews/gameSpec${idSuffix}/${uid}`,
-    {
-      timestamp: firebase.database.ServerValue.TIMESTAMP,
-      stars: 5,
-    });
-      
   }
 
   function runUserTest() {
@@ -469,32 +472,26 @@ module main {
     console.info("My uid=", uid);
 
     // Reading another user's data.
-    canRead(`/users/userId${idSuffix}/publicFields`);
-    cannotRead(`/users/userId${idSuffix}/privateFields`);
-    cannotRead(`/users/userId${idSuffix}/privateButAddable`);
-    cannotRead(`/users/userId${idSuffix}`);
-    cannotWrite(`/users/userId${idSuffix}/publicFields/isConnected`, true);
+    canRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/publicFields`);
+    cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/privateFields`);
+    cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/privateButAddable`);
+    cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}`);
+    cannotWrite(`/gamePortal/gamePortalUsers/userId${idSuffix}/publicFields/isConnected`, true);
 
     // Adding my user data.
-    write(`/users/${uid}`, {
+    write(`/gamePortal/gamePortalUsers/${uid}`, {
       publicFields: {
-        avatarImageUrl: `https://foo.bar/avatar`,
-        displayName: `Yoav Ziii`,
         isConnected: true,
         lastSeen: firebase.database.ServerValue.TIMESTAMP,
+        supportsWebRTC: true,
       },
       privateFields: {
-        email: `yoav.zibin@yooo.goo`,
         createdOn: firebase.database.ServerValue.TIMESTAMP,
         phoneNumber: ``,
-        facebookId: ``,
-        googleId: ``,
-        twitterId: ``,
-        githubId: ``,
-        //friends: {}, // Not needed: you can add it later.
+        newContacts: ``,
       },
     });
-    write(`/users/${uid}/publicFields/displayName`, `New name!`);
+    write(`/gamePortal/gamePortalUsers/${uid}/publicFields/isConnected`, false);
 
     runGameBuilderTest();
     runGamePortalTest();
@@ -502,45 +499,25 @@ module main {
     executeCommands();
   }
 
-  function init() {
-    let config = {
-      apiKey: `AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI`,
-      authDomain: `testproject-a6dce.firebaseapp.com`,
-      databaseURL: `https://testproject-a6dce.firebaseio.com`,
-      projectId: `testproject-a6dce`,
-      storageBucket: ``,
-      messagingSenderId: `957323548528`
-    };
-    firebase.initializeApp(config);
-    
-    console.log(`firebase.auth().currentUser=`, firebase.auth().currentUser);
-    firebase.auth().onAuthStateChanged(function (user: any) {
-      console.log(`onAuthStateChanged user=`, user);
-      if (user) {
-        runUserTest();
-        return;
-      }
-      // No auth user.
-      cannotRead(`/gameBuilder/images/${idSuffix}`); // We must authenticate first.
-    });
-  }
-
-  function login() {
-    let provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithRedirect(provider)
-      .then(function(result) {
-        console.info(result);
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        //let token = result.credential.accessToken;
-        // The signed-in user info.
-        //let user = result.user;
-        runUserTest();
-      })
-      .catch(function(error) {
-        console.error(`Failed auth: `, error);
-      });
-  }
-  document.getElementById('login').onclick = login;
-
-  init();
+  let config = {
+    apiKey: `AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI`,
+    authDomain: `testproject-a6dce.firebaseapp.com`,
+    databaseURL: `https://testproject-a6dce.firebaseio.com`,
+    projectId: `testproject-a6dce`,
+    storageBucket: ``,
+    messagingSenderId: `957323548528`
+  };
+  firebase.initializeApp(config);
+  firebase.auth().signInAnonymously()
+  .then(function(result) {
+    console.info(result);
+    // This gives you a Google Access Token. You can use it to access the Google API.
+    //let token = result.credential.accessToken;
+    // The signed-in user info.
+    //let user = result.user;
+    runUserTest();
+  })
+  .catch(function(error) {
+    console.error(`Failed auth: `, error);
+  });
 }

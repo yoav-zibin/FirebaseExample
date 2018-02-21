@@ -16,22 +16,17 @@ module webRTC {
   let uid: string = null;
 
   function writeUser() {
-    let myUserPath = `/users/${uid}`;
+    let myUserPath = `/gamePortal/gamePortalUsers/${uid}`;
     dbSet(db().ref(myUserPath), {
       publicFields: {
-        avatarImageUrl: `https://foo.bar/avatar`,
-        displayName: `Yoav Ziii`,
         isConnected: true,
         lastSeen: firebase.database.ServerValue.TIMESTAMP,
+        supportsWebRTC: true,
       },
       privateFields: {
-        email: `yoav.zibin@yooo.goo`,
         createdOn: firebase.database.ServerValue.TIMESTAMP,
         phoneNumber: ``,
-        facebookId: ``,
-        googleId: ``,
-        twitterId: ``,
-        githubId: ``,
+        newContacts: ``,
       },
     });
   }
@@ -42,7 +37,7 @@ module webRTC {
     listenToMessages();
     (<HTMLInputElement>document.getElementById('myUserId')).value = uid;
     
-    let myUserPath = `/users/${uid}`;
+    let myUserPath = `/gamePortal/gamePortalUsers/${uid}`;
     db().ref(myUserPath).once('value').then((snap)=>{
       let myUserInfo = snap.val();
       if (!myUserInfo) {
@@ -80,7 +75,7 @@ module webRTC {
 
   // Signalling using firebase.
   // We send messages to a user by writing SignalData to
-  // users/$userId/privateButAddable/signal/$signalId
+  // /gamePortal/gamePortalUsers/$userId/privateButAddable/signals/$signalId
   // And the target user will read the signals and delete them after reading them.
   interface SignalMsg {
     addedByUid: string;
@@ -90,7 +85,7 @@ module webRTC {
   }
   function sendMessage(signalType: string, signalData: any) {
     if (!targetUserId) throw new Error("Missing targetUserId");
-    let ref = db().ref(`users/${targetUserId}/privateButAddable/signal`).push();
+    let ref = db().ref(`/gamePortal/gamePortalUsers/${targetUserId}/privateButAddable/signals`).push();
     let signalMsg: SignalMsg = {
       addedByUid: uid,
       timestamp: firebase.database.ServerValue.TIMESTAMP,
@@ -100,7 +95,7 @@ module webRTC {
     dbSet(ref, signalMsg);
   }
   function listenToMessages() {
-    let path = `users/${uid}/privateButAddable/signal`;
+    let path = `/gamePortal/gamePortalUsers/${uid}/privateButAddable/signals`;
     db().ref(path).on('value',
       (snap: any) => {
         let signals: any = snap.val();

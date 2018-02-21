@@ -20,7 +20,7 @@ admin.initializeApp(functions.config().firebase);
 //  response.send("Hello from Firebase!");
 // });
 
-// TODO: implement newContacts
+// TODO: implement newContacts, we need to build a private index on phoneNumber (used just by the cloud function).
 
 // TODO: implement push notification when someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents

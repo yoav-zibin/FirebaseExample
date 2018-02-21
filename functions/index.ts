@@ -20,6 +20,16 @@ admin.initializeApp(functions.config().firebase);
 //  response.send("Hello from Firebase!");
 // });
 
+// TODO: implement newContacts
+
+// TODO: implement push notification when someone writes to
+// /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
+
+/*
+All these cloud functions aren't relevant in NewGamePortal.
+
+
+
 // https://firebase.google.com/docs/functions/database-events
 exports.deleteOldEntriesOnRecentlyConnected =
 functions.database.ref('/gamePortal/recentlyConnected')
@@ -246,3 +256,4 @@ functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{review
       return starsSummary;
     });
 });
+*/

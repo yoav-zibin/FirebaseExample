@@ -45,7 +45,6 @@ function downloadDatabase(){
     specs.forEach((spec) =>{
       let json = spec.child('pieces').toJSON();
       if(typeof json == "string"){ //it's a badly formatted array!
-        console.log(json);
         let array_obj = JSON.parse(database_json["specs"][spec.key]["pieces"]);
         let build = {};
         for(let i = 0; i < array_obj.length; i++){
@@ -289,7 +288,7 @@ function bytesToSize(bytes) {
 }
 
 function main(){
-  // downloadDatabase();
+  downloadDatabase();
   // downloadImages();
   // getGameData();
   // generateStats();

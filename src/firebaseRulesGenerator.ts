@@ -11,6 +11,12 @@ module firebaseRules {
     return rules;
   }
 
+  function setReadWrite(rule: Rule, read: string, write: string): Rule {
+    rule[".read"] = read;
+    rule[".write"] = write;
+    return rule;
+  }
+
   function addValidate(rule: Rule, exp: string): Rule {
     rule[".validate"] += " && (" + exp + ")";
     return rule;
@@ -112,12 +118,12 @@ module firebaseRules {
     return validate("newData.isString() && newData.val() === auth.uid");
   }
 
-  function validateUserId() {
-    return validateNewDataIdExists("users/");
+  function validateGamePortalUserId() {
+    return validateNewDataIdExists("gamePortal/gamePortalusers/");
   }
 
-  function validateGroupId() {
-    return validateNewDataIdExists("gamePortal/groups/");
+  function validateMatchId() {
+    return validateNewDataIdExists("gamePortal/matches/");
   }
 
   const VALIDATE_NOW = "newData.isNumber() && newData.val() == now";
@@ -148,7 +154,7 @@ module firebaseRules {
   const MAX_IMAGES_IN_ELEMENT = 256;
   const MAX_IMAGES_IN_DECK = 256;
   const MAX_PIECES = 256;
-  const MAX_USERS_IN_GROUP = 10;
+  const MAX_USERS_IN_MATCH = 8;
 
   function validatePieceState(): Rule {
     return {
@@ -270,31 +276,25 @@ module firebaseRules {
 
   function getValidateForParentKey(parentKey: string): Rule {
     switch (parentKey) {
-      case "$friendUserId":
-      case "$participantUserId":
-      case "$reviewerUserId":
-        return validateIdValueExists("users/", parentKey);
+      case "$participantUserId": return validateIdValueExists("gamePortal/gamePortalUsers/", parentKey);
       case "$deckMemberElementId": return validateIdValueExists("gameBuilder/elements/", parentKey);
-      case "$reviewedGameSpecId": return validateIdValueExists("gameBuilder/gameSpecs/", parentKey);
-      case "$memberOfGroupId": return validateIdValueExists("gamePortal/groups/", parentKey);
+      case "$matchMembershipId": return validateIdValueExists("gamePortal/matches/", parentKey);
       case "$imageIndex": return getValidateIndex(parentKey, MAX_IMAGES_IN_ELEMENT);
       case "$pieceIndex": return getValidateIndex(parentKey, MAX_PIECES);
       case "$deckMemberIndex": return getValidateIndex(parentKey, MAX_IMAGES_IN_DECK);
-      case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_GROUP);
+      case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_MATCH);
       
       //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
       case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
-      case "$fieldValue": return validate(`${parentKey}.matches(/^.{1,200}$/)`);
-      
-      
-      case "$groupId": 
-      case "$userId": 
+      case "$phoneNumber": return validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
+       
+      case "$gameBuilderUserId": 
+      case "$gamePortalUserId": 
       case "$imageId":
       case "$elementId":
       case "$gameSpecId": 
       case "$messageId":
       case "$matchId":
-      case "$recentlyConnectedEntryId":
       case "$signalEntryId":
       case "$lineId":
         return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
@@ -315,12 +315,6 @@ module firebaseRules {
       
       let filteredChildren = keys.filter((key) => hasNonCollectionGrandchildren(rules[key])); 
       
-      // filter out $elementId.name because I added it later.
-      if (parentKey == "$elementId") filteredChildren = filteredChildren.filter((key) => key != "name"); 
-      // filter out rotationDegrees and supportsWebRTC because I added those later.
-      // filter out pushNotificationsToken because it's deprecated.
-      filteredChildren = filteredChildren.filter((key) => ["supportsWebRTC", "rotationDegrees", "pushNotificationsToken"].indexOf(key) == -1);
-
       if (filteredChildren.length > 0) {
         let quotedChildren = filteredChildren.map((val)=>`'${val}'`).join(", ");
         validateConditions.push(`newData.hasChildren([${quotedChildren}])`);
@@ -349,7 +343,6 @@ module firebaseRules {
   }
 
   const ANYONE = "auth != null";
-  const ONLY_ME = "$userId === auth.uid";
   // Anyone can add a new image,
   // but not delete/modify values (only the uploader can change anything).
   const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
@@ -506,6 +499,7 @@ module firebaseRules {
             "gameName": validateMandatoryString(100), // It's ok if the gameName is not unique.
             "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
             "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
+            "screenShootImageId": validateOptionalString(1000),
             "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
             // Optional tutorial video (it can be an empty string).
             "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),
@@ -542,174 +536,139 @@ module firebaseRules {
             },          
           },
         },
-      },
-      // Stores public and private info about the users of GameBuilder and GamePortal.
-      "users": {
-        "$userId": {
-          ".read": ONLY_ME,
-          ".write": ONLY_ME,
-          // Contains fields that anyone can read, but only $userId can write.
-          "publicFields": {
-            ".read": ANYONE,
+        // Stores the users of GameBuilder ONLY. All the info is private just for that user.
+        "gameBuilderUsers": {
+          "$gameBuilderUserId": {
+            ".read": "$gameBuilderUserId === auth.uid",
+            ".write": "$gameBuilderUserId === auth.uid",
             "avatarImageUrl": validateSecureUrl(),
             "displayName": validateMandatoryString(100),
-            // Whether the user is currently connected or not.
-            // You must support a single user having multiple connections: 
-            // the user should listen to changes to isConnected,
-            // and if it becomes false while the user is still connected,
-            // then the user should set it back to true.
-            "isConnected": validateBoolean(),
-            // Whether the user supports WebRTC or not, e.g.,
-            // browsers on iPhones don't support WebRTC.
-            // Set to true iff:
-            // ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].some((item)=>item in window)
-            "supportsWebRTC": validateBoolean(),
             // The timestamp when the user last disconnected from firebase.
             // You can convert it to a date in JS using:
             // new Date(1506721603537)
             // returns
             // Fri Sep 29 2017 17:46:43 GMT-0400 (EDT)
             "lastSeen": validateNow(),
-          },
-          // Contains fields that only $userId can read&write.
-          "privateFields": {
             "email": validateOptionalEmail(),
             "createdOn": validateNow(), // When the user was created.
-            "phoneNumber": validateOptionalString(100), // If the user logged in via phone. 
-            "facebookId": validateOptionalString(100), // If the user logged in via FB.
-            "googleId": validateOptionalString(100), // If the user logged in via Google (see firebase.auth().currentUser.providerData[0].uid).
-            "twitterId": validateOptionalString(100), // If the user logged in via Twitter
-            "githubId": validateOptionalString(100), // If the user logged in via github (probably same as email).
-
-            // Friends: the set of userIds of your friends in social networks that you used for logging in.
-            // E.g., if you logged in via Facebook, then whenever you logged into to GamePortal,
-            // we should retrieve your list of Facebook friends,
-            // convert those facebookIds to our userIds,
-            // and replace this list of friends (because you might have removed/added friends on Facebook).
-            "friends": {
-              "$friendUserId": validateTrue(),
-            },
-
-            "pushNotificationsToken": validateRegex(''), // DEPRECATED: use fcmTokens below.
-
-            // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
-            // Push notifications will only be sent using cloud functions, after someone writes to /gamePortal/groups/$groupId/messages/...
-            // Currently, the cloud function only sends one push notification using the fcmToken with the latest lastTimeReceived field.
-            "fcmTokens": {
-              "$fcmToken": {
-                "createdOn": validateNow(), // When the token was first added.
-                "lastTimeReceived": validateNow(), // The last time we got this token; every time the user opens the app, we should fetch the token and update this lastTimeReceived timestamp.
-
-                // Because of this issue:
-                // https://github.com/firebase/quickstart-js/issues/71
-                // The notification sent to web or native is different:
-                // For native we send both title&body and data in payload:
-                // {
-                //   notification: {
-                //     title: data.title,
-                //     body: data.body,
-                //   },
-                //   data: {
-                //     fromUserId: String(data.fromUserId),
-                //     toUserId: String(data.toUserId),
-                //     groupId: String(data.groupId),
-                //     timestamp: String(data.timestamp),
-                //   }
-                // }
-                // For web we send only data in payload:
-                // {
-                //   data: {
-                //     title: data.title,
-                //     body: data.body,
-                //     fromUserId: String(data.fromUserId),
-                //     toUserId: String(data.toUserId),
-                //     groupId: String(data.groupId),
-                //     timestamp: String(data.timestamp),
-                //   }
-                // }
-                "platform": validateRegex("web|ios|android"),
-
-                // "app" isn't used anywhere, I just added it for easier debugging :)
-                "app": validateRegex("GamePortalAngular|GamePortalReact|GamePortalReactNative|GamePortalAndroid"),
-              },
-            },
-          },
-          // Contains fields that are private (only $userId can read), but others can add new fields if they’re new (so others can write as long as its new content)
-          "privateButAddable": {
-            // Groups in which the user is one of the participants/members
-            "groups": {
-              "$memberOfGroupId": {
-                ".write": "!data.exists()",
-                "addedByUid": validateMyUid(),
-                "timestamp": validateNow(),
-              },
-            },
-            // WebRTC require signalling between two users. 
-            // Only show video&audio option if the two users have true in privateFields/supportsWebRTC
-            // See https://www.html5rocks.com/en/tutorials/webrtc/basics/
-            // Any user can add signals, and only $userId can delete them (after reading the signal).
-            // The first message is from the caller and it has signalType='WannaTalk',
-            // then the receiver replies with signalType='YesLetsTalk' or signalType='Nope'.
-            // These signalTypes don't have any signalData.
-            // Then the caller and receiver exchange signalTypes 'sdp' and 'candidate'.
-            // The signalData for 'sdp' is the description you get in the callback for createOffer and createAnswer.
-            // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
-            "signal": { // // TODO: should be "signals".
-              "$signalEntryId": {
-                ".write": "!data.exists()",
-                "addedByUid": validateMyUid(),
-                "timestamp": validateNow(),
-                "signalType": validateRegex("WannaTalk|YesLetsTalk|Nope|sdp|candidate"),
-                "signalData": validateMandatoryString(10000),
-              },
-            },
           },
         },
       },
+
       // Only Game portal should write to this path.
       "gamePortal": {
-        // The last 20 users that got connected. 
-        // (When a user connects he should add himself, and there is a cloud function that deletes old entries.)
-        "recentlyConnected": {
-          ".read": ANYONE,
-          "$recentlyConnectedEntryId": {
-            // Anyone can add a new value (deleting values is done using cloud functions).
-            ".write": "!data.exists()",
-            "userId": validateMyUid(),
-            "timestamp": validateNow(),
-          },
-        },
-        "gameSpec": { // TODO: should be gamesReviews
-          // Added by the user
-          "reviews": {
-            "$reviewedGameSpecId": {
-              "$reviewerUserId": {
-                ".read": "$reviewerUserId === auth.uid",
-                ".write": "$reviewerUserId === auth.uid",
-                "timestamp": validateNow(),
-                "stars": validateInteger(1, 5),
-                // Maybe in the future :)
-                //"title": validateMandatoryString(30),
-                //"body": validateMandatoryString(1000),
+        // Stores the users of GamePortal ONLY (not GameBuilder users).
+        "gamePortalUsers": {
+          "$gamePortalUserId": {
+            ".read": "$gamePortalUserId === auth.uid",
+            ".write": "$gamePortalUserId === auth.uid",
+            // Contains fields that anyone can read, but only $userId can write.
+            "publicFields": {
+              ".read": ANYONE,
+              // Whether the user is currently connected or not.
+              // You must support a single user having multiple connections: 
+              // the user should listen to changes to isConnected,
+              // and if it becomes false while the user is still connected,
+              // then the user should set it back to true.
+              "isConnected": validateBoolean(),
+              // Whether the user supports WebRTC or not, e.g.,
+              // browsers on iPhones don't support WebRTC.
+              // Set to true iff:
+              // ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].some((item)=>item in window)
+              "supportsWebRTC": validateBoolean(),
+              // The timestamp when the user last disconnected from firebase.
+              // You can convert it to a date in JS using:
+              // new Date(1506721603537)
+              // returns
+              // Fri Sep 29 2017 17:46:43 GMT-0400 (EDT)
+              "lastSeen": validateNow(),
+            },
+            // Contains fields that only $userId can read&write.
+            "privateFields": {
+              "createdOn": validateNow(), // When the user was created.
+              "phoneNumber": validateOptionalString(100), // If the user logged in via phone. 
+              
+              // The user writes to newContacts a comma separated list of phone numbers,
+              // which kicks a cloud function that updates the mapping in contacts.
+              "newContacts": validateOptionalString(100),
+              // contacts maps phone numbers to userIds
+              "contacts": {
+                "$phoneNumber": validateGamePortalUserId(),
+              },
+
+              // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
+              // Push notifications will only be sent using cloud functions, after someone writes to
+              // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
+              // Currently, the cloud function only sends one push notification using the fcmToken with the latest lastTimeReceived field.
+              "fcmTokens": {
+                "$fcmToken": {
+                  "createdOn": validateNow(), // When the token was first added.
+                  "lastTimeReceived": validateNow(), // The last time we got this token; every time the user opens the app, we should fetch the token and update this lastTimeReceived timestamp.
+
+                  // Because of this issue:
+                  // https://github.com/firebase/quickstart-js/issues/71
+                  // The notification sent to web or native is different:
+                  // For native we send both title&body and data in payload:
+                  // {
+                  //   notification: {
+                  //     title: data.title,
+                  //     body: data.body,
+                  //   },
+                  //   data: {
+                  //     fromUserId: String(data.fromUserId),
+                  //     toUserId: String(data.toUserId),
+                  //     matchId: String(data.matchId),
+                  //     timestamp: String(data.timestamp),
+                  //   }
+                  // }
+                  // For web we send only data in payload:
+                  // {
+                  //   data: {
+                  //     title: data.title,
+                  //     body: data.body,
+                  //     fromUserId: String(data.fromUserId),
+                  //     toUserId: String(data.toUserId),
+                  //     matchId: String(data.matchId),
+                  //     timestamp: String(data.timestamp),
+                  //   }
+                  // }
+                  "platform": validateRegex("web|ios|android"),
+                },
+              },
+            },
+            // Contains fields that are private (only $userId can read),
+            // but others can add new fields if they’re new
+            // (so others can write as long as its new content)
+            "privateButAddable": {
+              "matchMemberships": {
+                "$matchMembershipId": { // Match Id
+                  ".write": "!data.exists()",
+                  "addedByUid": validateMyUid(),
+                  "timestamp": validateNow(),
+                },
+              },
+              // WebRTC require signalling between two users. 
+              // Only show video&audio option if the two users have true in privateFields/supportsWebRTC
+              // See https://www.html5rocks.com/en/tutorials/webrtc/basics/
+              // Any user can add signals, and only $userId can delete them (after reading the signal).
+              // Then the caller and receiver exchange signalTypes 'sdp' and 'candidate'.
+              // The signalData for 'sdp' is the description you get in the callback for createOffer and createAnswer.
+              // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
+              "signals": {
+                "$signalEntryId": {
+                  ".write": "!data.exists()",
+                  "addedByUid": validateMyUid(),
+                  "timestamp": validateNow(),
+                  "signalType": validateRegex("sdp|candidate"),
+                  "signalData": validateMandatoryString(10000),
+                },
               },
             },
           },
-          // Set by cloud functions
-          "starsSummary": { // TODO: should be starsSummaries
-            ".read": ANYONE,
-            "$reviewedGameSpecId": {
-              "stars1Count": validateInteger(0, 1000000000),
-              "stars2Count": validateInteger(0, 1000000000),
-              "stars3Count": validateInteger(0, 1000000000),
-              "stars4Count": validateInteger(0, 1000000000),
-              "stars5Count": validateInteger(0, 1000000000),
-            },
-          },
         },
-        // All groups of users (2-10 users).
-        "groups": {
-          "$groupId": {
-            // Anyone can create a group, but only the participants can read/modify it
+        "matches": {
+          "$matchId": {
+            // Anyone can create a match, but only the participants can read/modify it
             ".read": "data.child('participants').child(auth.uid).exists()",
             ".write": "!data.exists() || data.child('participants').child(auth.uid).exists()",
             "participants": {
@@ -717,64 +676,25 @@ module firebaseRules {
                 // Some games require giving each participant an index,
                 // e.g., Stratego initially shows the black pieces to participantIndex=0
                 // and blue pieces to participantIndex=1.
-                "participantIndex": validateInteger(0, MAX_USERS_IN_GROUP - 1),
+                "participantIndex": validateInteger(0, MAX_USERS_IN_MATCH - 1),
+                // Update pingOpponents whenever you enter a match so all opponents
+                // will get a push notification that you're calling.
+                // (Obviously, no need to do it in single-player matches, i.e., when you're the only participant.)
+                "pingOpponents": validateNow(),
               },
             },
-            // An optional name (i.e., groupName can be "").
-            "groupName": validateOptionalString(100),
             "createdOn": validateNow(),
-            // All the messages ever sent in this group, ordered by time (so newer messages have higher $messageId).
-            "messages": {
-              // The unique key generated by push() is based on a timestamp, so list items are automatically ordered chronologically.
-              "$messageId": {
-                "senderUid": validateMyUid(),
-                "message": validateMandatoryString(1000),
-                "timestamp": validateNow(),
-              },
-            },
-            // I recommend allowing in the UI at most one match in a group,
-            // but the DB allows multiple matches.
-            "matches": {
-              "$matchId": {
-                "gameSpecId": validateGameSpecId(),
-                "createdOn": validateNow(),
-                "lastUpdatedOn": validateNow(),
-                "pieces": {
-                  "$pieceIndex": {
-                    "currentState": validatePieceState(),
-                  },
-                },
+            "lastUpdatedOn": validateNow(),
+            "gameSpecId": validateGameSpecId(),
+            "pieces": {
+              "$pieceIndex": {
+                "currentState": validatePieceState(),
               },
             },
           },
         },
-        "userIdIndices": {
-          // The $fieldValue in displayName index contains both the full displayName,
-          // and also each part of the displayName (broken by white spaces, i.e., first name, middle name, last name, etc).
-          "displayName": getUserIdIndex(),
-          // The $fieldValue in the indices below is exactly the value stored in the user's /privateFields/XXX.
-          "email": getUserIdIndex(),
-          "phoneNumber": getUserIdIndex(),
-          "facebookId": getUserIdIndex(),
-          "googleId": getUserIdIndex(),
-          "twitterId": getUserIdIndex(),
-          "githubId": getUserIdIndex(),
-        }
       },
     };
-  }
-
-  function getUserIdIndex(): Rule {
-    return {
-      // $fieldValue is encoded so that these special characters (".#$/[]")
-      // are encoded using "%<ASCII value>", e.g., "]" is encoded as "%5D".
-      // You can decode the string using decodeURIComponent, e.g.,
-      // decodeURIComponent("%25%2E%23%24%2F%5B%5D") returns "%.#$/[]"
-      "$fieldValue": {
-        ".read": ANYONE,
-        "$userId": validateNow(),
-      }
-    }
   }
 
   function getTsType(key: string, rules: any) {
@@ -802,16 +722,13 @@ module firebaseRules {
     if (key == "pieces" && rules["$pieceIndex"]  && rules["$pieceIndex"]["currentState"]) return "PiecesState";
     if (key == "$pieceIndex" && rules["currentState"]) return "PieceState";
 
-    if (key == "groups" && rules["$memberOfGroupId"]) return "GroupMemberships";
-    if (key == "$memberOfGroupId") return "GroupMembership";
-
     // Make camel case
     let k = key.charAt(0) == '$' ? key.substr(1) : key;
     // Remove Index / Id from the suffix
     if (endsWith(k, 'Index')) k = k.substring(0, k.length - 'Index'.length);
     if (endsWith(k, 'Id')) k = k.substring(0, k.length - 'Id'.length);
 
-    return k.charAt(0).toUpperCase() + k.substr(1) + (rules["$fieldValue"] ? "Index" : "");
+    return k.charAt(0).toUpperCase() + k.substr(1);
   }
 
   let types: string[] = [];

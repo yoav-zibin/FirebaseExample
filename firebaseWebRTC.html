@@ -4,8 +4,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
   video {
-    max-width: 100%;
-    width: 320px;
+    width: 200px;
+    height: 200px;
   }
   </style>
 </head>
@@ -15,14 +15,12 @@
   Enter user ID you want to call<input id="targetUserId">
   <button id="callUser">Call!</button>
   
-  <span>
-    <h3>Remote video</h3>
-    <video id="remotevideo" autoplay="true"></video>
-  </span>
-  <span>
-    <h3>Local video</h3>
-    <video id="localvideo" autoplay="true"></video>
-  </span>
+  <video id="localvideo" autoplay></video>
+  <video id="remotevideo0" autoplay></video>
+  <video id="remotevideo1" autoplay></video>
+  <video id="remotevideo2" autoplay></video>
+  <video id="remotevideo3" autoplay></video>
+  <video id="remotevideo4" autoplay></video>
 
   <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>

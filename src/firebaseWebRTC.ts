@@ -102,21 +102,27 @@ module webRTC {
         signalIds.sort((signalId1, signalId2) => signals[signalId1].timestamp - signals[signalId2].timestamp); // oldest entries are at the beginning
 
         let updates: any = {};
+        const now = new Date().getTime();
         for (let signalId of signalIds) {
           updates[signalId] = null;
           let signal:SignalMsg = signals[signalId];
           
-          let foundPeer = false;
+          if (now - /*ONE_MINUTE_MILLIS*/60 * 1000 > signal.timestamp) {
+            console.warn("Ignoring signal because it's more than a minute old");
+            continue;
+          }
+
+          let peer: MyPeerConnection = null;
           for (let peerConnection of peerConnections) {
             if (peerConnection.targetUserId === signal.addedByUid) {
-              peerConnection.receivedMessage(signal);
-              foundPeer = true;
+              peer = peerConnection;
               break;
             }
           }
-          if (!foundPeer) {
-            createMyPeerConnection(signal.addedByUid, false);
+          if (!peer) {
+            peer = createMyPeerConnection(signal.addedByUid, false);
           }
+          peer.receivedMessage(signal);
         }
         db().ref(path).update(updates);
       }
@@ -139,6 +145,7 @@ module webRTC {
     let peer: MyPeerConnection = new MyPeerConnection(targetUserId, video);
     peerConnections.push(peer);
     peer.start(isCaller);
+    return peer;
   }
 
   export let localMediaStream: any = null;
@@ -183,6 +190,7 @@ module webRTC {
 
 class MyPeerConnection {
   pc: any = null;
+  needCreateAnswer = false;
   constructor(public targetUserId: string, public remoteVideoElement: HTMLVideoElement) {}
 
   static configuration = {
@@ -223,34 +231,23 @@ class MyPeerConnection {
       webRTC.setVideoStream(this.remoteVideoElement, evt.stream);
     };
 
-    
+  
     if (isCaller) {
       this.pc.createOffer(MyPeerConnection.offerOptions).then(
         this.gotDescription.bind(this),
         (err: any) => { console.error("Error in createOffer: ", err); }
       );
     } else {
-      this.pc.createAnswer().then(
-        this.gotDescription.bind(this),
-        (err: any) => { console.error("Error in createAnswer: ", err); }
-      );
+      // createAnswer can only be called after setRemoteDescription:
+      // Error in createAnswer:  DOMException: CreateAnswer can't be called before SetRemoteDescription.
+      this.needCreateAnswer = true;
     }
     this.pc.addStream(webRTC.localMediaStream);
   }
   
   //const ONE_MINUTE_MILLIS = 60 * 1000;
-   receivedMessage(signalMsg: SignalMsg) {
+  receivedMessage(signalMsg: SignalMsg) {
     console.log("receivedMessage signalMsg=", signalMsg);
-    const now = new Date().getTime();
-    if (now - /*ONE_MINUTE_MILLIS*/60 * 1000 > signalMsg.timestamp) {
-      console.warn("Ignoring signal because it's more than a minute old");
-      return;
-    }
-    if (!this.pc) {
-      this.targetUserId = signalMsg.addedByUid;
-      this.start(false);
-    }
-
     let signalType = signalMsg.signalType
     let signalData: any = JSON.parse(signalMsg.signalData);
     if (signalType == "sdp") {
@@ -258,6 +255,12 @@ class MyPeerConnection {
         () => { console.log("setRemoteDescription success"); }, 
         (err: any) => { console.error("Error in setRemoteDescription: ", err); }
       );
+      if (this.needCreateAnswer) {
+        this.pc.createAnswer().then(
+          this.gotDescription.bind(this),
+          (err: any) => { console.error("Error in createAnswer: ", err); }
+        );
+      }
     } else if (signalType == "candidate") {
       this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
         () => { console.log("addIceCandidate success"); }, 

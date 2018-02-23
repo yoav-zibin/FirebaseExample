@@ -502,7 +502,6 @@ var firebaseRules;
             "gamePortal": {
                 // Stores the users of GamePortal ONLY (not GameBuilder users).
                 "gamePortalUsers": {
-                    ".indexOn": ["privateFields/phoneNumber"],
                     "$gamePortalUserId": {
                         ".read": "$gamePortalUserId === auth.uid",
                         ".write": "$gamePortalUserId === auth.uid",

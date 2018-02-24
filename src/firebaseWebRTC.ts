@@ -1,7 +1,7 @@
 
 // Signalling using firebase.
 // We send messages to a user by writing SignalData to
-// users/$userId/privateButAddable/signal/$signalId
+// gamePortal/gamePortalUsers/$userId/privateButAddable/signal/$signalId
 // And the target user will read the signals and delete them after reading them.
 interface SignalMsg {
   addedByUid: string;

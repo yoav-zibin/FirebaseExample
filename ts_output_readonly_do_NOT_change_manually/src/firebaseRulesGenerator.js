@@ -505,27 +505,6 @@ var firebaseRules;
                     "$gamePortalUserId": {
                         ".read": "$gamePortalUserId === auth.uid",
                         ".write": "$gamePortalUserId === auth.uid",
-                        // Contains fields that anyone can read, but only $userId can write.
-                        "publicFields": {
-                            ".read": ANYONE,
-                            // Whether the user is currently connected or not.
-                            // You must support a single user having multiple connections: 
-                            // the user should listen to changes to isConnected,
-                            // and if it becomes false while the user is still connected,
-                            // then the user should set it back to true.
-                            "isConnected": validateBoolean(),
-                            // Whether the user supports WebRTC or not, e.g.,
-                            // browsers on iPhones don't support WebRTC.
-                            // Set to true iff:
-                            // ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].some((item)=>item in window)
-                            "supportsWebRTC": validateBoolean(),
-                            // The timestamp when the user last disconnected from firebase.
-                            // You can convert it to a date in JS using:
-                            // new Date(1506721603537)
-                            // returns
-                            // Fri Sep 29 2017 17:46:43 GMT-0400 (EDT)
-                            "lastSeen": validateNow(),
-                        },
                         // Contains fields that only $userId can read&write.
                         "privateFields": {
                             "createdOn": validateNow(),

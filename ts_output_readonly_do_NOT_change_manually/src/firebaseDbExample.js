@@ -446,25 +446,17 @@ var main;
         uid = firebase.auth().currentUser.uid;
         console.info("My uid=", uid);
         // Reading another user's data.
-        canRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/publicFields`);
         cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/privateFields`);
         cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}/privateButAddable`);
         cannotRead(`/gamePortal/gamePortalUsers/userId${idSuffix}`);
-        cannotWrite(`/gamePortal/gamePortalUsers/userId${idSuffix}/publicFields/isConnected`, true);
         // Adding my user data.
         write(`/gamePortal/gamePortalUsers/${uid}`, {
-            publicFields: {
-                isConnected: true,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                supportsWebRTC: true,
-            },
             privateFields: {
                 createdOn: firebase.database.ServerValue.TIMESTAMP,
                 phoneNumber: ``,
                 newContacts: ``,
             },
         });
-        write(`/gamePortal/gamePortalUsers/${uid}/publicFields/isConnected`, false);
         runGameBuilderTest();
         runGamePortalTest();
         executeCommands();

@@ -565,6 +565,8 @@ module firebaseRules {
             // Contains fields that only $userId can read&write.
             "privateFields": {
               "createdOn": validateNow(), // When the user was created.
+
+              // TODO: use firebase rules to ensure it's equal to auth.<phoneNumber>
               "phoneNumber": validateOptionalString(100), // If the user logged in via phone. 
               
               // The user writes to newContacts a comma separated list of phone numbers ([+0-9]{5,20}),

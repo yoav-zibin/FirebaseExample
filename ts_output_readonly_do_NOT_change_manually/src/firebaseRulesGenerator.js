@@ -509,11 +509,11 @@ var firebaseRules;
                         "privateFields": {
                             "createdOn": validateNow(),
                             "phoneNumber": validateOptionalString(100),
-                            // The user writes to newContacts a comma separated list of phone numbers,
-                            // which kicks a cloud function that updates the mapping in contacts.
+                            // The user writes to newContacts a comma separated list of phone numbers ([+0-9]{5,20}),
+                            // which kicks a cloud function that adds entries to the mapping in phoneNumberToUserId.
                             "newContacts": validateOptionalString(100),
-                            // contacts maps phone numbers to userIds
-                            "contacts": {
+                            // Maps phone numbers to userIds
+                            "phoneNumberToUserId": {
                                 "$phoneNumber": validateGamePortalUserId(),
                             },
                             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
@@ -522,7 +522,9 @@ var firebaseRules;
                             // Currently, the cloud function only sends one push notification using the fcmToken with the latest lastTimeReceived field.
                             "fcmTokens": {
                                 "$fcmToken": {
-                                    "createdOn": validateNow(),
+                                    // The last time we got this token; 
+                                    // every time the user opens the app, 
+                                    // we should fetch the token and update this lastTimeReceived timestamp.
                                     "lastTimeReceived": validateNow(),
                                     // Because of this issue:
                                     // https://github.com/firebase/quickstart-js/issues/71
@@ -540,18 +542,8 @@ var firebaseRules;
                                     //     timestamp: String(data.timestamp),
                                     //   }
                                     // }
-                                    // For web we send only data in payload:
-                                    // {
-                                    //   data: {
-                                    //     title: data.title,
-                                    //     body: data.body,
-                                    //     fromUserId: String(data.fromUserId),
-                                    //     toUserId: String(data.toUserId),
-                                    //     matchId: String(data.matchId),
-                                    //     timestamp: String(data.timestamp),
-                                    //   }
-                                    // }
-                                    "platform": validateRegex("web|ios|android"),
+                                    // For web we send only data in payload.
+                                    "platform": validateRegex("ios|android"),
                                 },
                             },
                         },

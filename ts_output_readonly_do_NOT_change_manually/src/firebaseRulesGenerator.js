@@ -95,6 +95,9 @@ var firebaseRules;
     function validateMyUid() {
         return validate("newData.isString() && newData.val() === auth.uid");
     }
+    function validateMyPhoneNumber(field = "newData.val()") {
+        return validate(`${field} === '' || ${field} === auth.token.phone_number`);
+    }
     function validateGamePortalUserId() {
         return validateNewDataIdExists("gamePortal/gamePortalusers/");
     }
@@ -246,7 +249,7 @@ var firebaseRules;
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_MATCH);
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
             case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
-            case "$phoneNumber": return validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
+            case "$phoneNumber": return validateMyPhoneNumber(parentKey); //validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
             case "$gameBuilderUserId":
             case "$gamePortalUserId":
             case "$imageId":
@@ -500,6 +503,15 @@ var firebaseRules;
             },
             // Only Game portal should write to this path.
             "gamePortal": {
+                // Maps international phone numbers to userIds.
+                "phoneNumberToUserId": {
+                    // $phoneNumber is an international number, i.e., (/^[+][0-9]{5,20}$/)
+                    "$phoneNumber": {
+                        ".write": "!data.exists()",
+                        "userId": validateMyUid(),
+                        "timestamp": validateNow(),
+                    },
+                },
                 // Stores the users of GamePortal ONLY (not GameBuilder users).
                 "gamePortalUsers": {
                     "$gamePortalUserId": {
@@ -508,14 +520,7 @@ var firebaseRules;
                         // Contains fields that only $userId can read&write.
                         "privateFields": {
                             "createdOn": validateNow(),
-                            "phoneNumber": validateOptionalString(100),
-                            // The user writes to newContacts a comma separated list of phone numbers ([+0-9]{5,20}),
-                            // which kicks a cloud function that adds entries to the mapping in phoneNumberToUserId.
-                            "newContacts": validateOptionalString(100),
-                            // Maps phone numbers to userIds
-                            "phoneNumberToUserId": {
-                                "$phoneNumber": validateGamePortalUserId(),
-                            },
+                            "phoneNumber": validateMyPhoneNumber(),
                             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
                             // Push notifications will only be sent using cloud functions, after someone writes to
                             // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents

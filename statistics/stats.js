@@ -10,15 +10,15 @@ const pngToJpeg = require('png-to-jpeg');
 const fs = require('fs-extra');
 const jimp = require('jimp');
 const serviceAccount = require("./credentials.json");
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   databaseURL: "https://universalgamemaker.firebaseio.com",
-//   storageBucket: 'universalgamemaker.appspot.com'
-// });
-//
-// const db = admin.database();
-// const storage = admin.storage().bucket();
-// const dbRef = db.ref("/gameBuilder");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://universalgamemaker.firebaseio.com",
+  storageBucket: 'universalgamemaker.appspot.com'
+});
+
+const db = admin.database();
+const storage = admin.storage().bucket();
+const dbRef = db.ref("/gameBuilder");
 
 const db_outfile = "database.json";
 const images_outfile = "image_data.json";
@@ -114,7 +114,7 @@ function getGameData(){
 function convertBoardImage(board_file, board_ext, game){
     let filename = path.basename(board_file, board_ext);
     filename += ".jpg";
-    let outpath = "./images/boardToJPG/" + game.replace(/ /g, '');
+    let outpath = "./images/compressed/" + game.replace(/ /g, '');
 
     return imagemin([board_file], outpath, {
       plugins: [
@@ -128,135 +128,38 @@ function convertBoardImage(board_file, board_ext, game){
     });
 }
 
-function convertNonBoardImages(nonboard_files, quality, promises, compress, game){
-  const allowed = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'];
-
-  // TODO: refactor code based on batch compression per game
-  if(compress){ //make EVERYTHING .jpgs
-    let outpath = "./images/q" + quality + "/compressed/" +  game.replace(/ /g, '');
-    promises.push(
-      imagemin(nonboard_files, outpath, {
-        plugins : [
-          imageminJpegtran(),
-          pngToJpeg({ quality: quality })
-        ]
-      }).then((buffer) =>{
-        let list = fs.readdirSync(outpath);
-        console.log("Reading dir for", game, "with", list.length, "image(s)");
-
-        for(let i = 0; i < list.length; i++){
-          const file = list[i];
-          console.log("\t", file);
-          const ext = path.extname(file); //.png
-          let filename = path.basename(file, ext); //dog
-          let newpath = path.join(outpath, file); //./images/quality/compressed/game/dog.png
-          console.log("\tExtension is", ext);
-
-          // rename to JPG
-          if(ext != '.jpg' && ext != '.JPG' && ext != '.jpeg' && ext != '.JPEG'){
-            filename += '.jpg'; //dog.jpg
-            newpath = path.join(outpath, filename); //./images/quality/compressed/game/dog.jpg
-            // console.log("\tRenaming ", path.join(outpath, file), "to", newpath );
-            fs.renameSync(path.join(outpath, file), newpath);
-            fs.unlinkSync(path.join(outpath, file));
-          }
-          // compare file sizes
-          let original = path.join('./images', file);
-          const new_size = getFilesizeInBytes(newpath);
-          const old_size = getFilesizeInBytes(original);
-          if(new_size > old_size){
-            console.log("\tResize is bigger, putting old file back", file);
-            fs.unlinkSync(newpath);
-            let finalpath = path.join(outpath, file);
-            console.log("\tWrote file");
-            fs.copySync(original, finalpath);
-          }
-          console.log("\tAT INDEX", i);
-        } //for loop
-
-        return;
-
-
-      }).catch( (err) =>{
-        return err;
-      })
-    );
-  }else{ //keep file extensions as is
-    let outpath = "./images/q" + quality + "/uncompressed/" +  game.replace(/ /g, '');
-    promises.push(
-      imagemin(nonboard_files, outpath, {
-        plugins : [
-          imageminJpegtran(),
-          imageminPngquant({ quality: quality })
-        ]
-      }).then((buffer) =>{
-        let list = fs.readdirSync(outpath);
-        for(let i = 0; i < list.length; i++){
-          const file = list[i];
-          const ext = path.extname(file); //.png
-          let filename = path.basename(file, ext); //dog
-          let newpath = path.join(outpath, file); //./images/quality/compressed/game/dog.png
-
-          // compare file sizes
-          let original = path.join('./images', file);
-          const new_size = getFilesizeInBytes(newpath);
-          const old_size = getFilesizeInBytes(original);
-          if(new_size > old_size){
-            fs.unlinkSync(newpath);
-            let finalpath = path.join(outpath, file);
-            fs.copySync(original, finalpath);
-          }
-        } //for loop
-
-        return;
-      }).catch( (err) =>{
-        return err;
-      })
-    );
-
-  } //if-else
+function convert(files){
+  let quality = 70;
+  return imagemin(files, "./images/compressed", {
+      plugins : [
+        imageminJpegtran(),
+        imageminPngquant({ quality: quality })
+      ]
+    }).catch((err) => {
+      return err;
+    });
 }
 
-function getGameSize(board_file, board_ext, nonboard_files, game, destination_path, compress){
+function getGameSize(board_file, board_ext, nonboard_files, game){
   const allowed = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'];
   let size_sum = 0;
   for(let i = 0; i < nonboard_files.length; i++){
       const file = nonboard_files[i];
       const ext = path.extname(file);
       if(allowed.indexOf(ext) >= 0){
-        let filename;
-        if(compress){ //must be .jpg file
-          filename = path.basename(file, ext);
-          filename += '.jpg';
-        }else{
-          filename = path.basename(file);
-        }
-        let outpath = destination_path + game.replace(/ /g, '');
+        let filename = path.basename(file);
+        let outpath = './images/compressed';
         let finalpath = path.join(outpath, filename);
         size_sum += getFilesizeInBytes(finalpath);
       }
   }
-  // add new or old board image
-  if(board_ext != '.jpg'){
-    // add newly generated image
-    let filename = path.basename(board_file, board_ext, game);
-    filename += ".jpg";
-    let outpath = "./images/boardToJPG/" + game.replace(/ /g, '');
-    let finalpath = path.join(outpath, filename);
-    size_sum += getFilesizeInBytes(finalpath);
-  }else{
-    // add old image
-    size_sum += getFilesizeInBytes(board_file);
-  }
-  // return bytesToSize(size_sum);
+  size_sum += getFilesizeInBytes(board_file);
   return size_sum;
 }
 
-function generateStats(){
+async function generateStats(){
   let stats = {}; //{gameName: {original : ___, q70_uncompressed:_____, q70_compressed:____, q50_uncompressed:____, q50_compressed:____}}
   const extensions = ['.jpg', '.png', '.jpeg', '.JPG', '.JPEG'];
-  const dir50 = "images/50";
-  const dir70 = "images/70";
   const str = fs.readFileSync(images_outfile);
   const game_data = JSON.parse(str);
   const promises = [];
@@ -278,29 +181,10 @@ function generateStats(){
       }
       stats[count] = {};
       stats[count]['game'] = game;
-      // stats[count]['original'] = bytesToSize(size_sum);
       stats[count]['original'] = size_sum;
 
-      // if(board_ext != ".jpg"){
-      //   promises.push(convertBoardImage(board_file, board_ext, game));
-      // }
-
-      // convert non-board images to q70
-      let quality = 70;
-      let compress = false;
-      convertNonBoardImages(nonboard_files, quality, promises, compress, game);
-
-      // // compress non-board images to q70
-      compress = true;
-      convertNonBoardImages(nonboard_files, quality, promises, compress, game);
-
-      // // compress non-board images to q50
-      quality = 50;
-      convertNonBoardImages(nonboard_files, quality, promises, compress, game);
-      //
-      // // convert non-board images to q50
-      compress = false;
-      convertNonBoardImages(nonboard_files,  quality, promises, compress, game);
+      console.log("Converting files for", game);
+      await convert(nonboard_files);
 
       count += 1;
 
@@ -317,18 +201,12 @@ function generateStats(){
         const board_file = data['board'];
         const nonboard_files = data['nonboard'];
         const board_ext = path.extname(board_file);
-        let compress = false;
-
-        stats[count]['q70_uncompressed'] = getGameSize(board_file, board_ext, nonboard_files, game, "./images/q70/uncompressed/", compress);
-        stats[count]['q50_uncompressed'] = getGameSize(board_file, board_ext, nonboard_files, game, "./images/q50/uncompressed/", compress);
-
-        compress = true;
-
-        stats[count]['q70_compressed'] = getGameSize(board_file, board_ext, nonboard_files, game, "./images/q70/compressed/", compress);
-        stats[count]['q50_compressed'] = getGameSize(board_file, board_ext, nonboard_files, game, "./images/q50/compressed/", compress);
+        console.log(getGameSize(board_file, board_ext, nonboard_files, game));
+        stats[count]['compressed'] = getGameSize(board_file, board_ext, nonboard_files, game);
         count += 1;
       }
     }
+
     // write json file
     console.log("Writing statistics to file");
     fs.writeFileSync(stats_outfile, JSON.stringify(stats, null, 2));
@@ -360,8 +238,7 @@ function main(){
   // downloadDatabase();
   // downloadImages();
   // getGameData();
-  // generateStats();
-  let list = fs.readdirSync('./images/q70/compressed')
+  generateStats();
   // admin.app().delete();
 }
 

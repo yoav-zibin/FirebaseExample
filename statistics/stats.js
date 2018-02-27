@@ -1,14 +1,15 @@
 // Radhika Mattoo, rm3485@nyu.edu
 const admin = require("firebase-admin");
 const gcs = require('@google-cloud/storage')();
-const imagemagick = require('imagemagick');
 const os = require('os');
 const path = require('path');
 const realFs = require('fs');
-const mkdirp = require('mkdirp');
+const imagemin = require('imagemin');
+const imageminJpegtran = require('imagemin-jpegtran');
+const imageminPngquant = require('imagemin-pngquant');
+const pngToJpeg = require('png-to-jpeg');
 const fs = require('graceful-fs');
 fs.gracefulify(realFs);
-const Jimp = require("jimp");
 const serviceAccount = require("./credentials.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -59,12 +60,17 @@ function downloadDatabase(){
 
 function downloadImages(){
   storage.getFiles(function(err, files){
+    let downloaded = [];
     files.forEach((file) =>{
-      file.download({
-        destination: file.name
-      },(err) =>{
-        console.log("Downloaded file to", file.name);
-      });
+      const filename = file.name;
+      if(!downloaded.includes(filename)){
+        downloaded.push(filename);
+        file.download({
+          destination: filename
+        },(err) =>{
+          console.log("Downloaded file to", filename);
+        });
+      }
     });
   });
 }
@@ -94,7 +100,9 @@ function getGameData(){
       for(let image in image_set){
         const imageId = image_set[image]['imageId'];
         const imgPath = images[imageId]['cloudStoragePath'];
-        game_data[name]['nonboard'].push(imgPath);
+        if(!game_data[name]['nonboard'].includes(imgPath)){
+          game_data[name]['nonboard'].push(imgPath);
+        }
       }
     }
   }
@@ -107,17 +115,21 @@ function convertBoardImage(board_file, board_ext, game){
     let filename = path.basename(board_file, board_ext);
     filename += ".jpg";
     let outpath = "./images/boardToJPG/" + game.replace(/ /g, '');
-    let finalpath = path.join(outpath, filename);
 
-    return Jimp.read(board_file).then((img) =>{
-      return img.write(finalpath);
+    return imagemin([board_file], outpath, {
+      plugins: [
+        pngToJpeg({quality: 70})
+    	]
+    }).then((file) =>{
+      let finalpath = path.join(outpath, filename);
+      fs.renameSync(file, finalpath);
     }).catch((err) =>{
       return err;
     });
 }
 
 function convertNonBoardImages(nonboard_files, destination_path, quality, promises, compress, game){
-  const allowed = ['.jpg', '.jpeg', '.png'];
+  const allowed = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'];
 
   for(let i = 0; i < nonboard_files.length; i++){
     const file = nonboard_files[i];
@@ -135,18 +147,76 @@ function convertNonBoardImages(nonboard_files, destination_path, quality, promis
       let outpath = destination_path + game.replace(/ /g, '');
       let finalpath = path.join(outpath, filename);
 
-      promises.push(Jimp.read(file).then((img) =>{
-        return img.quality(quality).write(finalpath);
-      }).catch((err) =>{
-        return err;
-      }));
+      if(compress){ //compressing everything to JPG
+        promises.push(
+          imagemin([file], outpath, {
+            plugins : [
+              imageminJpegtran(),
+              pngToJpeg({ quality: quality })
+            ]
+          }).then((buffer) =>{
+            let outpath = path.join(outpath, path.basename(file));
+            fs.renameSync(outpath, finalpath);
+            // if the newly generated file is bigger than the original, store the original!
+            const new_size = getFilesizeInBytes(finalpath) ;
+            const old_size = getFilesizeInBytes(file);
+            if(new_size > old_size){
+              console.log("New image is larger than original (compress to JPEG)!", game);
+              console.log("Overwriting to ", finalpath ," from original file", file);
+              fs.writeFileSync(finalpath, file, 'binary');
+            }
+            return buffer;
+          }).catch( (err) =>{
+            return err;
+          })
+        );
+      }else{ // keep all extensions as is
+        promises.push(
+          imagemin([file], outpath, {
+            plugins : [
+              imageminJpegtran(),
+              imageminPngquant({ quality: quality })
+            ]
+          }).then((buffer) =>{
+            // if the newly generated file is bigger than the original, store the original!
+            const new_size = getFilesizeInBytes(finalpath);
+            const old_size = getFilesizeInBytes(file);
+            if(new_size > old_size){
+              console.log("New image is larger than original (keeping extensions)!");
+              console.log("Overwriting to ", finalpath ," from original file", file);
+              fs.writeFileSync(finalpath, file, 'binary');
+            }
+            return buffer;
+          }).catch( (err) =>{
+            return err;
+          })
+        );
+      }
+
+
+      //   Jimp.read(file).then((img) =>{
+      //   return img.quality(quality).write(finalpath);
+      //   }).then((new_img) => {
+          // if the newly generated file is bigger than the original, store the original!
+          // const new_size = getFilesizeInBytes(finalpath);
+          // const old_size = getFilesizeInBytes(file);
+          // if(new_size > old_size){
+          //   // console.log("New image is larger than original!", game);
+          //   return img.write(finalpath);
+          // }
+      //     return new_img;
+      //   }).catch((err) =>{
+      //     return err;
+      //   })
+      // );
+
     } //if
   } //for loop
 
 }
 
 function getGameSize(board_file, board_ext, nonboard_files, game, destination_path, compress){
-  const allowed = ['.jpg', '.jpeg', '.png'];
+  const allowed = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'];
   let size_sum = 0;
   for(let i = 0; i < nonboard_files.length; i++){
       const file = nonboard_files[i];
@@ -182,7 +252,7 @@ function getGameSize(board_file, board_ext, nonboard_files, game, destination_pa
 
 function generateStats(){
   let stats = {}; //{gameName: {original : ___, q70_uncompressed:_____, q70_compressed:____, q50_uncompressed:____, q50_compressed:____}}
-  const extensions = ['.jpg', '.png', '.jpeg'];
+  const extensions = ['.jpg', '.png', '.jpeg', '.JPG', '.JPEG'];
   const dir50 = "images/50";
   const dir70 = "images/70";
   const str = fs.readFileSync(images_outfile);

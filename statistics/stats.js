@@ -163,7 +163,7 @@ function convertNonBoardImages(nonboard_files, destination_path, quality, promis
             if(new_size > old_size){
               console.log("New image is larger than original (compress to JPEG)!", game);
               console.log("Overwriting to ", finalpath ," from original file", file);
-              fs.writeFileSync(finalpath, file, 'binary');
+              return fs.writeFileSync(finalpath, file, 'binary');
             }
             return buffer;
           }).catch( (err) =>{
@@ -184,7 +184,7 @@ function convertNonBoardImages(nonboard_files, destination_path, quality, promis
             if(new_size > old_size){
               console.log("New image is larger than original (keeping extensions)!");
               console.log("Overwriting to ", finalpath ," from original file", file);
-              fs.writeFileSync(finalpath, file, 'binary');
+              return fs.writeFileSync(finalpath, file, 'binary');
             }
             return buffer;
           }).catch( (err) =>{

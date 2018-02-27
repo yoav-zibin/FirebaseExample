@@ -111,23 +111,6 @@ function getGameData(){
   return game_data;
 }
 
-function convertBoardImage(board_file, board_ext, game){
-    let filename = path.basename(board_file, board_ext);
-    filename += ".jpg";
-    let outpath = "./images/compressed/" + game.replace(/ /g, '');
-
-    return imagemin([board_file], outpath, {
-      plugins: [
-        pngToJpeg({quality: 70})
-    	]
-    }).then((file) =>{
-      let finalpath = path.join(outpath, filename);
-      fs.renameSync(path.join(outpath, path.basename(board_file)), finalpath);
-    }).catch((err) =>{
-      return err;
-    });
-}
-
 function convert(files){
   let quality = 70;
   return imagemin(files, "./images/compressed", {
@@ -168,9 +151,9 @@ async function generateStats(){
     if (game_data.hasOwnProperty(game)) {
       const data = game_data[game];
       const board_file = data['board'];
-      const nonboard_files = data['nonboard'];
+      const files = data['nonboard'];
       const board_ext = path.extname(board_file);
-
+      nonboard_files.push(board_file);
       // ORIGINAL SUMMED SIZE
       let size_sum = 0;
       let size = getFilesizeInBytes(board_file);
@@ -184,7 +167,7 @@ async function generateStats(){
       stats[count]['original'] = size_sum;
 
       console.log("Converting files for", game);
-      await convert(nonboard_files);
+      await convert(files);
 
       count += 1;
 

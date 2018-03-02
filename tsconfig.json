@@ -40,6 +40,7 @@
         "src/firebaseRulesGenerator.ts",
         "src/firebasePushNotifications.ts",
         "src/dragAndDropHtmlExample.ts",
+        "src/playground.ts",
         "typings/globals.d.ts",
         "typings/firebase.d.ts"
     ],

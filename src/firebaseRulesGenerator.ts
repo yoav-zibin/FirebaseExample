@@ -301,6 +301,8 @@ module firebaseRules {
       case "$matchId":
       case "$signalEntryId":
       case "$lineId":
+      case "$gameInfoId":
+      case "$gameSpecForPortalId":
         return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
     }
     throw new Error("Illegal parentKey=" + parentKey);
@@ -351,6 +353,178 @@ module firebaseRules {
   // but not delete/modify values (only the uploader can change anything).
   const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
   
+  function getImage(): Object {
+    return {
+      ".write": ADD_OR_UPLOADER,
+      ".validate": "newData.child('isBoardImage').val() === false || newData.child('width').val() === 1024 || newData.child('height').val() === 1024",
+      "uploaderEmail": validateMandatoryEmail(),
+      "uploaderUid": validateMyUid(),
+      "createdOn": validateNow(),
+      "width": validateNumber(10, 1024),
+      "height": validateNumber(10, 1024),
+      "isBoardImage": validateBoolean(),
+      "downloadURL": validateSecureUrl(), // URL that allows downloading from cloudStorage.
+      "sizeInBytes": validateNumber(100, 2 * 1024 * 1024), // At most 2MB per image (though even board images should be around 512KB).
+      "cloudStoragePath": validateRegex(`images\\/${ID_PATTERN}[.](gif|png|jpg)`), // e.g., "images/-KuV-Y9TXnfnaZExRTli.gif"
+      "name": validateMandatoryString(100),
+    };
+  }
+
+  function getElement(): Object {
+    return {
+      ".write": ADD_OR_UPLOADER,
+      "uploaderEmail": validateMandatoryEmail(),
+      "uploaderUid": validateMyUid(),
+      "createdOn": validateNow(),
+      "width": validateNumber(10, 1024),
+      "height": validateNumber(10, 1024),
+      "name": validateOptionalString(100),
+
+      // An array of image ids.
+      // All the images must have the same width&height as that of the element.
+      // Read about arrays in firebase DB: http://firebase.googleblog.com/2014/04/best-practices-arrays-in-firebase.html
+      "images": {
+        "$imageIndex": {
+          "imageId": addValidate(validateImageId(),
+              `${validElementImageProp('width')} && ${validElementImageProp('height')}`),
+        },
+      },
+      
+      // Sometimes you shouldn't be able to drag elements,
+      // e.g., dice, deck, a drawable piece of paper, etc.
+      "isDraggable": validateBoolean(),
+
+      // Standard:
+      // Standard elements have a single image in images array.
+      //
+      // Toggable:
+      // Toggable elements will rotate (round-robin) between the array of images.
+      // E.g., used in games like Reversi, Checkers.
+      //
+      // Dice:
+      // A dice element as in backgammon or D&D games.
+      // E.g., a 6-sided dice will have an array of images of length 6.
+      // In backgammon you can represent the two dices as one element with 36 images.
+      //
+      // Card:
+      // Cards are elements that have two faces: a public face and a private face.
+      // Cards must have exactly 2 images.
+      // The public face is the image in index=0, and the private face is in index=1.
+      // E.g., in a game of poker, each card has two faces: the public face is what everyone
+      // can see, and the private face is the actual card (e.g., prince of diamonds).
+      // Another example is the game of Stratego, where pieces have two faces (one public and one private).
+      //
+      // Deck (two kinds: cardsDeck|piecesDeck):
+      // Cards can be grouped into a deck,
+      // and a deck has a special operation: shuffle!
+      // Shuffling moves all the deck members (all the cards) to be within
+      // the deck area (depending on the width&height of the deck), and shuffles the cards zDepth.
+      // When a game spec contains a deck, it must contain all its elements as well.
+      // After shuffling a deck, all its members receive their
+      // initial cardVisibility (as set in that piece initialState).
+      // Initially, when a game starts, a deck is shuffled.
+      // There are two kinds of decks:
+      // 1) cardsDeck: A deck of cards, where the cards are stacked on top of another,
+      // so you can only take a card that's within the deck area if it has the heighest zDepth.
+      // 2) piecesDeck: Like in Stratego, where the red/blue pieces are one deck, and you
+      // can shuffle the deck, but you can take a piece from anywhere in the deck.
+      "elementKind": validateRegex("standard|toggable|dice|card|cardsDeck|piecesDeck"),
+
+      // In some game, pieces can be rotated, e.g., Blokus, Dominoes.
+      // Note that different pieces can be rotated by different degrees.
+      // E.g.,
+      // * a piece that looks like a long line can only rotate my multiples of 180 degrees.
+      // * a piece that looks like the letter L can rotate my multiples of 90 degrees.
+      // * a piece that looks like a square cannot rotate (i.e., by multiples of 360 degrees).
+      // (If the piece can't rotate at all, use rotatableDegrees=360)
+      // If a piece can rotate, then it must be a standard|toggable|card elementKind (to simplify GamePortal UI).
+      "rotatableDegrees": validateNumber(1, 360),
+
+      "deckElements": {
+        "$deckMemberIndex": {
+          "deckMemberElementId": validateElementId(),
+          // Ensure this member is a card element.
+          ".validate": "root.child('gameBuilder/elements/' + newData.child('deckMemberElementId').val()).child('elementKind').val() === 'card'",
+        },
+      },
+
+      // In some games you want to be able to draw on elements
+      // (only if elementKind is standard or card),
+      // like in dots-and-boxes or Diplomacy.
+      // When drawing on a card, you draw on the private face of the card.
+      // Each player will have his own unique color based on his participantIndex,
+      // use the first 10 colors from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/ 
+      // (so participantIndex=0 has color red #e6194b)
+      "isDrawable": validateBoolean(),
+
+      // Validate the number of images fits with the elementKind.
+      ".validate": 
+        // A deck should have at least 2 deck members (otherwise, no deck memebers!)
+        "(newData.child('elementKind').val().matches(/^cardsDeck|piecesDeck$/) ? newData.child('deckElements/1').exists() : !newData.child('deckElements').exists()) " +
+        // isDrawable only for elementKind of standard|card
+        " && (newData.child('isDrawable').val() === false || newData.child('elementKind').val().matches(/^standard|card$/)) " +
+        // If the piece can rotate, then it must be standard.
+        " && (newData.child('rotatableDegrees').val() === 360 || newData.child('elementKind').val().matches(/^standard|card|toggable$/)) " +
+        // All element kinds (including decks) should have at least one image.
+        " && newData.child('images/0').exists() " +
+        ' && (' +
+        // standard and decks should have exactly one image.
+        " (newData.child('elementKind').val().matches(/^standard|cardsDeck|piecesDeck$/) && !newData.child('images/1').exists()) " +
+        // toggable and dice have 2 or more images.
+        " || (newData.child('elementKind').val().matches(/^toggable|dice$/) && newData.child('images/1').exists()) " +
+        // card has exactly 2 images.
+        " || (newData.child('elementKind').val() === 'card' && newData.child('images/1').exists() && !newData.child('images/2').exists()) " +
+        ")",
+    };
+  }
+
+  function getGameSpec(): Object {
+    return {
+      ".write": ADD_OR_UPLOADER,
+      "uploaderEmail": validateMandatoryEmail(),
+      "uploaderUid": validateMyUid(),
+      "createdOn": validateNow(),
+      "gameName": validateMandatoryString(100), // It's ok if the gameName is not unique.
+      "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
+      "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
+      "screenShootImageId": validateOptionalString(1000),
+      "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
+      // Optional tutorial video (it can be an empty string).
+      "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),
+      // Info about the board.
+      "board": {
+        "imageId": addValidate(validateImageId(), validateBoardImage()),
+        "backgroundColor": validateColor(),
+        // Similar to:
+        // <meta name="viewport" content="maximum-scale=1" />
+        // maxScale=1 means you can't zoom at all.
+        // maxScale=2 means you can zoom up to 2X. Etc.
+        "maxScale": validateNumber(1, 10),
+      },
+      // All the pieces in the game.
+      // Every piece is an element, an a element may be included many times.
+      // E.g., Reversi has many pieces, all built from the same element.
+      "pieces": {
+        // pieces is an array, so $pieceIndex is a 0-based index, i.e., an integer >= 0
+        "$pieceIndex": { 
+          "pieceElementId": validateElementId(),
+          "initialState": validatePieceState(),
+
+          // If this piece belongs to a deck, then deckPieceIndex will contain 
+          // the pieceIndex of the matching deck.
+          // If this piece does not belong to a deck, then store -1.
+          "deckPieceIndex": addValidate(validateInteger(-1, 1000),
+            // Checking that if deckPieceIndex is not -1, then this element is a card
+            // and the index points to an element of type deck.
+            `newData.val() === -1 || (` +
+            `root.child('gameBuilder/elements/' + newData.parent().child('pieceElementId').val() + '/elementKind').val() == 'card'` +
+            ` && root.child('gameBuilder/elements/' + newData.parent().parent().child('' + newData.val()).child('pieceElementId').val() + '/elementKind').val().endsWith('Deck')` +
+            `)`),
+        },
+      },          
+    };
+  }
+
   /* 
   - permission cascades down: 
       once you've granted read or write permission on a certain level in the tree,
@@ -371,174 +545,14 @@ module firebaseRules {
         ".read": ANYONE,
         "images": {
           ".indexOn": ["isBoardImage"],
-          "$imageId": {
-            ".write": ADD_OR_UPLOADER,
-            ".validate": "newData.child('isBoardImage').val() === false || newData.child('width').val() === 1024 || newData.child('height').val() === 1024",
-            "uploaderEmail": validateMandatoryEmail(),
-            "uploaderUid": validateMyUid(),
-            "createdOn": validateNow(),
-            "width": validateNumber(10, 1024),
-            "height": validateNumber(10, 1024),
-            "isBoardImage": validateBoolean(),
-            "downloadURL": validateSecureUrl(), // URL that allows downloading from cloudStorage.
-            "sizeInBytes": validateNumber(100, 2 * 1024 * 1024), // At most 2MB per image (though even board images should be around 512KB).
-            "cloudStoragePath": validateRegex(`images\\/${ID_PATTERN}[.](gif|png|jpg)`), // e.g., "images/-KuV-Y9TXnfnaZExRTli.gif"
-            "name": validateMandatoryString(100),
-          },
+          "$imageId": getImage(),
         },
         "elements": {
-          "$elementId": {
-            ".write": ADD_OR_UPLOADER,
-            "uploaderEmail": validateMandatoryEmail(),
-            "uploaderUid": validateMyUid(),
-            "createdOn": validateNow(),
-            "width": validateNumber(10, 1024),
-            "height": validateNumber(10, 1024),
-            "name": validateOptionalString(100),
-
-            // An array of image ids.
-            // All the images must have the same width&height as that of the element.
-            // Read about arrays in firebase DB: http://firebase.googleblog.com/2014/04/best-practices-arrays-in-firebase.html
-            "images": {
-              "$imageIndex": {
-                "imageId": addValidate(validateImageId(),
-                    `${validElementImageProp('width')} && ${validElementImageProp('height')}`),
-              },
-            },
-            
-            // Sometimes you shouldn't be able to drag elements,
-            // e.g., dice, deck, a drawable piece of paper, etc.
-            "isDraggable": validateBoolean(),
-
-            // Standard:
-            // Standard elements have a single image in images array.
-            //
-            // Toggable:
-            // Toggable elements will rotate (round-robin) between the array of images.
-            // E.g., used in games like Reversi, Checkers.
-            //
-            // Dice:
-            // A dice element as in backgammon or D&D games.
-            // E.g., a 6-sided dice will have an array of images of length 6.
-            // In backgammon you can represent the two dices as one element with 36 images.
-            //
-            // Card:
-            // Cards are elements that have two faces: a public face and a private face.
-            // Cards must have exactly 2 images.
-            // The public face is the image in index=0, and the private face is in index=1.
-            // E.g., in a game of poker, each card has two faces: the public face is what everyone
-            // can see, and the private face is the actual card (e.g., prince of diamonds).
-            // Another example is the game of Stratego, where pieces have two faces (one public and one private).
-            //
-            // Deck (two kinds: cardsDeck|piecesDeck):
-            // Cards can be grouped into a deck,
-            // and a deck has a special operation: shuffle!
-            // Shuffling moves all the deck members (all the cards) to be within
-            // the deck area (depending on the width&height of the deck), and shuffles the cards zDepth.
-            // When a game spec contains a deck, it must contain all its elements as well.
-            // After shuffling a deck, all its members receive their
-            // initial cardVisibility (as set in that piece initialState).
-            // Initially, when a game starts, a deck is shuffled.
-            // There are two kinds of decks:
-            // 1) cardsDeck: A deck of cards, where the cards are stacked on top of another,
-            // so you can only take a card that's within the deck area if it has the heighest zDepth.
-            // 2) piecesDeck: Like in Stratego, where the red/blue pieces are one deck, and you
-            // can shuffle the deck, but you can take a piece from anywhere in the deck.
-            "elementKind": validateRegex("standard|toggable|dice|card|cardsDeck|piecesDeck"),
-
-            // In some game, pieces can be rotated, e.g., Blokus, Dominoes.
-            // Note that different pieces can be rotated by different degrees.
-            // E.g.,
-            // * a piece that looks like a long line can only rotate my multiples of 180 degrees.
-            // * a piece that looks like the letter L can rotate my multiples of 90 degrees.
-            // * a piece that looks like a square cannot rotate (i.e., by multiples of 360 degrees).
-            // (If the piece can't rotate at all, use rotatableDegrees=360)
-            // If a piece can rotate, then it must be a standard|toggable|card elementKind (to simplify GamePortal UI).
-            "rotatableDegrees": validateNumber(1, 360),
-
-            "deckElements": {
-              "$deckMemberIndex": {
-                "deckMemberElementId": validateElementId(),
-                // Ensure this member is a card element.
-                ".validate": "root.child('gameBuilder/elements/' + newData.child('deckMemberElementId').val()).child('elementKind').val() === 'card'",
-              },
-            },
-
-            // In some games you want to be able to draw on elements
-            // (only if elementKind is standard or card),
-            // like in dots-and-boxes or Diplomacy.
-            // When drawing on a card, you draw on the private face of the card.
-            // Each player will have his own unique color based on his participantIndex,
-            // use the first 10 colors from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/ 
-            // (so participantIndex=0 has color red #e6194b)
-            "isDrawable": validateBoolean(),
-
-            // Validate the number of images fits with the elementKind.
-            ".validate": 
-              // A deck should have at least 2 deck members (otherwise, no deck memebers!)
-              "(newData.child('elementKind').val().matches(/^cardsDeck|piecesDeck$/) ? newData.child('deckElements/1').exists() : !newData.child('deckElements').exists()) " +
-              // isDrawable only for elementKind of standard|card
-              " && (newData.child('isDrawable').val() === false || newData.child('elementKind').val().matches(/^standard|card$/)) " +
-              // If the piece can rotate, then it must be standard.
-              " && (newData.child('rotatableDegrees').val() === 360 || newData.child('elementKind').val().matches(/^standard|card|toggable$/)) " +
-              // All element kinds (including decks) should have at least one image.
-              " && newData.child('images/0').exists() " +
-              ' && (' +
-              // standard and decks should have exactly one image.
-              " (newData.child('elementKind').val().matches(/^standard|cardsDeck|piecesDeck$/) && !newData.child('images/1').exists()) " +
-              // toggable and dice have 2 or more images.
-              " || (newData.child('elementKind').val().matches(/^toggable|dice$/) && newData.child('images/1').exists()) " +
-              // card has exactly 2 images.
-              " || (newData.child('elementKind').val() === 'card' && newData.child('images/1').exists() && !newData.child('images/2').exists()) " +
-              ")",
-          },
+          "$elementId": getElement(),
         },
         // Stores info about all the game gameSpecs.
         "gameSpecs": {
-          "$gameSpecId": {
-            ".write": ADD_OR_UPLOADER,
-            "uploaderEmail": validateMandatoryEmail(),
-            "uploaderUid": validateMyUid(),
-            "createdOn": validateNow(),
-            "gameName": validateMandatoryString(100), // It's ok if the gameName is not unique.
-            "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
-            "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
-            "screenShootImageId": validateOptionalString(1000),
-            "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
-            // Optional tutorial video (it can be an empty string).
-            "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),
-            // Info about the board.
-            "board": {
-              "imageId": addValidate(validateImageId(), validateBoardImage()),
-              "backgroundColor": validateColor(),
-              // Similar to:
-              // <meta name="viewport" content="maximum-scale=1" />
-              // maxScale=1 means you can't zoom at all.
-              // maxScale=2 means you can zoom up to 2X. Etc.
-              "maxScale": validateNumber(1, 10),
-            },
-            // All the pieces in the game.
-            // Every piece is an element, an a element may be included many times.
-            // E.g., Reversi has many pieces, all built from the same element.
-            "pieces": {
-              // pieces is an array, so $pieceIndex is a 0-based index, i.e., an integer >= 0
-              "$pieceIndex": { 
-                "pieceElementId": validateElementId(),
-                "initialState": validatePieceState(),
-
-                // If this piece belongs to a deck, then deckPieceIndex will contain 
-                // the pieceIndex of the matching deck.
-                // If this piece does not belong to a deck, then store -1.
-                "deckPieceIndex": addValidate(validateInteger(-1, 1000),
-                  // Checking that if deckPieceIndex is not -1, then this element is a card
-                  // and the index points to an element of type deck.
-                  `newData.val() === -1 || (` +
-                  `root.child('gameBuilder/elements/' + newData.parent().child('pieceElementId').val() + '/elementKind').val() == 'card'` +
-                  ` && root.child('gameBuilder/elements/' + newData.parent().parent().child('' + newData.val()).child('pieceElementId').val() + '/elementKind').val().endsWith('Deck')` +
-                  `)`),
-              },
-            },          
-          },
+          "$gameSpecId": getGameSpec(),
         },
         // Stores the users of GameBuilder ONLY. All the info is private just for that user.
         "gameBuilderUsers": {
@@ -561,6 +575,32 @@ module firebaseRules {
 
       // Only Game portal should write to this path.
       "gamePortal": {
+        "gamesInfoAndSpec": {
+          ".read": ANYONE,
+          // TODO: Will be written by cloud functions
+          "gameInfos": {
+            ".indexOn": ["numberOfMatches"],
+            "$gameInfoId": {
+              "gameSpecId": validateMandatoryString(100),
+              "gameName": validateMandatoryString(100),
+              "screenShootImageId": validateMandatoryString(100),
+              "numberOfMatches": validateInteger(0, 1000000000),
+            },
+          },
+          "gameSpecsForPortal": {
+            "$gameSpecForPortalId": {
+              "images": {
+                "$imageId": getImage(),
+              },
+              "elements": {
+                "$elementId": getElement(),
+              },
+              // Stores info about all the game gameSpecs.
+              "gameSpec": getGameSpec(),
+            },
+          },
+        },
+
         // Maps international phone numbers to userIds.
         "phoneNumberToUserId": {
           // $phoneNumber is an international number, i.e., (/^[+][0-9]{5,20}$/)
@@ -684,7 +724,7 @@ module firebaseRules {
       if (regex && regex.match(/^(\w+[|])+\w+$/)) {
         return "'" + regex.split('|').join("'|'") + "'";
       }
-      return v.indexOf(VALIDATE_NOW) >= 0 ? "number/*firebase.database.ServerValue.TIMESTAMP*/" : v.indexOf('isNumber') >= 0 ? "number" : v.indexOf('isBoolean') >= 0 ? "boolean" : "string";
+      return v.indexOf(VALIDATE_NOW) >= 0 ? "number /*firebase.database.ServerValue.TIMESTAMP*/" : v.indexOf('isNumber') >= 0 ? "number" : v.indexOf('isBoolean') >= 0 ? "boolean" : "string";
     }
 
     // I used the string "images" twice: once for all images (with $imageId) and once for an element images (with $imageIndex)

@@ -11,11 +11,9 @@
         "sourceMap": true,
         "noLib": false,
         "newLine": "CRLF",
-        "allowJs": true,
-        "checkJs": true
+        "allowJs": false,
+        "checkJs": false
     },
-    "filesGlob": [
-    ],
     "formatCodeOptions": {
         "indentSize": 2,
         "tabSize": 2,
@@ -34,7 +32,8 @@
         "index.ts"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "node_modules/@types/lodash/index.d.ts"
     ],
     "atom": {
         "rewriteTsconfig": true

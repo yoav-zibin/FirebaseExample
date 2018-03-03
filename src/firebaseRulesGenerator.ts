@@ -573,6 +573,11 @@ module firebaseRules {
         },
       },
 
+      "testPushNotification": {
+        ".write": "true",
+        ".validate": validateMandatoryString(1000)[".validate"],
+      },
+
       // Only Game portal should write to this path.
       "gamePortal": {
         "gamesInfoAndSpec": {

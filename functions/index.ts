@@ -25,10 +25,37 @@ admin.initializeApp(functions.config().firebase);
 // TODO: implement push notification when someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
 
+
+exports.testPushNotification =
+functions.database.ref('testPushNotification').onWrite((event: any) => {
+  let fcmToken = event.data.val();
+  if (!fcmToken) {
+    console.log(`No fcmToken`);
+    return null;
+  }
+  const payload: any = 
+      {
+        notification: {
+          title: "Monopoly game is starting",
+          body: "Open GamePortal and join the fun!",
+        },
+        data: {
+          // Must be only strings in these key-value pairs
+          examplePayload: "Some arbitrary payload string",
+          fcmToken: fcmToken,
+        }
+      };
+  return admin.messaging().sendToDevice([fcmToken], payload)
+    .catch((err: any)=> {
+      console.error("Error: ", err);
+    });
+});
+
+/*
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
 function sendPushToUser(
-  toUserId: string, senderUid: string, senderName: string, body: string, timestamp: string, groupId: string) {
-  console.log('Sending push notification:', toUserId, senderUid, senderName, body, timestamp, groupId);
+  toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
+  console.log('Sending push notification:', toUserId, senderUid, body, timestamp, groupId);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
   // Get the list of device notification tokens.
   return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
@@ -51,7 +78,7 @@ function sendPushToUser(
     const payload: any = 
       {
         notification: {
-          title: senderName,
+          title: "Monopoly game is starting", // TODO: fetch game name.
           body: body,
         },
         data: {
@@ -108,12 +135,10 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
 
   // Get sender name and participants
   return Promise.all([
-    admin.database().ref(`/users/${senderUid}/publicFields/displayName`).once('value'),
     admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
   ]).then(results => {
-    const senderName = results[0].val();
-    const participants = results[1].val();
-    console.log('senderName=', senderName, ' participants=', participants);
+    const participants = results[0].val();
+    console.log(' participants=', participants);
     // Send push to all participants except the sender (but we include the sender for "TEST_SEND_PUSH_NOTIFICATION")
     let targetUserIds = Object.keys(participants);
     if (!body.startsWith("TEST_SEND_PUSH_NOTIFICATION")) {
@@ -121,7 +146,7 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
     }
     let promises: Promise<any>[] = [];
     for (let toUserId of targetUserIds) {
-      promises.push(sendPushToUser(toUserId, senderUid, senderName, body, timestamp, groupId));
+      promises.push(sendPushToUser(toUserId, senderUid, body, timestamp, groupId));
     }
     return Promise.all(promises);
   });

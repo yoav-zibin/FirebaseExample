@@ -15,10 +15,6 @@
         "allowJs": true,
         "checkJs": true
     },
-    "filesGlob": [
-        "./src/*.ts",
-        "./typings/**/*.ts"
-    ],
     "formatCodeOptions": {
         "indentSize": 2,
         "tabSize": 2,

@@ -185,7 +185,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'ios'|'android';
+    platform: 'web'|'ios'|'android';
   }
 
   interface FcmTokens {
@@ -194,6 +194,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface PrivateFields {
     createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    countryCode: string;
     phoneNumber: string;
     fcmTokens: FcmTokens;
   }
@@ -280,6 +281,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface FirebaseDb {
     gameBuilder: GameBuilder;
+    testPushNotification: string;
     gamePortal: GamePortal;
   }
 

@@ -560,6 +560,7 @@ var firebaseRules;
                         // Contains fields that only $userId can read&write.
                         "privateFields": {
                             "createdOn": validateNow(),
+                            "countryCode": validateOptionalString(3),
                             "phoneNumber": validateMyPhoneNumber(),
                             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
                             // Push notifications will only be sent using cloud functions, after someone writes to

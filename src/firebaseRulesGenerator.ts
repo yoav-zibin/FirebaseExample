@@ -625,6 +625,7 @@ module firebaseRules {
             "privateFields": {
               "createdOn": validateNow(), // When the user was created.
 
+              "countryCode": validateOptionalString(3), // 2-letter country code.
               "phoneNumber": validateMyPhoneNumber(), // If the user logged in via phone. 
               
               // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).

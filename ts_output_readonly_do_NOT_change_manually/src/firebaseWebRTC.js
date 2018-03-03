@@ -22,7 +22,7 @@ var webRTC;
             privateFields: {
                 createdOn: firebase.database.ServerValue.TIMESTAMP,
                 phoneNumber: ``,
-                newContacts: ``,
+                countryCode: ``,
             },
         });
     }

@@ -481,6 +481,7 @@ module main {
       privateFields: {
         createdOn: firebase.database.ServerValue.TIMESTAMP,
         phoneNumber: ``,
+        countryCode: ``,
       },
     });
 

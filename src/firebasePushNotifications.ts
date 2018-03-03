@@ -22,6 +22,7 @@ module pushNotifications {
       privateFields: {
         createdOn: firebase.database.ServerValue.TIMESTAMP,
         phoneNumber: ``,
+        countryCode: ``,
       },
     });
 

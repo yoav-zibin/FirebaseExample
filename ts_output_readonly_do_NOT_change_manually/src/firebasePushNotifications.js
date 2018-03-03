@@ -3,7 +3,7 @@ var pushNotifications;
     function db() { return firebase.database(); }
     function messaging() { return firebase.messaging(); }
     let uid = null;
-    let groupId = null;
+    let matchId = null;
     let hasFcmToken = false;
     function prettyJson(obj) {
         return JSON.stringify(obj, null, '  ');
@@ -14,25 +14,14 @@ var pushNotifications;
         ref.set(writeVal);
     }
     function writeUser() {
-        let myUserPath = `/users/${uid}`;
+        let myUserPath = `/gamePortal/gamePortalUsers/${uid}`;
         dbSet(db().ref(myUserPath), {
-            publicFields: {
-                avatarImageUrl: `https://foo.bar/avatar`,
-                displayName: `Yoav Ziii`,
-                isConnected: true,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP,
-            },
             privateFields: {
-                email: `yoav.zibin@yooo.goo`,
                 createdOn: firebase.database.ServerValue.TIMESTAMP,
                 phoneNumber: ``,
-                facebookId: ``,
-                googleId: ``,
-                twitterId: ``,
-                githubId: ``,
             },
         });
-        writeGroup();
+        writeMatch();
     }
     function gotFcmToken() {
         hasFcmToken = true;
@@ -41,7 +30,7 @@ var pushNotifications;
     function writeUserIfNeeded() {
         uid = firebase.auth().currentUser.uid;
         console.info("My uid=", uid);
-        let myUserPath = `/users/${uid}`;
+        let myUserPath = `/gamePortal/gamePortalUsers/${uid}`;
         db().ref(myUserPath).once('value').then((snap) => {
             let myUserInfo = snap.val();
             if (!myUserInfo) {
@@ -49,37 +38,73 @@ var pushNotifications;
                 return;
             }
             console.log("User already exists");
-            if (myUserInfo.privateButAddable && myUserInfo.privateButAddable.groups) {
-                console.log("Group already exists");
-                setGroupId(Object.keys(myUserInfo.privateButAddable.groups)[0]);
+            if (myUserInfo.privateButAddable && myUserInfo.privateButAddable.matchMemberships) {
+                console.log("matchMemberships already exists");
+                setmatchId(Object.keys(myUserInfo.privateButAddable.matchMemberships)[0]);
                 return;
             }
-            writeGroup();
+            writeMatch();
         });
     }
-    function setGroupId(_groupId) {
+    function setmatchId(_matchId) {
         if (!uid)
             throw Error("Missing uid!");
-        if (groupId)
-            throw Error("groupId was already set!");
-        groupId = _groupId;
+        if (matchId)
+            throw Error("matchId was already set!");
+        matchId = _matchId;
         console.log("Update the FCM token every time the app starts");
         getFcmToken();
         console.log("For testing purposes, setting up onDisconnect so we'll send a push notification when the tab is closed.");
         sendPushNotification(true);
     }
-    function writeGroup() {
-        console.log("Create group");
-        let groupData = db().ref(`/gamePortal/groups`).push();
-        setGroupId(groupData.key);
-        dbSet(groupData, {
-            participants: {
-                [uid]: { participantIndex: 0 },
-            },
-            groupName: ``,
+    const idSuffix = "ForPushNotification";
+    function addImage(id, width, height, isBoardImage) {
+        dbSet(db().ref(`/gameBuilder/images/${id}${idSuffix}`), {
+            name: `whatever`,
+            width: width,
+            height: height,
+            sizeInBytes: 150000,
+            isBoardImage: isBoardImage,
+            downloadURL: `https://blabla.com`,
+            cloudStoragePath: `images/-KuV-Y9TXnfnaZExRTli.gif`,
+            uploaderEmail: `yoav@goo.bar`,
+            uploaderUid: uid,
             createdOn: firebase.database.ServerValue.TIMESTAMP,
         });
-        dbSet(db().ref(`/users/${uid}/privateButAddable/groups/${groupId}`), {
+    }
+    function writeMatch() {
+        console.log("Create match");
+        addImage(`gameIcon50x50`, 50, 50, false);
+        addImage(`gameIcon512x512`, 512, 512, false);
+        addImage(`boardImage`, 1024, 10, true);
+        dbSet(db().ref(`/gameBuilder/gameSpecs/gameSpec${idSuffix}`), {
+            uploaderEmail: `yoav@goo.bar`,
+            uploaderUid: uid,
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            gameName: `Chess!`,
+            gameIcon50x50: `gameIcon50x50${idSuffix}`,
+            gameIcon512x512: `gameIcon512x512${idSuffix}`,
+            screenShootImageId: `boardImage${idSuffix}`,
+            wikipediaUrl: `https://en.wikipedia.org/wiki/Chess`,
+            tutorialYoutubeVideo: ``,
+            board: {
+                imageId: `boardImage${idSuffix}`,
+                backgroundColor: `FFFFFF`,
+                maxScale: 1,
+            },
+            pieces: [],
+        });
+        let matchData = db().ref(`/gamePortal/matches`).push();
+        setmatchId(matchData.key);
+        dbSet(matchData, {
+            participants: {
+                [uid]: { participantIndex: 0, pingOpponents: firebase.database.ServerValue.TIMESTAMP, },
+            },
+            createdOn: firebase.database.ServerValue.TIMESTAMP,
+            lastUpdatedOn: firebase.database.ServerValue.TIMESTAMP,
+            gameSpecId: `gameSpec${idSuffix}`,
+        });
+        dbSet(db().ref(`/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships/${matchId}`), {
             addedByUid: uid,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
         });
@@ -104,11 +129,9 @@ var pushNotifications;
     }
     function setFcmToken(token) {
         console.log('Token:', token);
-        dbSet(db().ref(`/users/${uid}/privateFields/fcmTokens/${token}`), {
-            "createdOn": firebase.database.ServerValue.TIMESTAMP,
+        dbSet(db().ref(`/gamePortal/gamePortalUsers/${uid}/privateFields/fcmTokens/${token}`), {
             "lastTimeReceived": firebase.database.ServerValue.TIMESTAMP,
             "platform": "web",
-            "app": "GamePortalAngular",
         });
         gotFcmToken();
     }
@@ -124,14 +147,10 @@ var pushNotifications;
     function sendPushNotification(onDisconnect) {
         notificationCounter++;
         console.log('Send notification to myself. notificationCounter=', notificationCounter);
-        let messageData = db().ref(`gamePortal/groups/${groupId}/messages`).push();
+        let messageData = db().ref(`gamePortal/matches/${matchId}/participants/${uid}/pingOpponents`);
         if (onDisconnect)
             messageData = messageData.onDisconnect();
-        dbSet(messageData, {
-            "senderUid": uid,
-            "message": "TEST_SEND_PUSH_NOTIFICATION" + notificationCounter,
-            "timestamp": firebase.database.ServerValue.TIMESTAMP,
-        });
+        dbSet(messageData, firebase.database.ServerValue.TIMESTAMP);
     }
     function requestPermissionOrSendPushNotification() {
         if (hasFcmToken) {
@@ -162,12 +181,12 @@ var pushNotifications;
     function init() {
         // Initialize Firebase
         let config = {
-            apiKey: "AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M",
-            authDomain: "universalgamemaker.firebaseapp.com",
-            databaseURL: "https://universalgamemaker.firebaseio.com",
-            projectId: "universalgamemaker",
-            storageBucket: "universalgamemaker.appspot.com",
-            messagingSenderId: "144595629077"
+            apiKey: `AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI`,
+            authDomain: `testproject-a6dce.firebaseapp.com`,
+            databaseURL: `https://testproject-a6dce.firebaseio.com`,
+            projectId: `testproject-a6dce`,
+            storageBucket: ``,
+            messagingSenderId: `957323548528`
         };
         firebase.initializeApp(config);
         if ('serviceWorker' in navigator) {

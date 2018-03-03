@@ -584,7 +584,7 @@ var firebaseRules;
                                     //   }
                                     // }
                                     // For web we send only data in payload.
-                                    "platform": validateRegex("ios|android"),
+                                    "platform": validateRegex("web|ios|android"),
                                 },
                             },
                         },

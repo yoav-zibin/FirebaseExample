@@ -68,12 +68,12 @@ module webRTC {
   function init() {
     // Initialize Firebase
     var config = {
-      apiKey: "AIzaSyC2p0MXPE-yIQjnNztbxlK2on7EAMnBO54",
-      authDomain: "mytest-a0c11.firebaseapp.com",
-      databaseURL: "https://mytest-a0c11.firebaseio.com",
-      projectId: "mytest-a0c11",
-      storageBucket: "mytest-a0c11.appspot.com",
-      messagingSenderId: "212624241094"
+      apiKey: 'AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M',
+      authDomain: 'universalgamemaker.firebaseapp.com',
+      databaseURL: 'https://universalgamemaker.firebaseio.com',
+      projectId: 'universalgamemaker',
+      storageBucket: 'universalgamemaker.appspot.com',
+      messagingSenderId: '144595629077'
     };
     firebase.initializeApp(config);
     firebaseLogin();

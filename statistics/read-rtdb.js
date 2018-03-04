@@ -24,6 +24,7 @@ function downloadDatabase(){
         console.log("gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
       }
     });
+    admin.app().delete();
   });
 }
 

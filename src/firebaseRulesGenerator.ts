@@ -302,7 +302,7 @@ module firebaseRules {
       case "$signalEntryId":
       case "$lineId":
       case "$gameInfoId":
-      case "$gameSpecForPortalId":
+      case "$gameSpecId":
         return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
     }
     throw new Error("Illegal parentKey=" + parentKey);
@@ -593,7 +593,7 @@ module firebaseRules {
             },
           },
           "gameSpecsForPortal": {
-            "$gameSpecForPortalId": {
+            "$gameSpecId": {
               "images": {
                 "$imageId": getImage(),
               },
@@ -623,7 +623,7 @@ module firebaseRules {
             ".write": "$gamePortalUserId === auth.uid",
             // Contains fields that only $userId can read&write.
             "privateFields": {
-              "createdOn": validateNow(), // When the user was created.
+              "createdOn": validateNow(), // When the user last logged on.
 
               "countryCode": validateOptionalString(3), // 2-letter country code.
               "phoneNumber": validateMyPhoneNumber(), // If the user logged in via phone. 
@@ -737,12 +737,7 @@ module firebaseRules {
     if (key == "images" && rules["$imageIndex"]) return "ElementImages";
     //Image already exists: parentKey=$imageIndex old parentKey=$imageId
     if (key == "$imageIndex" && rules["imageId"]) return "ElementImage";
-    if (key == "$reviewedGameSpecId") {
-      return rules["$reviewerUserId"] ? "StarReviewsForGame" : "StarsSummaryForGame";
-    }
-    if (key == "$reviewerUserId") return "StarReview";
-    if (key == "gameSpec") return "GamesReviews";
-
+    if (key == "$gameSpecId" && rules["images"]) return "GameSpecForPortal";
     if (key == "pieces" && rules["$pieceIndex"]  && rules["$pieceIndex"]["currentState"]) return "PiecesState";
     if (key == "$pieceIndex" && rules["currentState"]) return "PieceState";
 

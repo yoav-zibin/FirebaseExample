@@ -260,7 +260,7 @@ var firebaseRules;
             case "$signalEntryId":
             case "$lineId":
             case "$gameInfoId":
-            case "$gameSpecForPortalId":
+            case "$gameSpecId":
                 return validate(`${parentKey}.matches(/^${ID_PATTERN}$/)`);
         }
         throw new Error("Illegal parentKey=" + parentKey);
@@ -531,7 +531,7 @@ var firebaseRules;
                         },
                     },
                     "gameSpecsForPortal": {
-                        "$gameSpecForPortalId": {
+                        "$gameSpecId": {
                             "images": {
                                 "$imageId": getImage(),
                             },
@@ -671,13 +671,8 @@ var firebaseRules;
         //Image already exists: parentKey=$imageIndex old parentKey=$imageId
         if (key == "$imageIndex" && rules["imageId"])
             return "ElementImage";
-        if (key == "$reviewedGameSpecId") {
-            return rules["$reviewerUserId"] ? "StarReviewsForGame" : "StarsSummaryForGame";
-        }
-        if (key == "$reviewerUserId")
-            return "StarReview";
-        if (key == "gameSpec")
-            return "GamesReviews";
+        if (key == "$gameSpecId" && rules["images"])
+            return "GameSpecForPortal";
         if (key == "pieces" && rules["$pieceIndex"] && rules["$pieceIndex"]["currentState"])
             return "PiecesState";
         if (key == "$pieceIndex" && rules["currentState"])

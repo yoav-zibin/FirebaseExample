@@ -21,7 +21,7 @@ function downloadDatabase(){
       const screenShootImageId = spec.child("screenShootImageId").val();
       const gameName = spec.child("gameName").val();
       if (screenShootImageId) {
-        console.log("gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
+        console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
       }
     });
     admin.app().delete();

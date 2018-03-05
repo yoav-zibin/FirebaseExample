@@ -1,6 +1,6 @@
 # Firebase Statistics & File Conversion
 
-This module using the [Firebase Admin SDK](https://firebase.google.com/docs/reference/admin/) to read image data/paths from the universalgamemaker Firebase Database, perform image resizing/compression on images in Firebase Cloud Storage, then create statistics based on the newly generated images.
+This module uses the [Firebase Admin SDK](https://firebase.google.com/docs/reference/admin/) to read image data/paths from the universalgamemaker Firebase Database, perform image resizing/compression on images in Firebase Cloud Storage, then create statistics based on the newly generated images.
 
 ## Setup:
 After running `npm install`, download your service account credentials and replace this line with the path to your own credential file:

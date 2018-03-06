@@ -1,4 +1,4 @@
-const serviceAccount = require("../../Certificates/universalgamemaker-firebase-adminsdk.json");
+const serviceAccount = require("../../universalgamemaker-firebase-adminsdk.json");
 const admin = require("firebase-admin");
 
 admin.initializeApp({
@@ -9,6 +9,7 @@ admin.initializeApp({
 
 const db = admin.database();
 const dbRef = db.ref("/gameBuilder");
+const dbTarget = db.ref("/gamePortal/gamesInfoAndSpec/gameInfo");
 
 function downloadDatabase(){
   let database_json = {};
@@ -21,7 +22,13 @@ function downloadDatabase(){
       const screenShootImageId = spec.child("screenShootImageId").val();
       const gameName = spec.child("gameName").val();
       if (screenShootImageId) {
-        console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
+        //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
+        dbTarget.push({
+          gameName: gameName,
+          gameSpecId: spec.key,
+          screenShootImageId: screenShootImageId,
+          numberOfMatches: 0
+        });
       }
     });
     admin.app().delete();

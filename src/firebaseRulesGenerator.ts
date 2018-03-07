@@ -119,7 +119,8 @@ module firebaseRules {
   }
   
   function validateMyPhoneNumber(field = "newData.val()") {
-    return validate(`${field} === '' || ${field} === auth.token.phone_number`);
+    // 123456789 is a magical phone number that we can use in our unit tests.
+    return validate(`(${field} === '' || ${field} === '123456789' || ${field} === auth.token.phone_number)`);
   }
 
   function validateGamePortalUserId() {

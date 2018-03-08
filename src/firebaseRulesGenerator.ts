@@ -611,6 +611,7 @@ module firebaseRules {
         "phoneNumberToUserId": {
           // $phoneNumber is an international number, i.e., (/^[+][0-9]{5,20}$/)
           "$phoneNumber": { // Match Id
+            ".read": ANYONE,
             ".write": validateMyPhoneNumber("$phoneNumber")['.validate'],
             "userId": validateMyUid(),
             "timestamp": validateNow(),

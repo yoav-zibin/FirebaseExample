@@ -291,7 +291,7 @@ module firebaseRules {
       
       //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
       case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
-      case "$phoneNumber": return validateMyPhoneNumber(parentKey); //validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
+      case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
       
       case "$gameBuilderUserId": 
       case "$gamePortalUserId": 
@@ -611,7 +611,7 @@ module firebaseRules {
         "phoneNumberToUserId": {
           // $phoneNumber is an international number, i.e., (/^[+][0-9]{5,20}$/)
           "$phoneNumber": { // Match Id
-            ".write": "!data.exists()",
+            ".write": validateMyPhoneNumber("$phoneNumber")['.validate'],
             "userId": validateMyUid(),
             "timestamp": validateNow(),
           },

@@ -529,6 +529,7 @@ var firebaseRules;
                             "gameSpecId": validateMandatoryString(100),
                             "gameName": validateMandatoryString(100),
                             "screenShootImageId": validateMandatoryString(100),
+                            "screenShootImage": getImage(),
                             "numberOfMatches": validateInteger(0, 1000000000),
                         },
                     },

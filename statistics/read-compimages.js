@@ -10,6 +10,8 @@ admin.initializeApp({
 const db = admin.database();
 const dbRef = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal");
 
+// -L-SbyQzVtEP_sDhK2Mz
+// https://firebasestorage.googleapis.com/v0/b/universalgamemaker.appspot.com/o/images%2F-L-SbyQzVtEP_sDhK2Mz.png?alt=media&token=c11c45e3-d7f9-465f-a436-38345baaf96a
 function download_Images(){
   const promises = [];
   dbRef.once("value", (gameImages) => {

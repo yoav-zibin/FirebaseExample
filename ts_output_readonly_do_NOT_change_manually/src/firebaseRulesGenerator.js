@@ -250,7 +250,8 @@ var firebaseRules;
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_MATCH);
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
             case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
-            case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+0-9]{5,20}$/)`);
+            case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
+            case "$contactPhoneNumber": return validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
             case "$gameBuilderUserId":
             case "$gamePortalUserId":
             case "$imageId":
@@ -564,6 +565,11 @@ var firebaseRules;
                             "createdOn": validateNow(),
                             "countryCode": validateOptionalString(3),
                             "phoneNumber": validateMyPhoneNumber(),
+                            "contacts": {
+                                "$contactPhoneNumber": {
+                                    "contactName": validateMandatoryString(20),
+                                },
+                            },
                             // The tokens for sending this user push notifications using FCM (Firebase Cloud Messaging).
                             // Push notifications will only be sent using cloud functions, after someone writes to
                             // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents

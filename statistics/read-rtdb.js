@@ -1,4 +1,4 @@
-const serviceAccount = require("../../universalgamemaker-firebase-adminsdk.json");
+const serviceAccount = require("../../Certificates/universalgamemaker-firebase-adminsdk.json");
 const admin = require("firebase-admin");
 
 admin.initializeApp({
@@ -84,9 +84,20 @@ function downloadDatabase_gameSpecforPortal(){
         //console.log(items);
       }
     });
-    admin.app().delete();
+    //admin.app().delete();
   });
 }
 
+function exampleDownloadUrl() {
+  const storage = admin.storage().bucket();
+  const file = storage.file("compressed/-L5uNRbN3zNwj5OcFtks.png");
+  return file.getSignedUrl({
+    action: 'read',
+    expires: '03-09-2491'
+  }).then(signedUrls => {
+    console.log(signedUrls[0]);
+  });
+  
+}
 
-downloadDatabase();
+exampleDownloadUrl();

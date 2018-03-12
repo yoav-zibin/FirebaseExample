@@ -1,43 +1,42 @@
-const serviceAccount = require("../../testproject-firebase-adminsdk.json");
+const serviceAccount = require("../../universalgamemaker-firebase-adminsdk.json");
 const admin = require("firebase-admin");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://testproject-a6dce.firebaseio.com/",
-  storageBucket: 'testproject-a6dce.appspot.com'
+  databaseURL: "https://universalgamemaker.firebaseio.com",
+  storageBucket: 'universalgamemaker.appspot.com'
 });
 
 const db = admin.database();
 const dbRef = db.ref("/gameBuilder");
 const dbTarget = db.ref("/gamePortal/gamesInfoAndSpec/gameInfo");
 const dbTargetSpec = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal");
-var dbTargetElement;
 
-
-var writeUserData = function (promisesSpecs, promisesElemes, promisesImages,itemsElems,itemsSpecs,dbTargetElem) {
+var writeGameData = function (promisesImages,itemElements,itemsSpecs) {
 //console.log(dbTargetElem);
   Promise.all(promisesImages).then(
     (promises) => {
-       promises = promises.filter(promise => !(promise instanceof Error));
-      
-       errors = promises.filter(promise => (promise instanceof Error));
-      console.log("Errors Encountered:" + errors);
+      // promises = promises.filter(promise => !(promise instanceof Error));    
+      const errorsImages = promises.filter(promise => (promise instanceof Error));
+      console.log("Image Errors Encountered:" + errorsImages);
       console.log(" Finished Writing Images");
     }
   ).then(val => {
-    Object.keys(itemsElems).forEach(function(key) {
-        const dbTargetElem = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/"+itemsElems[key].specKey+"/elements");
-         promisesElemes.push(dbTargetElem.child(itemsElems[key].key).set(itemsElems[key].value));
+    const promisesElements = [];
+    Object.keys(itemElements).forEach(function(key) {
+        const dbTargetElem = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/"+itemElements[key].specKey+"/elements");
+        promisesElements.push(dbTargetElem.child(itemElements[key].key).set(itemElements[key].value));
    });
-    return Promise.all(promisesElemes).then(
+    return Promise.all(promisesElements).then(
       (promises) => {
-         promises = promises.filter(promise => !(promise instanceof Error));  
-         errors = promises.filter(promise => (promise instanceof Error));
-        console.log("Errors Encountered:" + errors);
+        // promises = promises.filter(promise => !(promise instanceof Error));  
+        const errorsElements = promises.filter(promise => (promise instanceof Error));
+        console.log("Element Errors Encountered:" + errorsElements);
         console.log(" Finished Writing Elements");
       }
     )
 }).then(val => {
+  const promisesSpecs = [];
   Object.keys(itemsSpecs).forEach(function(key) {
     promisesSpecs.push(dbTargetSpec.child(itemsSpecs[key].key).update({
            gameSpec: itemsSpecs[key].value
@@ -45,21 +44,20 @@ var writeUserData = function (promisesSpecs, promisesElemes, promisesImages,item
  });
     return Promise.all(promisesSpecs).then(
       (promises) => {
-         promises = promises.filter(promise => !(promise instanceof Error));
-        
-         errors = promises.filter(promise => (promise instanceof Error));
-        console.log("Errors Encountered:" + errors);
+        // promises = promises.filter(promise => !(promise instanceof Error));      
+        const errorsSpecs = promises.filter(promise => (promise instanceof Error));
+        console.log("Game Specification Errors Encountered:" + errorsSpecs);
         console.log(" Finished Writing Specs");
       }
     )
 }).then(finalVal => {
-    console.log(" All elements written successfully");
+    console.log(" Transfer Complete!! ");
     return admin.app().delete();
 }).catch((err) =>{
-    console.log("Error: ");
-    console.log(err);
-    return admin.app().delete();
-  });
+  console.log("Error Encountered: ");
+  console.log(err);
+  return admin.app().delete();
+});
 
 };
 
@@ -67,59 +65,48 @@ var writeUserData = function (promisesSpecs, promisesElemes, promisesImages,item
 function downloadDatabase(){
   //dbTargetSpec.remove();
   let database_json = {};
-  const promisesSpecs = [];
-  const promisesElemes = [];
   const promisesImages = [];
-  const itemsElems= [];
-  const itemsSpecs = [];
+  const itemElements = [];
+  const itemSpecs = [];
   dbRef.once("value", (gameBuilder) => {
     const specs = gameBuilder.child('gameSpecs');
     const elements = gameBuilder.child('elements');
     const images = gameBuilder.child('images');
-    specs.forEach((spec) =>{
-        dbTargetElem = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/"+spec.key+"/elements");
-        dbTargetElement = dbTargetElem;
-      
+    specs.forEach((spec) =>{   
         const dbTargetImg = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/"+spec.key+"/images");
         const screenShootImageId = spec.child("screenShootImageId").val();
         const gameName = spec.child("gameName").val();
         const pieces = spec.child("pieces");
-        if (screenShootImageId ) {
+        if (screenShootImageId) {
             //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
-            //dbTargetSpec.remove();
-            var gamespec = {};
-            gamespec.key = spec.key;
-            gamespec.value = spec.val();
-            //gamespec[spec.key] = spec.val()
-            itemsSpecs.push(gamespec);
+            // dbTargetSpec.remove();
+            const boardImageId = spec.child("board").child("imageId").val();
+            var gameSpec = {};
+            gameSpec.key = spec.key;
+            gameSpec.value = spec.val();
+            itemSpecs.push(gameSpec);
             pieces.forEach((pieces) =>{
-
                 const pieceElementId = pieces.child("pieceElementId").val();
                 elements.forEach((elements) =>{       
                     if(pieceElementId === elements.key)
                     {
-                        var list = {};
-                        list.key = elements.key;
-                        list.specKey = spec.key;
-                        list.value = elements.val();
-                        //list[elements.key] = elements.val();
-                        itemsElems.push(list);
-                        const elemImageId = elements.child("images/0/imageId").val();
-                        images.forEach((images) =>{              
-                            if(elemImageId === images.key)
-                            {
-                                promisesImages.push(dbTargetImg.child(images.key).set(images.val()));                           
-                            }
-                        }); 
+                        var gameElement = {};
+                        gameElement.key = elements.key;
+                        gameElement.specKey = spec.key;
+                        gameElement.value = elements.val();
+                        itemElements.push(gameElement);
+                        const elemImageId = elements.child("images");
+                        elemImageId.forEach((elemImageId) =>{  
+                            const elemImageVal = elemImageId.child("imageId").val();      
+                            promisesImages.push(dbTargetImg.child(elemImageVal).set(images.child(elemImageVal).val()));   
+                        });    
                     }
                 });                    
-             });  
-       //console.log(items);   
+            });    
+             promisesImages.push(dbTargetImg.child(boardImageId).set(images.child(boardImageId).val()));   
         }     
     });
-    //Object.keys(itemsElems).map(e => console.log(`key=${e}  value=${Object.values(e)}`));
-    writeUserData(promisesSpecs, promisesElemes, promisesImages,itemsElems,itemsSpecs,dbTargetElement);
-    //admin.app().delete();
+     writeGameData(promisesImages, itemElements, itemSpecs);
   });
 }
 

@@ -85,7 +85,7 @@ var pushNotifications;
             gameName: `Chess!`,
             gameIcon50x50: `gameIcon50x50${idSuffix}`,
             gameIcon512x512: `gameIcon512x512${idSuffix}`,
-            screenShootImageId: `boardImage${idSuffix}`,
+            screenShotImageId: `boardImage${idSuffix}`,
             wikipediaUrl: `https://en.wikipedia.org/wiki/Chess`,
             tutorialYoutubeVideo: ``,
             board: {

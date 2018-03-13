@@ -74,11 +74,11 @@ function downloadDatabase(){
     const images = gameBuilder.child('images');
     specs.forEach((spec) =>{   
         const dbTargetImg = db.ref("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/"+spec.key+"/images");
-        const screenShootImageId = spec.child("screenShootImageId").val();
+        const screenShotImageId = spec.child("screenShotImageId").val();
         const gameName = spec.child("gameName").val();
         const pieces = spec.child("pieces");
-        if (screenShootImageId) {
-            //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
+        if (screenShotImageId) {
+            //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShotImageId=" + screenShotImageId);
             // dbTargetSpec.remove();
             const boardImageId = spec.child("board").child("imageId").val();
             var gameSpec = {};

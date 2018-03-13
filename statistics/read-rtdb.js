@@ -19,16 +19,16 @@ function downloadDatabase(){
     const images = gameBuilder.child('images');
     // dbTarget.remove();
     specs.forEach((spec) =>{
-      const screenShootImageId = spec.child("screenShootImageId").val();
+      const screenShotImageId = spec.child("screenShotImageId").val();
       const gameName = spec.child("gameName").val();
-      if (screenShootImageId) {
-        //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShootImageId=" + screenShootImageId);
+      if (screenShotImageId) {
+        //console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShotImageId=" + screenShotImageId);
         dbTarget.push({
           gameName: gameName,
           gameSpecId: spec.key,
-          screenShootImageId: screenShootImageId,
+          screenShotImageId: screenShotImageId,
           numberOfMatches: 0,
-          screenShotImage: images.child(screenShootImageId).val()
+          screenShotImage: images.child(screenShotImageId).val()
         });
       }
     });

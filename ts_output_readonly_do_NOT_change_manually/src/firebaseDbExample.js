@@ -261,7 +261,7 @@ var main;
             gameName: `Chess!`,
             gameIcon50x50: `gameIcon50x50${idSuffix}`,
             gameIcon512x512: `gameIcon512x512${idSuffix}`,
-            screenShootImageId: `deckArea${idSuffix}`,
+            screenShotImageId: `deckArea${idSuffix}`,
             wikipediaUrl: `https://en.wikipedia.org/wiki/Chess`,
             tutorialYoutubeVideo: ``,
             board: {

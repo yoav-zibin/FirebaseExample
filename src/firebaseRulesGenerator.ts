@@ -489,7 +489,7 @@ module firebaseRules {
       "gameName": validateMandatoryString(100), // It's ok if the gameName is not unique.
       "gameIcon50x50": addValidate(validateImageId(), validateImageIdOfSize(50, 50)),
       "gameIcon512x512": addValidate(validateImageId(), validateImageIdOfSize(512, 512)),
-      "screenShootImageId": validateOptionalString(1000),
+      "screenShotImageId": validateOptionalString(1000),
       "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
       // Optional tutorial video (it can be an empty string).
       "tutorialYoutubeVideo": validateRegex(`(${YOUTUBE_VIDEO_ID_PATTERN})?`),
@@ -590,8 +590,8 @@ module firebaseRules {
             "$gameInfoId": {
               "gameSpecId": validateMandatoryString(100),
               "gameName": validateMandatoryString(100),
-              "screenShootImageId": validateMandatoryString(100),
-              "screenShootImage": getImage(),
+              "screenShotImageId": validateMandatoryString(100),
+              "screenShotImage": getImage(),
               "numberOfMatches": validateInteger(0, 1000000000),
             },
           },

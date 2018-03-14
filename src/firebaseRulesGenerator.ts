@@ -586,13 +586,11 @@ module firebaseRules {
           ".read": ANYONE,
           // TODO: Will be written by cloud functions
           "gameInfos": {
-            ".indexOn": ["numberOfMatches"],
             "$gameInfoId": {
               "gameSpecId": validateMandatoryString(100),
               "gameName": validateMandatoryString(100),
               "screenShotImageId": validateMandatoryString(100),
               "screenShotImage": getImage(),
-              "numberOfMatches": validateInteger(0, 1000000000),
             },
           },
           "gameSpecsForPortal": {

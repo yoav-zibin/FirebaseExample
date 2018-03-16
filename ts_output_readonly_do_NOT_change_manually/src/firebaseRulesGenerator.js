@@ -95,9 +95,10 @@ var firebaseRules;
     function validateMyUid() {
         return validate("newData.isString() && newData.val() === auth.uid");
     }
+    // 123456789 is a magical phone number that we can use in our unit tests.
+    const MAGIC_PHONE_NUMBER_FOR_TESTS = '123456789';
     function validateMyPhoneNumber(field = "newData.val()") {
-        // 123456789 is a magical phone number that we can use in our unit tests.
-        return validate(`(${field} === '' || ${field} === '123456789' || ${field} === auth.token.phone_number)`);
+        return validate(`(${field} === '' || ${field} === '${MAGIC_PHONE_NUMBER_FOR_TESTS}' || ${field} === auth.token.phone_number)`);
     }
     function validateGamePortalUserId() {
         return validateNewDataIdExists("gamePortal/gamePortalusers/");
@@ -251,7 +252,7 @@ var firebaseRules;
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
             case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
             case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
-            case "$contactPhoneNumber": return validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
+            case "$contactPhoneNumber": return validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/) || ${parentKey}=='${MAGIC_PHONE_NUMBER_FOR_TESTS}'`);
             case "$gameBuilderUserId":
             case "$gamePortalUserId":
             case "$imageId":
@@ -288,9 +289,9 @@ var firebaseRules;
         }
         if (validateConditions.length > 0) {
             if (rules[".validate"]) {
-                validateConditions.push("(" + rules[".validate"] + ")");
+                validateConditions.push(rules[".validate"]);
             }
-            rules[".validate"] = validateConditions.join(" && ");
+            rules[".validate"] = "(" + validateConditions.join(") && (") + ")";
         }
         if (keys.length > 1) {
             for (let key of keys) {
@@ -524,13 +525,11 @@ var firebaseRules;
                     ".read": ANYONE,
                     // TODO: Will be written by cloud functions
                     "gameInfos": {
-                        ".indexOn": ["numberOfMatches"],
                         "$gameInfoId": {
                             "gameSpecId": validateMandatoryString(100),
                             "gameName": validateMandatoryString(100),
                             "screenShotImageId": validateMandatoryString(100),
                             "screenShotImage": getImage(),
-                            "numberOfMatches": validateInteger(0, 1000000000),
                         },
                     },
                     "gameSpecsForPortal": {

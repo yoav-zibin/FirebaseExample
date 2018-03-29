@@ -4,9 +4,9 @@ var dragAndDrop;
         if (!touchElementId || !handleDragEvent) {
             throw new Error("When calling addDragListener(touchElementId, handleDragEvent), you must pass two parameters");
         }
-        let isMouseDown = false;
+        var isMouseDown = false;
         function touchHandler(event) {
-            let touch = event.changedTouches[0];
+            var touch = event.changedTouches[0];
             handleEvent(event, event.type, touch.clientX, touch.clientY);
         }
         function mouseDownHandler(event) {
@@ -36,7 +36,7 @@ var dragAndDrop;
             console.log("handleDragEvent:", type, clientX, clientY);
             handleDragEvent(type, clientX, clientY, event);
         }
-        let gameArea = document.getElementById(touchElementId);
+        var gameArea = document.getElementById(touchElementId);
         if (!gameArea) {
             throw new Error("You must have <div id='" + touchElementId + "'>...</div>");
         }
@@ -50,15 +50,15 @@ var dragAndDrop;
         gameArea.addEventListener("mouseup", mouseUpHandler, true);
     }
     function init() {
-        let currentElement = null;
-        let currentZIndex = 100;
+        var currentElement = null;
+        var currentZIndex = 100;
         function endDrag() {
             if (currentElement != null) {
                 currentElement.classList.remove('currentlyDragged');
                 currentElement = null;
             }
         }
-        function touchHandler(type, clientX, clientY, event) {
+        function touchHandler(type, clientX, clientY) {
             if (type == "touchstart") {
                 endDrag();
                 currentElement = document.elementFromPoint(clientX, clientY);

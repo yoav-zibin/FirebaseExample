@@ -1,4 +1,4 @@
-const isTestProject = false;
+const isTestProject = true;
 const projectName = isTestProject ? "testproject-a6dce" : "universalgamemaker";
 const certificateName = isTestProject ? "testproject-firebase-adminsdk.json" : "universalgamemaker-firebase-adminsdk.json";
 const serviceAccount = require(`../../Certificates/${certificateName}`);
@@ -10,7 +10,6 @@ admin.initializeApp({
 });
 
 const db = admin.database();
-const dbRef = db.ref("/gameBuilder");
 const allPromises = [];
 function refSet(path, val) {
   console.log("refSet path=" + path);
@@ -36,48 +35,96 @@ function fixDownloadUrl(image) {
   return image;
 }
 
+function trimImageFields(img) {
+  return {
+    height: img.height,
+    width: img.width,
+    isBoardImage: img.isBoardImage,
+    downloadURL: img.downloadURL,
+    cloudStoragePath: img.cloudStoragePath,
+  };
+}
+
+function trimElementFields(element) {
+  return {
+    height: element.height,
+    width: element.width,
+    elementKind: element.elementKind,
+    images: element.images,
+    isDraggable: element.isDraggable
+  };
+}
+
+function trimGameSpecFields(gameSpec) {
+  return {
+    board: {imageId : gameSpec.board.imageId},
+    pieces: gameSpec.pieces,
+    screenShotImageId: gameSpec.screenShotImageId,
+    gameName: gameSpec.gameName,
+  };
+}
+
+function trimObject(obj, trimFunc) {
+  for (let [id, v] of Object.entries(obj)) {
+    obj[id] = trimFunc(v);
+  }
+}
+
+function changeElementToCard(element) {
+  // One game had toggable elements in a deck of cards, so we fix it here.
+  if (Object.keys(element.images).length != 2) throw new Error('changeElementToCard');
+  element.elementKind = 'card';
+}
+
 function downloadDatabase(){
   let database_json = {};
-  allPromises.push(dbRef.once("value", (gameBuilder) => {
-    const specs = gameBuilder.child('gameSpecs');
-    const elementIdToElement = gameBuilder.child('elements').val();
-    const imageIdToImage = gameBuilder.child('images').val();
-    // dbTarget.remove();
+  allPromises.push(db.ref("/gameBuilder").once("value", (snap) => {
+    const gameBuilder = snap.val();
+    const specIdToSpec = gameBuilder.gameSpecs;
+    const elementIdToElement = gameBuilder.elements;
+    const imageIdToImage = gameBuilder.images;
+    trimObject(specIdToSpec, trimGameSpecFields);
+    trimObject(elementIdToElement, trimElementFields);
+    trimObject(imageIdToImage, trimImageFields);
     let specCount = 0;
     let gameSpecs = [];
     let gameSpecsForPortal = {};
-    specs.forEach((spec) =>{
-      const screenShotImageId = spec.child("screenShotImageId").val();
-      const gameName = spec.child("gameName").val();
-      if (!screenShotImageId) return;
+    for (let [gameSpecId,spec] of Object.entries(specIdToSpec)) {
+      
+      const screenShotImageId = spec.screenShotImageId;
+      const gameName = spec.gameName;
+      if (!screenShotImageId) continue;
+      if (!spec.pieces) continue; // skip that game that has no pieces.
       specCount++;
-      // console.log("gameSpecId=" + spec.key + " gameName=" + gameName + " screenShotImageId=" + screenShotImageId);
+      console.log("gameSpecId=" + gameSpecId + " gameName=" + gameName + " screenShotImageId=" + screenShotImageId);
       gameSpecs.push({
-        gameSpecId: spec.key,
+        gameSpecId: gameSpecId,
         gameName: gameName,
         screenShotImageId: screenShotImageId,
         screenShotImage: fixDownloadUrl(imageIdToImage[screenShotImageId])
       });
 
-      let specVal = spec.val();
       const images = {};
       const elements = {};
-      images[specVal.board.imageId] = fixDownloadUrl(imageIdToImage[specVal.board.imageId]);
-      spec.child('pieces').forEach(piece => {
-        const elementId = piece.child('pieceElementId').val();
+      images[spec.board.imageId] = fixDownloadUrl(imageIdToImage[spec.board.imageId]);
+      for (let [_index, piece] of Object.entries(spec.pieces)) {
+        const elementId = piece.pieceElementId;
         let element = elementIdToElement[elementId];
+        if (piece.deckPieceIndex !== -1) changeElementToCard(element);
         elements[elementId] = element;
         for (let [k,v] of Object.entries(element.images)) {
           images[v.imageId] = fixDownloadUrl(imageIdToImage[v.imageId]);
         }
-      });
+      }
 
-      gameSpecsForPortal[spec.key] = {
+      if (Object.keys(elements).length == 0) throw new Error("no elements in gameSpecId=" + gameSpecId);
+      gameSpecsForPortal[gameSpecId] = {
         images: images,
         elements: elements,
-        gameSpec: spec.val(),
+        gameSpec: spec,
       };
-    });
+    }
+    console.log('wrote specCount=' + specCount);
     Promise.all(downLoadUrlPromises).then(()=> {
       refSet("/gamePortal/gamesInfoAndSpec/gameInfos", gameSpecs);
       refSet("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal", gameSpecsForPortal);

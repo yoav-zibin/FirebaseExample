@@ -2,8 +2,8 @@ module pushNotifications {
   function db() { return firebase.database(); }
   function messaging() { return firebase.messaging(); }
   
-  let uid: string = null;
-  let matchId: string = null;
+  let uid: string = '';
+  let matchId: string = '';
   let hasFcmToken = false;
 
   function prettyJson(obj: any): string {
@@ -31,11 +31,11 @@ module pushNotifications {
 
   function gotFcmToken() {
     hasFcmToken = true;
-    document.getElementById('requestPermission').innerHTML = "Send push notification in 2 seconds (so you can test both getting a notification in the foreground and background). I'll also send another message after the window is closed.";
+    document.getElementById('requestPermission')!.innerHTML = "Send push notification in 2 seconds (so you can test both getting a notification in the foreground and background). I'll also send another message after the window is closed.";
   }
 
   function writeUserIfNeeded() {
-    uid = firebase.auth().currentUser.uid;
+    uid = firebase.auth().currentUser!.uid;
     console.info("My uid=", uid);
     let myUserPath = `/gamePortal/gamePortalUsers/${uid}`;
     db().ref(myUserPath).once('value').then((snap)=>{
@@ -103,7 +103,7 @@ module pushNotifications {
       pieces: [],
     });
     let matchData = db().ref(`/gamePortal/matches`).push();
-    setmatchId(matchData.key);
+    setmatchId(matchData.key!);
     dbSet(matchData, {
       participants: {
         [uid]: {participantIndex: 0, pingOpponents: firebase.database.ServerValue.TIMESTAMP,},
@@ -144,7 +144,7 @@ module pushNotifications {
 
     messaging().onTokenRefresh(function() {
       console.log('onTokenRefresh: if for some reason the FCM token changed, then we write it again in DB');
-      messaging().getToken()
+      messaging().getToken()!
       .then(function(refreshedToken) {
         console.log('Token refreshed:', refreshedToken, "uid=", uid);
         if (uid) {
@@ -165,7 +165,7 @@ module pushNotifications {
 
   function getFcmToken() {
     console.log("getFcmToken");
-    messaging().getToken().then(function(token) {
+    messaging().getToken()!.then(function(token) {
       setFcmToken(token);
     }, function(err) {
       console.log('Unable to retrieve refreshed token ', err);
@@ -190,7 +190,7 @@ module pushNotifications {
     }
 
     console.log('Request permission to get push notifications.');
-    messaging().requestPermission()
+    messaging().requestPermission()!
     .then(function() {
       console.log('Notification permission granted.');
       getFcmToken();
@@ -240,6 +240,6 @@ module pushNotifications {
   }
 
   init();
-  document.getElementById('requestPermission').onclick = requestPermissionOrSendPushNotification;
+  document.getElementById('requestPermission')!.onclick = requestPermissionOrSendPushNotification;
 
 }  

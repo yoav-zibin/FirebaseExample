@@ -2,18 +2,19 @@
 // We send messages to a user by writing SignalData to
 // gamePortal/gamePortalUsers/$userId/privateButAddable/signal/$signalId
 // And the target user will read the signals and delete them after reading them.
-var SDP1 = 'sdp1';
-var SDP2 = 'sdp2';
+var CALLER = 'caller';
+var RECEIVER = 'receiver';
 var CANDIDATE = 'candidate';
 function checkCondition(desc, cond) {
     if (!cond) {
         throw new Error('Condition check failed for: ' + desc);
     }
-    return cond;
 }
 var videoChat;
 (function (videoChat) {
     var waitingSignals = {};
+    var videoChatContainer;
+    var myUserId;
     videoChat.localMediaStream = null;
     var localVideoElement;
     var opponentUserIds;
@@ -21,25 +22,27 @@ var videoChat;
     var peerConnections = {};
     var nav = navigator;
     navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
-    function updateOpponents(_myUserId, _opponentIds) {
-        console.log("updateOpponents:", _myUserId, _opponentIds);
+    function updateParticipantsUserIds(_myUserId, _participantsUserIds) {
         checkCondition('call getUserMedia() first', videoChat.localMediaStream);
         checkCondition("TODO: handle multiple calls!", !opponentUserIds);
-        opponentUserIds = _opponentIds.slice();
-        var index = 0;
-        localVideoElement = getVideoElement(index++);
+        myUserId = _myUserId;
+        opponentUserIds = _participantsUserIds.slice();
+        var myIndex = _participantsUserIds.indexOf(_myUserId);
+        opponentUserIds.splice(myIndex, 1);
+        videoChatContainer = document.getElementById('videoChatContainer');
+        localVideoElement = addVideoElement();
         setVideoStream(localVideoElement, videoChat.localMediaStream);
         // TODO: add user names until video shows up
         remoteVideoElements = [];
         for (var _i = 0, opponentUserIds_1 = opponentUserIds; _i < opponentUserIds_1.length; _i++) {
             var userId = opponentUserIds_1[_i];
-            var remoteVideoElement = getVideoElement(index++);
+            var remoteVideoElement = addVideoElement();
             remoteVideoElements.push(remoteVideoElement);
             createMyPeerConnection(userId, waitingSignals[userId]);
             delete waitingSignals[userId];
         }
     }
-    videoChat.updateOpponents = updateOpponents;
+    videoChat.updateParticipantsUserIds = updateParticipantsUserIds;
     function restartPeerConnection(userId) {
         createMyPeerConnection(userId, []);
     }
@@ -59,62 +62,57 @@ var videoChat;
         var uid = signal.addedByUid;
         var existingSignals = waitingSignals[uid];
         var peerConnection = peerConnections[uid];
-        var signalType = signal.signalType;
         if (peerConnection) {
-            if (peerConnection.canReceiveMessage(signalType)) {
-                peerConnection.receivedMessage(signal);
-            }
-            else {
-                // We either drop the signal or create a new peerConnection
-                if (signalType === SDP1) {
-                    console.warn("Got SDP1, so creating new connection");
+            if (signal.signalType == "sdp") {
+                if (peerConnection.didGetSdp()) {
+                    console.warn("Got another sdp, so creating new connection");
                     createMyPeerConnection(uid, [signal]);
                 }
                 else {
-                    console.warn("Dropping signal", signal);
+                    peerConnection.receivedMessage(signal);
+                }
+            }
+            else {
+                if (peerConnection.didGetSdp()) {
+                    peerConnection.receivedMessage(signal);
+                }
+                else {
+                    console.warn("Got candidate before sdp!", signal);
                 }
             }
             return;
         }
-        switch (signalType) {
-            case SDP2:
-                console.warn("Throwing away SDP2:", signal);
-                break;
-            case SDP1:
-                if (existingSignals) {
-                    console.warn("Throwing away signals=", existingSignals);
-                }
-                waitingSignals[uid] = [signal];
-                break;
-            case CANDIDATE:
-                if (!existingSignals) {
-                    console.warn("Throwing away candidate:", signal);
-                }
-                else {
-                    existingSignals.push(signal);
-                }
-                break;
+        if (signal.signalType == "sdp") {
+            if (existingSignals) {
+                console.warn("Throwing away signals=", existingSignals);
+            }
+            waitingSignals[uid] = [signal];
+        }
+        else {
+            if (!existingSignals) {
+                console.warn("Throwing away candidate:", signal);
+            }
+            else {
+                existingSignals.push(signal);
+            }
         }
     }
     videoChat.receivedMessage = receivedMessage;
-    function getElementById(id) {
-        return checkCondition('getElementById', document.getElementById(id));
+    function addVideoElement() {
+        var video = document.createElement('video');
+        video.autoplay = true;
+        videoChatContainer.appendChild(video);
+        return video;
     }
-    videoChat.getElementById = getElementById;
-    function getVideoElement(index) {
-        var video = getElementById('videoElement' + index);
-        var div = getElementById('videoParticipantName' + index);
-        return { video: video, name: div };
-    }
-    function setVideoStream(videoName, stream) {
-        var video = videoName.video, name = videoName.name;
-        video.style.display = 'inline';
-        name.style.display = 'none';
+    function setVideoStream(video, stream) {
         if ('srcObject' in video) {
             video.srcObject = stream;
         }
+        else if (window.URL) {
+            video.src = window.URL.createObjectURL(stream);
+        }
         else {
-            video.src = window.URL ? window.URL.createObjectURL(stream) : stream;
+            video.src = stream;
         }
         if ('getVideoTracks' in stream) {
             var videoTrack = stream.getVideoTracks()[0];
@@ -123,20 +121,16 @@ var videoChat;
                 if (settings.width && settings.height) {
                     var width = settings.width + "px";
                     var height = settings.height + "px";
-                    setWidthHeight(video, width, height);
-                    setWidthHeight(name, width, height);
+                    var style = video.style;
+                    style.width = width;
+                    style.height = height;
+                    style.minWidth = width;
+                    style.minHeight = height;
+                    style.maxWidth = width;
+                    style.maxHeight = height;
                 }
             }
         }
-    }
-    function setWidthHeight(elem, width, height) {
-        var style = elem.style;
-        style.width = width;
-        style.height = height;
-        style.minWidth = width;
-        style.minHeight = height;
-        style.maxWidth = width;
-        style.maxHeight = height;
     }
     function getUserMedia() {
         // get the local stream, show it in the local video element and send it
@@ -164,8 +158,6 @@ var MyPeerConnection = /** @class */ (function () {
         console.log("MyPeerConnection: initialSignals=", initialSignals);
         var pc = new RTCPeerConnection(MyPeerConnection.configuration);
         this.pc = pc;
-        checkCondition('localMediaStream', videoChat.localMediaStream);
-        pc.addStream(videoChat.localMediaStream);
         // send any ice candidates to the other peer
         pc.onicecandidate = function (evt) {
             if (_this.isClosed) {
@@ -188,6 +180,7 @@ var MyPeerConnection = /** @class */ (function () {
         };
         var stateChangeHandler = function (connectionState) {
             if (_this.isClosed) {
+                console.warn("oniceconnectionstatechange after close");
                 return;
             }
             if (connectionState === "failed" ||
@@ -198,30 +191,30 @@ var MyPeerConnection = /** @class */ (function () {
             }
         };
         pc.oniceconnectionstatechange = function (evt) {
-            console.log("oniceconnectionstatechange: ", evt, " iceConnectionState=", pc.iceConnectionState, "this.isClosed=", _this.isClosed);
+            console.log("oniceconnectionstatechange: ", evt, " iceConnectionState=", pc.iceConnectionState);
             stateChangeHandler(pc.iceConnectionState);
         };
         if ('onconnectionstatechange' in pc) {
             var anyPc_1 = pc;
             anyPc_1.onconnectionstatechange = function (evt) {
-                console.log("onconnectionstatechange: ", evt, " connectionState=", anyPc_1.connectionState, "this.isClosed=", _this.isClosed);
+                console.log("onconnectionstatechange: ", evt, " connectionState=", anyPc_1.connectionState);
                 stateChangeHandler(anyPc_1.connectionState);
             };
         }
         var isCaller = !initialSignals || initialSignals.length == 0;
         this.isCaller = isCaller;
         if (isCaller) {
-            pc.createOffer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createOffer: ", err); });
+            this.pc.createOffer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createOffer: ", err); });
         }
         else {
-            checkCondition(SDP1, initialSignals[0].signalType == SDP1);
-            // DOMException: CreateAnswer can't be called before SetRemoteDescription.
+            checkCondition(RECEIVER, initialSignals[0].signalType == RECEIVER);
             for (var _i = 0, initialSignals_1 = initialSignals; _i < initialSignals_1.length; _i++) {
                 var signal = initialSignals_1[_i];
                 this.receivedMessage(signal);
             }
-            pc.createAnswer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createAnswer: ", err); });
+            this.pc.createAnswer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createAnswer: ", err); });
         }
+        this.pc.addStream(videoChat.localMediaStream);
     }
     MyPeerConnection.prototype.didGetSdp = function () { return this.gotSdp; };
     MyPeerConnection.prototype.getIsCaller = function () { return this.isCaller; };
@@ -231,26 +224,18 @@ var MyPeerConnection = /** @class */ (function () {
     };
     MyPeerConnection.prototype.gotDescription = function (desc) {
         console.log("gotDescription: ", desc);
-        this.pc.setLocalDescription(desc).then(function () { console.log("setLocalDescription success"); }, function (err) { console.error("Error in setLocalDescription: ", err); });
-        webRTC.sendMessage(this.targetUserId, this.isCaller ? SDP1 : SDP2, desc);
-    };
-    MyPeerConnection.prototype.canReceiveMessage = function (signalType) {
-        switch (signalType) {
-            case SDP2:
-            case SDP1:
-                return !this.gotSdp && (signalType === (this.isCaller ? SDP2 : SDP1));
-            case CANDIDATE:
-                return this.gotSdp;
-        }
+        this.pc.setLocalDescription(desc);
+        webRTC.sendMessage(this.targetUserId, this.isCaller ? CALLER : RECEIVER, desc);
     };
     MyPeerConnection.prototype.receivedMessage = function (signalMsg) {
         console.log("receivedMessage signalMsg=", signalMsg);
         var signalType = signalMsg.signalType;
-        checkCondition('canReceiveMessage', this.canReceiveMessage(signalType));
         var signalData = JSON.parse(signalMsg.signalData);
         switch (signalType) {
-            case SDP2:
-            case SDP1:
+            case CALLER:
+            case RECEIVER:
+                checkCondition('gotSdp', !this.gotSdp);
+                checkCondition('isCaller', signalType === (this.isCaller ? RECEIVER : CALLER));
                 this.gotSdp = true;
                 this.pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(function () { console.log("setRemoteDescription success"); }, function (err) { console.error("Error in setRemoteDescription: ", err); });
                 break;
@@ -269,6 +254,7 @@ var MyPeerConnection = /** @class */ (function () {
 var webRTC;
 (function (webRTC) {
     function db() { return firebase.database(); }
+    function messaging() { return firebase.messaging(); }
     function prettyJson(obj) {
         return JSON.stringify(obj, null, '  ');
     }
@@ -277,7 +263,7 @@ var webRTC;
         console.log("Writing path=", ref.toString(), " writeVal=", writeValJson, "...");
         ref.set(writeVal);
     }
-    var uid = '';
+    var uid = null;
     function firebaseLogin() {
         console.info("My uid=", uid);
         listenToMessages();
@@ -329,21 +315,17 @@ var webRTC;
         });
     }
     function updateParticipantsUserIds() {
-        var participantsUserIds = videoChat.getElementById('participantsUserIds').value;
+        var participantsUserIds = document.getElementById('participantsUserIds').value;
         if (!participantsUserIds || participantsUserIds.indexOf(uid) == -1) {
             alert("You must enter participantsUserIds, that includes myUserId");
             return;
         }
-        var _participantsUserIds = participantsUserIds.split(",").map(function (s) { return s.trim(); });
-        var opponentUserIds = _participantsUserIds.slice();
-        var myIndex = _participantsUserIds.indexOf(uid);
-        opponentUserIds.splice(myIndex, 1);
-        videoChat.updateOpponents(uid, opponentUserIds);
+        videoChat.updateParticipantsUserIds(uid, participantsUserIds.split(",").map(function (s) { return s.trim(); }));
     }
+    document.getElementById('updateParticipantsUserIds').onclick = updateParticipantsUserIds;
     uid = window.location.search ? window.location.search.substr(1) : '' + Math.floor(Math.random() * 10);
-    videoChat.getElementById('myUserId').value = uid;
+    document.getElementById('myUserId').value = uid;
     init();
     videoChat.getUserMedia();
-    videoChat.getElementById('updateParticipantsUserIds').onclick = updateParticipantsUserIds;
 })(webRTC || (webRTC = {}));
 //# sourceMappingURL=firebaseWebRTC.js.map

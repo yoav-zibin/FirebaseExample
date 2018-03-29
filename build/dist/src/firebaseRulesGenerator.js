@@ -8,6 +8,11 @@ var firebaseRules;
         addValidateNoOther('', rules);
         return rules;
     }
+    function setReadWrite(rule, read, write) {
+        rule[".read"] = read;
+        rule[".write"] = write;
+        return rule;
+    }
     function addValidate(rule, exp) {
         rule[".validate"] += " && (" + exp + ")";
         return rule;
@@ -62,6 +67,9 @@ var firebaseRules;
     // image id: "-KwC4GgT2oJXK-FaKGq3" (len 20)
     // user id: "KTz2OcYNrQUCy8brAV9D8rcj4it" or "zg1ZOW7P2AM7va3FAdnpUHGw2HD2" (len 27-28)
     var ID_PATTERN = "[-_A-Za-z0-9]{17,40}";
+    function validateAnyId() {
+        return validateRegex(ID_PATTERN);
+    }
     var YOUTUBE_VIDEO_ID_PATTERN = "[-_A-Za-z0-9]{11}"; // e.g. -FyjEnoIgTM or lWhqORImND0
     function validateImageIdOfSize(width, height) {
         return "root.child('gameBuilder/images/' + newData.val() + '/width').val() === " + width + " && root.child('gameBuilder/images/' + newData.val() + '/height').val() === " + height;
@@ -92,6 +100,12 @@ var firebaseRules;
     function validateMyPhoneNumber(field) {
         if (field === void 0) { field = "newData.val()"; }
         return validate("(" + field + " === '' || " + field + " === '" + MAGIC_PHONE_NUMBER_FOR_TESTS + "' || " + field + " === auth.token.phone_number)");
+    }
+    function validateGamePortalUserId() {
+        return validateNewDataIdExists("gamePortal/gamePortalusers/");
+    }
+    function validateMatchId() {
+        return validateNewDataIdExists("gamePortal/matches/");
     }
     var VALIDATE_NOW = "newData.isNumber() && newData.val() == now";
     function validateNow() {
@@ -169,6 +183,12 @@ var firebaseRules;
                 },
             },
         };
+    }
+    function allowWrite(write, rule) {
+        if (rule[".write"])
+            throw new Error("Rule already has .write: " + prettyJson(rule));
+        rule[".write"] = write;
+        return rule;
     }
     function deleteElement(arr, elem) {
         var index = arr.indexOf(elem);
@@ -603,14 +623,14 @@ var firebaseRules;
                             // See https://www.html5rocks.com/en/tutorials/webrtc/basics/
                             // Any user can add signals, and only $userId can delete them (after reading the signal).
                             // Then the caller and receiver exchange signals.
-                            // The signalData for 'sdp1|sdp2' is the description you get in the callback for createOffer (sdp1) and createAnswer (sdp2).
+                            // The signalData for 'caller|receiver' is the description you get in the callback for createOffer and createAnswer.
                             // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
                             "signals": {
                                 "$signalEntryId": {
                                     ".write": "!data.exists() || data.child('addedByUid').val() == auth.uid",
                                     "addedByUid": validateMyUid(),
                                     "timestamp": validateNow(),
-                                    "signalType": validateRegex("sdp1|sdp2|candidate"),
+                                    "signalType": validateRegex("caller|receiver|candidate"),
                                     "signalData": validateMandatoryString(10000),
                                 },
                             },

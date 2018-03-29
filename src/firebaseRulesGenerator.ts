@@ -11,12 +11,6 @@ module firebaseRules {
     return rules;
   }
 
-  function setReadWrite(rule: Rule, read: string, write: string): Rule {
-    rule[".read"] = read;
-    rule[".write"] = write;
-    return rule;
-  }
-
   function addValidate(rule: Rule, exp: string): Rule {
     rule[".validate"] += " && (" + exp + ")";
     return rule;
@@ -80,10 +74,6 @@ module firebaseRules {
   // user id: "KTz2OcYNrQUCy8brAV9D8rcj4it" or "zg1ZOW7P2AM7va3FAdnpUHGw2HD2" (len 27-28)
   const ID_PATTERN = "[-_A-Za-z0-9]{17,40}";
 
-  function validateAnyId() {
-    return validateRegex(ID_PATTERN);
-  }
-
   const YOUTUBE_VIDEO_ID_PATTERN = "[-_A-Za-z0-9]{11}"; // e.g. -FyjEnoIgTM or lWhqORImND0
 
   function validateImageIdOfSize(width: number, height: number): string {
@@ -122,14 +112,6 @@ module firebaseRules {
   const MAGIC_PHONE_NUMBER_FOR_TESTS = '123456789';
   function validateMyPhoneNumber(field = "newData.val()") {
     return validate(`(${field} === '' || ${field} === '${MAGIC_PHONE_NUMBER_FOR_TESTS}' || ${field} === auth.token.phone_number)`);
-  }
-
-  function validateGamePortalUserId() {
-    return validateNewDataIdExists("gamePortal/gamePortalusers/");
-  }
-
-  function validateMatchId() {
-    return validateNewDataIdExists("gamePortal/matches/");
   }
 
   const VALIDATE_NOW = "newData.isNumber() && newData.val() == now";
@@ -217,12 +199,6 @@ module firebaseRules {
         },
       },
     };
-  }
-
-  function allowWrite(write: string, rule: Rule): Rule {
-    if (rule[".write"]) throw new Error("Rule already has .write: " + prettyJson(rule));
-    rule[".write"] = write;
-    return rule;
   }
 
   function deleteElement(arr: string[], elem: string) {
@@ -683,15 +659,15 @@ module firebaseRules {
               // Only show video&audio option if the two users have true in privateFields/supportsWebRTC
               // See https://www.html5rocks.com/en/tutorials/webrtc/basics/
               // Any user can add signals, and only $userId can delete them (after reading the signal).
-              // Then the caller and receiver exchange signalTypes 'sdp' and 'candidate'.
-              // The signalData for 'sdp' is the description you get in the callback for createOffer and createAnswer.
+              // Then the caller and receiver exchange signals.
+              // The signalData for 'sdp1|sdp2' is the description you get in the callback for createOffer (sdp1) and createAnswer (sdp2).
               // The signalData for 'candidate' is the event.candidate you get in the callback for onicecandidate.
               "signals": {
                 "$signalEntryId": {
-                  ".write": "!data.exists()",
+                  ".write": "!data.exists() || data.child('addedByUid').val() == auth.uid",
                   "addedByUid": validateMyUid(),
                   "timestamp": validateNow(),
-                  "signalType": validateRegex("sdp|candidate"),
+                  "signalType": validateRegex("sdp1|sdp2|candidate"),
                   "signalData": validateMandatoryString(10000),
                 },
               },

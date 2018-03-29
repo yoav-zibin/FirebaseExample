@@ -36,7 +36,7 @@ module main {
       console.log(`Finished test successfully :)`);
       return;
     }
-    let command = commands.shift();
+    let command = commands.shift()!;
     let path = command.path;
     let shouldSucceed = command.shouldSucceed;
     let writeVal = command.writeVal;
@@ -468,7 +468,7 @@ module main {
   }
 
   function runUserTest() {
-    uid = firebase.auth().currentUser.uid;
+    uid = firebase.auth().currentUser!.uid;
     console.info("My uid=", uid);
 
     // Reading another user's data.

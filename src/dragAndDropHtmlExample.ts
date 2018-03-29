@@ -58,7 +58,7 @@ module dragAndDrop {
   }
 
   function init() {
-    let currentElement: HTMLElement = null;
+    let currentElement: HTMLElement | null = null;
     let currentZIndex = 100;
 
     function endDrag() {
@@ -68,7 +68,7 @@ module dragAndDrop {
       }
     }
 
-    function touchHandler(type: string, clientX: number, clientY: number, event: TouchEvent | MouseEvent) {
+    function touchHandler(type: string, clientX: number, clientY: number) {
       if (type == "touchstart") {
         endDrag();
         currentElement = <HTMLElement> document.elementFromPoint(clientX, clientY);

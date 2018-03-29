@@ -1,20 +1,27 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "declaration": false,
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
-        "removeComments": false,
-        "rootDir": ".",
-        "baseUrl": ".",
         "outDir": "ts_output_readonly_do_NOT_change_manually/",
-        "sourceMap": true,
-        "noLib": false,
+        "rootDir": ".",
+        
         "newLine": "CRLF",
+        "module": "esnext",
+        "target": "es5",
+        "lib": ["es6", "dom"],
+        "sourceMap": true,
         "allowJs": true,
-        "checkJs": true
-    },
+        "checkJs": true,
+        "jsx": "react",
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+      },
     "formatCodeOptions": {
         "indentSize": 2,
         "tabSize": 2,
@@ -41,7 +48,8 @@
         "typings/firebase.d.ts"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "functions"
     ],
     "atom": {
         "rewriteTsconfig": true

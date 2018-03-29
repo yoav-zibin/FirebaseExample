@@ -67,12 +67,12 @@ var dragAndDrop;
                 }
                 else {
                     currentElement.classList.add('currentlyDragged');
+                    currentElement.style.zIndex = '' + (++currentZIndex);
                 }
             }
             if (currentElement != null) {
                 currentElement.style.left = (clientX - currentElement.offsetWidth / 2) + 'px';
                 currentElement.style.top = (clientY - currentElement.offsetHeight / 2) + 'px';
-                currentElement.style.zIndex = '' + (++currentZIndex);
             }
             if (type == "touchend") {
                 endDrag();
@@ -82,4 +82,4 @@ var dragAndDrop;
     }
     init();
 })(dragAndDrop || (dragAndDrop = {}));
-//# sourceMappingURL=dragAndDropExample.js.map
+//# sourceMappingURL=dragAndDropHtmlExample.js.map

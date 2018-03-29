@@ -2,8 +2,8 @@ var pushNotifications;
 (function (pushNotifications) {
     function db() { return firebase.database(); }
     function messaging() { return firebase.messaging(); }
-    var uid = '';
-    var matchId = '';
+    var uid = null;
+    var matchId = null;
     var hasFcmToken = false;
     function prettyJson(obj) {
         return JSON.stringify(obj, null, '  ');

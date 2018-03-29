@@ -2,26 +2,93 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-  video {
-    width: 200px;
-    height: 200px;
-  }
-  </style>
+<style>
+html, body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+.videoChatContainer {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  bottom: 0px;
+  left: 0px;
+  width: 100%;
+  height: 160px;
+  overflow-y: scroll;
+  font-size: 0; /* to avoid spaces between the inline video elements after linebreak. see https://css-tricks.com/fighting-the-space-between-inline-block-elements/ */
+}
+.displayInline {
+  display: inline-block;
+}
+.videoChatPeer {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  width: 150px;
+  height: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  min-height: 150px;
+  max-height: 150px;
+}
+video {
+  display: none;
+}
+/* http://vanseodesign.com/css/vertical-centering/ */
+.forVerticalCenteringParent {
+  display: table;
+}
+.forVerticalCenteringChild {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 16px;
+}
+</style>
 </head>
 <body>
-  My user ID: <input id="myUserId"><br>
+  <div class="forVerticalCenteringParent videoChatPeer" style="background-color: red">
+    <div class="forVerticalCenteringChild">Exampled of centered text</div>
+  </div>
+  My user ID (randomly set between 0-9, or you can set it in the URL search string, e.g. <code>?1</code>):
+  <input readonly="true" id="myUserId"><br>
   <hr>
-  Enter user ID you want to call<input id="targetUserId">
-  <button id="callUser">Call!</button>
+  Enter participants user IDs (comma separated) you want to play in this game
+  (all particpants should have the same string of user IDs):
+  <input id="participantsUserIds" value="1,2,3">
+  <button id="updateParticipantsUserIds">Change participants user IDs</button>
   
-  <video id="localvideo" autoplay></video>
-  <video id="remotevideo0" autoplay></video>
-  <video id="remotevideo1" autoplay></video>
-  <video id="remotevideo2" autoplay></video>
-  <video id="remotevideo3" autoplay></video>
-  <video id="remotevideo4" autoplay></video>
-
+  <div class="videoChatContainer">
+    <div class="videoChatPeer displayInline">
+      <video class="videoChatPeer" id="videoElement0" autoplay="true"></video>
+      <div id="videoParticipantName0" class="videoChatPeer forVerticalCenteringParent">
+        <div class="forVerticalCenteringChild">
+          User display name
+        </div>
+      </div>
+    </div>
+    <div class="videoChatPeer displayInline">
+      <video class="videoChatPeer" id="videoElement1" autoplay="true"></video>
+      <div id="videoParticipantName1" class="videoChatPeer forVerticalCenteringParent">
+        <div class="forVerticalCenteringChild">
+          User display name
+        </div>
+      </div>
+    </div>
+    <div class="videoChatPeer displayInline">
+      <video class="videoChatPeer" id="videoElement2" autoplay="true"></video>
+      <div id="videoParticipantName2" class="videoChatPeer forVerticalCenteringParent">
+        <div class="forVerticalCenteringChild">
+          User display name
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="ts_output_readonly_do_NOT_change_manually/src/firebaseWebRTC.js"></script>

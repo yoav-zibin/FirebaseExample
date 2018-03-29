@@ -66,10 +66,12 @@ module videoChat {
   }
 
   export function restartPeerConnection(userId: string) {
-    createMyPeerConnection(userId, []);
+    showUserName(userId);
+    setTimeout(() => createMyPeerConnection(userId, []), 1000);
   }
 
   function createMyPeerConnection(userId: string, signals: SignalMsg[]) {
+    showUserName(userId);
     console.log("createMyPeerConnection targetUserId=", userId, ' signals=', signals);
     if (peerConnections[userId]) {
       peerConnections[userId].close();
@@ -78,7 +80,11 @@ module videoChat {
   }
 
   export function receivedVideoStream(userId: string, stream: any) {
-    setVideoStream(remoteVideoElements[opponentUserIds.indexOf(userId)], stream);
+    setVideoStream(getRemoteVideoElement(userId), stream);
+  }
+
+  function getRemoteVideoElement(userId: string) {
+    return remoteVideoElements[opponentUserIds.indexOf(userId)];
   }
 
   export function receivedMessage(signal: SignalMsg) {
@@ -130,10 +136,18 @@ module videoChat {
     return {video: video, name: div};
   }
 
-  function setVideoStream(videoName: VideoNameElement, stream: any) {
+  function showUserName(userId: string) {
+    setVideoOrNameVisible(getRemoteVideoElement(userId), false);
+  }
+  function setVideoOrNameVisible(videoName: VideoNameElement, isVideoVisible: boolean) {
+    console.log(isVideoVisible ? "Showing video" : "Showing name");
     const {video, name} = videoName;
-    video.style.display = 'inline';
-    name.style.display = 'none';
+    video.style.display = isVideoVisible ? 'inline' : 'none';
+    name.style.display = isVideoVisible ? 'none' : 'table';
+  }
+  function setVideoStream(videoName: VideoNameElement, stream: any) {
+    setVideoOrNameVisible(videoName, true);
+    const {video, name} = videoName;
     if ('srcObject' in video) {
       video.srcObject = stream;
     } else {
@@ -228,7 +242,7 @@ class MyPeerConnection {
           connectionState === "disconnected" ||
           connectionState === "closed") {
         this.close();
-        setTimeout(() => videoChat.restartPeerConnection(this.targetUserId), 1000);
+        videoChat.restartPeerConnection(this.targetUserId);
       }
     };
     pc.oniceconnectionstatechange = (evt: any) => {

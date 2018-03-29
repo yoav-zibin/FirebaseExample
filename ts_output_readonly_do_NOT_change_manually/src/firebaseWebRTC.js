@@ -41,10 +41,12 @@ var videoChat;
     }
     videoChat.updateOpponents = updateOpponents;
     function restartPeerConnection(userId) {
-        createMyPeerConnection(userId, []);
+        showUserName(userId);
+        setTimeout(function () { return createMyPeerConnection(userId, []); }, 1000);
     }
     videoChat.restartPeerConnection = restartPeerConnection;
     function createMyPeerConnection(userId, signals) {
+        showUserName(userId);
         console.log("createMyPeerConnection targetUserId=", userId, ' signals=', signals);
         if (peerConnections[userId]) {
             peerConnections[userId].close();
@@ -52,9 +54,12 @@ var videoChat;
         peerConnections[userId] = new MyPeerConnection(userId, signals);
     }
     function receivedVideoStream(userId, stream) {
-        setVideoStream(remoteVideoElements[opponentUserIds.indexOf(userId)], stream);
+        setVideoStream(getRemoteVideoElement(userId), stream);
     }
     videoChat.receivedVideoStream = receivedVideoStream;
+    function getRemoteVideoElement(userId) {
+        return remoteVideoElements[opponentUserIds.indexOf(userId)];
+    }
     function receivedMessage(signal) {
         var uid = signal.addedByUid;
         var existingSignals = waitingSignals[uid];
@@ -106,10 +111,18 @@ var videoChat;
         var div = getElementById('videoParticipantName' + index);
         return { video: video, name: div };
     }
-    function setVideoStream(videoName, stream) {
+    function showUserName(userId) {
+        setVideoOrNameVisible(getRemoteVideoElement(userId), false);
+    }
+    function setVideoOrNameVisible(videoName, isVideoVisible) {
+        console.log(isVideoVisible ? "Showing video" : "Showing name");
         var video = videoName.video, name = videoName.name;
-        video.style.display = 'inline';
-        name.style.display = 'none';
+        video.style.display = isVideoVisible ? 'inline' : 'none';
+        name.style.display = isVideoVisible ? 'none' : 'table';
+    }
+    function setVideoStream(videoName, stream) {
+        setVideoOrNameVisible(videoName, true);
+        var video = videoName.video, name = videoName.name;
         if ('srcObject' in video) {
             video.srcObject = stream;
         }
@@ -194,7 +207,7 @@ var MyPeerConnection = /** @class */ (function () {
                 connectionState === "disconnected" ||
                 connectionState === "closed") {
                 _this.close();
-                setTimeout(function () { return videoChat.restartPeerConnection(_this.targetUserId); }, 1000);
+                videoChat.restartPeerConnection(_this.targetUserId);
             }
         };
         pc.oniceconnectionstatechange = function (evt) {

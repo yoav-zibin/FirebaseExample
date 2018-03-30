@@ -109,9 +109,10 @@ module firebaseRules {
   }
   
     // 123456789 is a magical phone number that we can use in our unit tests.
-  const MAGIC_PHONE_NUMBER_FOR_TESTS = '123456789';
+  const MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX = '/^(123456789|9175730795|2016824408|7326476905|7187107933|7185525029|2038859211|5513586613|9174021465)$/';
+
   function validateMyPhoneNumber(field = "newData.val()") {
-    return validate(`(${field} === '' || ${field} === '${MAGIC_PHONE_NUMBER_FOR_TESTS}' || ${field} === auth.token.phone_number)`);
+    return validate(`(${field} === '' || ${field}.matches(${MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX}) || ${field} === auth.token.phone_number)`);
   }
 
   const VALIDATE_NOW = "newData.isNumber() && newData.val() == now";
@@ -269,7 +270,7 @@ module firebaseRules {
       //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
       case "$fcmToken": return validate(`${parentKey}.matches(/^.{140,200}$/)`);
       case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
-      case "$contactPhoneNumber": return validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/) || ${parentKey}=='${MAGIC_PHONE_NUMBER_FOR_TESTS}'`);
+      case "$contactPhoneNumber": return validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/) || ${parentKey}.matches(${MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX})`);
       
       case "$gameBuilderUserId": 
       case "$gamePortalUserId": 

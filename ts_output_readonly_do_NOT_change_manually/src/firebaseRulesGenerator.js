@@ -88,7 +88,7 @@ var firebaseRules;
         return validate("newData.isString() && newData.val() === auth.uid");
     }
     // 123456789 is a magical phone number that we can use in our unit tests.
-    var MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX = '/^(123456789|9175730795|2016824408|7326476905|7187107933|7185525029|2038859211|5513586613|9174021465)$/';
+    var MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX = '/^(123456789|[+]19175730795|[+]12016824408|[+]17326476905|[+]17187107933|[+]17185525029|[+]12038859211|[+]15513586613|[+]19174021465)$/';
     function validateMyPhoneNumber(field) {
         if (field === void 0) { field = "newData.val()"; }
         return validate("(" + field + " === '' || " + field + ".matches(" + MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX + ") || " + field + " === auth.token.phone_number)");

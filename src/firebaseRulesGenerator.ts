@@ -108,8 +108,8 @@ module firebaseRules {
     return validate("newData.isString() && newData.val() === auth.uid");
   }
   
-    // 123456789 is a magical phone number that we can use in our unit tests.
-  const MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX = '/^(123456789|[+]19175730795|[+]12016824408|[+]17326476905|[+]17187107933|[+]17185525029|[+]12038859211|[+]15513586613|[+]19174021465)$/';
+    // +1111111111[0-9] is a magical phone number that we can use in our unit tests and manual tests.
+  const MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX = '/^+1111111111[0-9]$/';
 
   function validateMyPhoneNumber(field = "newData.val()") {
     return validate(`(${field} === '' || ${field}.matches(${MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX}) || ${field} === auth.token.phone_number)`);

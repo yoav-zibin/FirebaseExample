@@ -39,7 +39,7 @@ module videoChat {
   export let localMediaStream: any = null;
   let localVideoElement: VideoNameElement;
 
-  let opponentUserIds: string[];
+  let opponentUserIds: string[] = [];
   let remoteVideoElements: VideoNameElement[];
 
   const peerConnections: UserIdToPeerConnection = {};
@@ -50,18 +50,37 @@ module videoChat {
   export function updateOpponents(_myUserId: string, _opponentIds: string[]) {
     console.log("updateOpponents:", _myUserId, _opponentIds);
     checkCondition('call getUserMedia() first', localMediaStream);
-    checkCondition("TODO: handle multiple calls!", !opponentUserIds);
+    const oldOpponentIds = opponentUserIds;
     opponentUserIds = _opponentIds.slice();
     let index = 0;
     localVideoElement = getVideoElement(index++);
     setVideoStream(localVideoElement, localMediaStream);
-    // TODO: add user names until video shows up
+    
+    // Close old connections that aren't going to be reused.
+    for (let oldUserId of oldOpponentIds) {
+      if (opponentUserIds.indexOf(oldUserId) === -1) {
+        closeMyPeerConnection(oldUserId);
+      }
+    }
+    
+    // Create/reuse connections.
     remoteVideoElements = [];
     for (let userId of opponentUserIds) {
       const remoteVideoElement = getVideoElement(index++);
       remoteVideoElements.push(remoteVideoElement);
-      createMyPeerConnection(userId, waitingSignals[userId]);
-      delete waitingSignals[userId];
+      const oldPeerConnection = peerConnections[userId];
+      if (oldPeerConnection && oldOpponentIds.indexOf(userId) !== -1) {
+        // reuse and set video stream
+        const stream = oldPeerConnection.getRemoteStream();
+        if (stream) {
+          receivedVideoStream(userId, stream);
+        } else {
+          showUserName(userId);
+        }
+      } else {
+        createMyPeerConnection(userId, waitingSignals[userId]);
+        delete waitingSignals[userId];
+      }
     }
   }
 
@@ -70,21 +89,32 @@ module videoChat {
     setTimeout(() => createMyPeerConnection(userId, []), 1000);
   }
 
-  function createMyPeerConnection(userId: string, signals: SignalMsg[]) {
-    showUserName(userId);
-    console.log("createMyPeerConnection targetUserId=", userId, ' signals=', signals);
+  function closeMyPeerConnection(userId: string) {
     if (peerConnections[userId]) {
       peerConnections[userId].close();
     }
+    delete peerConnections[userId];
+  }
+
+  function createMyPeerConnection(userId: string, signals: SignalMsg[]) {
+    if (opponentUserIds.indexOf(userId) === -1) {
+      console.warn("createMyPeerConnection for non-opponent", opponentUserIds, userId);
+      return;
+    }
+    showUserName(userId);
+    console.log("createMyPeerConnection targetUserId=", userId, ' signals=', signals);
+    closeMyPeerConnection(userId);
     peerConnections[userId] = new MyPeerConnection(userId, signals);
   }
 
-  export function receivedVideoStream(userId: string, stream: any) {
+  export function receivedVideoStream(userId: string, stream: MediaStream) {
     setVideoStream(getRemoteVideoElement(userId), stream);
   }
 
   function getRemoteVideoElement(userId: string) {
-    return remoteVideoElements[opponentUserIds.indexOf(userId)];
+    const index = opponentUserIds.indexOf(userId);
+    checkCondition('getRemoteVideoElement', index !== -1);
+    return remoteVideoElements[index];
   }
 
   export function receivedMessage(signal: SignalMsg) {
@@ -145,7 +175,7 @@ module videoChat {
     video.style.display = isVideoVisible ? 'inline' : 'none';
     name.style.display = isVideoVisible ? 'none' : 'table';
   }
-  function setVideoStream(videoName: VideoNameElement, stream: any) {
+  function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);
     const {video, name} = videoName;
     if ('srcObject' in video) {
@@ -202,6 +232,8 @@ class MyPeerConnection {
   private gotSdp: boolean;
   private isClosed: boolean = false;
   private pc: RTCPeerConnection;
+  private remoteStream: MediaStream | null = null;
+
   constructor(
     public targetUserId: string,
     initialSignals: SignalMsg[]) {
@@ -225,14 +257,27 @@ class MyPeerConnection {
     };
 
     // once remote stream arrives, show it in the remote video element
-    pc.onaddstream = (evt: any) => {
+    const addedStream = (stream: MediaStream) => {
       if (this.isClosed) {
         console.warn("onaddstream after close");
         return;
       }
-      console.log("onaddstream: ", evt);
-      videoChat.receivedVideoStream(this.targetUserId, evt.stream);
+      this.remoteStream = stream;
+      videoChat.receivedVideoStream(this.targetUserId, stream);
     };
+    if ('ontrack' in pc) {
+      (<any>pc).ontrack = (event: any) => {
+        console.log("ontrack: ", event);
+        addedStream(event.streams[0]);
+      };
+    } else {
+      pc.onaddstream = (event) => {
+        console.log("onaddstream: ", event);
+        if (event.stream) {
+          addedStream(event.stream);
+        }
+      };
+    }
 
     const stateChangeHandler = (connectionState: string) => {
       if (this.isClosed) {
@@ -279,8 +324,10 @@ class MyPeerConnection {
 
   didGetSdp() { return this.gotSdp; }
   getIsCaller() { return this.isCaller; }
+  getRemoteStream() { return this.remoteStream; }
   close() {
     this.isClosed = true;
+    this.remoteStream = null;
     this.pc.close();
   }
 

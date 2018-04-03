@@ -36,16 +36,13 @@ module videoChat {
   }
   const waitingSignals: UserIdToSignals = {};
 
-  export let localMediaStream: any = null;
+  export let localMediaStream: MediaStream | null = null;
   let localVideoElement: VideoNameElement;
 
   let opponentUserIds: string[] = [];
   let remoteVideoElements: VideoNameElement[];
 
   const peerConnections: UserIdToPeerConnection = {};
-
-  let nav: any = navigator;
-  navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
 
   export function updateOpponents(_myUserId: string, _opponentIds: string[]) {
     console.log("updateOpponents:", _myUserId, _opponentIds);
@@ -207,6 +204,14 @@ module videoChat {
     style.maxHeight = height;
   }
   
+  let _isSupported = !!(<any>window).RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  export function isSupported() {
+    return _isSupported;
+  }
+
+  export function hasUserMedia() {
+    return !!localMediaStream;
+  }
   export function getUserMedia() {
     // get the local stream, show it in the local video element and send it
     console.log('Requesting getUserMedia...');
@@ -217,10 +222,13 @@ module videoChat {
         } 
       })
       .then(
-        (stream: any) => {
+        (stream) => {
           console.log("getUserMedia response: ", stream);
           localMediaStream = stream;   
-        }, (err: any) => { console.error("Error in getUserMedia: ", err); });
+        }, (err: any) => {
+          _isSupported = false;
+          console.error("Error in getUserMedia: ", err); 
+        });
   }
 }
 
@@ -242,10 +250,10 @@ class MyPeerConnection {
     const pc = new RTCPeerConnection(MyPeerConnection.configuration);
     this.pc = pc;
     checkCondition('localMediaStream', videoChat.localMediaStream);
-    pc.addStream(videoChat.localMediaStream);
+    pc.addStream(videoChat.localMediaStream!);
     
     // send any ice candidates to the other peer
-    pc.onicecandidate = (evt: any) => {
+    pc.onicecandidate = (evt) => {
       if (this.isClosed) {
         console.warn("onicecandidate after close");
         return;

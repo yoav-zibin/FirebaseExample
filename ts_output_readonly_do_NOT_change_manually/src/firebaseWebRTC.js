@@ -19,15 +19,13 @@ var videoChat;
     var opponentUserIds = [];
     var remoteVideoElements;
     var peerConnections = {};
-    var nav = navigator;
-    navigator.getUserMedia = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia;
     function updateOpponents(_myUserId, _opponentIds) {
         console.log("updateOpponents:", _myUserId, _opponentIds);
-        checkCondition('call getUserMedia() first', videoChat.localMediaStream);
         var oldOpponentIds = opponentUserIds;
         opponentUserIds = _opponentIds.slice();
         var index = 0;
         localVideoElement = getVideoElement(index++);
+        checkCondition('call getUserMedia() first', videoChat.localMediaStream);
         setVideoStream(localVideoElement, videoChat.localMediaStream);
         // Close old connections that aren't going to be reused.
         for (var _i = 0, oldOpponentIds_1 = oldOpponentIds; _i < oldOpponentIds_1.length; _i++) {
@@ -181,6 +179,15 @@ var videoChat;
         style.maxWidth = width;
         style.maxHeight = height;
     }
+    var _isSupported = !!window.RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    function isSupported() {
+        return _isSupported;
+    }
+    videoChat.isSupported = isSupported;
+    function hasUserMedia() {
+        return !!videoChat.localMediaStream;
+    }
+    videoChat.hasUserMedia = hasUserMedia;
     function getUserMedia() {
         // get the local stream, show it in the local video element and send it
         console.log('Requesting getUserMedia...');
@@ -193,9 +200,33 @@ var videoChat;
             .then(function (stream) {
             console.log("getUserMedia response: ", stream);
             videoChat.localMediaStream = stream;
-        }, function (err) { console.error("Error in getUserMedia: ", err); });
+        }, function (err) {
+            _isSupported = false;
+            console.error("Error in getUserMedia: ", err);
+        });
     }
     videoChat.getUserMedia = getUserMedia;
+    videoChat.configuration = {
+        'iceServers': [{
+                'urls': 'stun:stun.l.google.com:19302'
+            }]
+    };
+    if ('fetch' in window) {
+        console.log('Adding xirsys turn&ice servers');
+        fetch("https://global.xirsys.net/_turn/GamePortal/", {
+            method: 'PUT',
+            body: '',
+            headers: new Headers({
+                "Authorization": "Basic " + btoa("yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f")
+            })
+        }).then(function (res) { return res.json(); })
+            .catch(function (error) { return console.error('Error:', error); })
+            .then(function (response) {
+            var iceServers = response.v.iceServers;
+            console.log('Success:', response, "ICE List: " + iceServers);
+            videoChat.configuration.iceServers = videoChat.configuration.iceServers.concat(iceServers);
+        });
+    }
 })(videoChat || (videoChat = {}));
 // See:
 // https://www.html5rocks.com/en/tutorials/webrtc/basics/
@@ -206,7 +237,7 @@ var MyPeerConnection = /** @class */ (function () {
         this.isClosed = false;
         this.remoteStream = null;
         console.log("MyPeerConnection: initialSignals=", initialSignals);
-        var pc = new RTCPeerConnection(MyPeerConnection.configuration);
+        var pc = new RTCPeerConnection(videoChat.configuration);
         this.pc = pc;
         checkCondition('localMediaStream', videoChat.localMediaStream);
         pc.addStream(videoChat.localMediaStream);
@@ -318,11 +349,6 @@ var MyPeerConnection = /** @class */ (function () {
                 this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(function () { console.log("addIceCandidate success"); }, function (err) { console.error("Error in addIceCandidate: ", err); });
                 break;
         }
-    };
-    MyPeerConnection.configuration = {
-        'iceServers': [{
-                'urls': 'stun:stun.l.google.com:19302'
-            }]
     };
     return MyPeerConnection;
 }());

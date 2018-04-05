@@ -46,12 +46,12 @@ module videoChat {
 
   export function updateOpponents(_myUserId: string, _opponentIds: string[]) {
     console.log("updateOpponents:", _myUserId, _opponentIds);
-    checkCondition('call getUserMedia() first', localMediaStream);
     const oldOpponentIds = opponentUserIds;
     opponentUserIds = _opponentIds.slice();
     let index = 0;
     localVideoElement = getVideoElement(index++);
-    setVideoStream(localVideoElement, localMediaStream);
+    checkCondition('call getUserMedia() first', localMediaStream);
+    setVideoStream(localVideoElement, localMediaStream!);
     
     // Close old connections that aren't going to be reused.
     for (let oldUserId of oldOpponentIds) {
@@ -230,6 +230,28 @@ module videoChat {
           console.error("Error in getUserMedia: ", err); 
         });
   }
+
+  export const configuration = {
+    'iceServers': [{
+      'urls': 'stun:stun.l.google.com:19302'
+    }]
+  };
+  if ('fetch' in window) {
+    console.log('Adding xirsys turn&ice servers');
+    fetch("https://global.xirsys.net/_turn/GamePortal/", {
+      method: 'PUT',
+      body: '',
+      headers: new Headers({
+        "Authorization": "Basic " + btoa("yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f")
+      })
+    }).then(res => res.json())
+    .catch(error => console.error('Error:', error))
+    .then(response => {
+      const iceServers = response.v.iceServers;
+      console.log('Success:', response, "ICE List: "+iceServers);
+      configuration.iceServers = configuration.iceServers.concat(iceServers);
+    });
+  }
 }
 
 
@@ -247,7 +269,7 @@ class MyPeerConnection {
     initialSignals: SignalMsg[]) {
     
     console.log("MyPeerConnection: initialSignals=", initialSignals);
-    const pc = new RTCPeerConnection(MyPeerConnection.configuration);
+    const pc = new RTCPeerConnection(videoChat.configuration);
     this.pc = pc;
     checkCondition('localMediaStream', videoChat.localMediaStream);
     pc.addStream(videoChat.localMediaStream!);
@@ -338,12 +360,6 @@ class MyPeerConnection {
     this.remoteStream = null;
     this.pc.close();
   }
-
-  static configuration = {
-    'iceServers': [{
-      'urls': 'stun:stun.l.google.com:19302'
-    }]
-  };
   
   gotDescription(desc: any) {
     console.log("gotDescription: ", desc);

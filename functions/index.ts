@@ -10,6 +10,11 @@ admin.initializeApp(functions.config().firebase);
 // npm install -g firebase-tools
 // firebase login
 //
+// Ensure headers (CORS and caching) are set correctly:
+// gsutil cors set cors.json gs://universalgamemaker.appspot.com
+// gsutil -m setmeta   -h "Cache-Control:public, max-age=3600000"  gs://universalgamemaker.appspot.com/**
+
+//
 // To init:
 // firebase init functions
 //

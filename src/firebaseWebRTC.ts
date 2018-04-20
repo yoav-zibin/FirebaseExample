@@ -44,6 +44,33 @@ module videoChat {
 
   const peerConnections: UserIdToPeerConnection = {};
 
+  let _isSupported = !!(<any>window).RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  export function isSupported() {
+    return _isSupported;
+  }
+
+  export function hasUserMedia() {
+    return !!localMediaStream;
+  }
+  export function getUserMedia() {
+    // get the local stream, show it in the local video element and send it
+    console.log('Requesting getUserMedia...');
+    return navigator.mediaDevices.getUserMedia({
+        "audio": true, 
+        "video": {
+          facingMode: "user", width: 150, height: 150
+        } 
+      })
+      .then(
+        (stream) => {
+          console.log("getUserMedia response: ", stream);
+          localMediaStream = stream;   
+        }, (err: any) => {
+          _isSupported = false;
+          console.error("Error in getUserMedia: ", err); 
+        });
+  }
+
   export function updateOpponents(_myUserId: string, _opponentIds: string[]) {
     console.log("updateOpponents:", _myUserId, _opponentIds);
     const oldOpponentIds = opponentUserIds;
@@ -204,33 +231,6 @@ module videoChat {
     style.maxHeight = height;
   }
   
-  let _isSupported = !!(<any>window).RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-  export function isSupported() {
-    return _isSupported;
-  }
-
-  export function hasUserMedia() {
-    return !!localMediaStream;
-  }
-  export function getUserMedia() {
-    // get the local stream, show it in the local video element and send it
-    console.log('Requesting getUserMedia...');
-    return navigator.mediaDevices.getUserMedia({
-        "audio": true, 
-        "video": {
-          facingMode: "user", width: 150, height: 150
-        } 
-      })
-      .then(
-        (stream) => {
-          console.log("getUserMedia response: ", stream);
-          localMediaStream = stream;   
-        }, (err: any) => {
-          _isSupported = false;
-          console.error("Error in getUserMedia: ", err); 
-        });
-  }
-
   export const configuration = {
     'iceServers': [{
       'urls': 'stun:stun.l.google.com:19302'

@@ -546,6 +546,10 @@ var firebaseRules;
                     "$gamePortalUserId": {
                         ".read": "$gamePortalUserId === auth.uid",
                         ".write": "$gamePortalUserId === auth.uid",
+                        "publicFields": {
+                            ".read": ANYONE,
+                            "displayName": validateOptionalString(50),
+                        },
                         // Contains fields that only $userId can read&write.
                         "privateFields": {
                             "createdOn": validateNow(),

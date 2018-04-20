@@ -19,6 +19,33 @@ var videoChat;
     var opponentUserIds = [];
     var remoteVideoElements;
     var peerConnections = {};
+    var _isSupported = !!window.RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    function isSupported() {
+        return _isSupported;
+    }
+    videoChat.isSupported = isSupported;
+    function hasUserMedia() {
+        return !!videoChat.localMediaStream;
+    }
+    videoChat.hasUserMedia = hasUserMedia;
+    function getUserMedia() {
+        // get the local stream, show it in the local video element and send it
+        console.log('Requesting getUserMedia...');
+        return navigator.mediaDevices.getUserMedia({
+            "audio": true,
+            "video": {
+                facingMode: "user", width: 150, height: 150
+            }
+        })
+            .then(function (stream) {
+            console.log("getUserMedia response: ", stream);
+            videoChat.localMediaStream = stream;
+        }, function (err) {
+            _isSupported = false;
+            console.error("Error in getUserMedia: ", err);
+        });
+    }
+    videoChat.getUserMedia = getUserMedia;
     function updateOpponents(_myUserId, _opponentIds) {
         console.log("updateOpponents:", _myUserId, _opponentIds);
         var oldOpponentIds = opponentUserIds;
@@ -179,33 +206,6 @@ var videoChat;
         style.maxWidth = width;
         style.maxHeight = height;
     }
-    var _isSupported = !!window.RTCPeerConnection && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    function isSupported() {
-        return _isSupported;
-    }
-    videoChat.isSupported = isSupported;
-    function hasUserMedia() {
-        return !!videoChat.localMediaStream;
-    }
-    videoChat.hasUserMedia = hasUserMedia;
-    function getUserMedia() {
-        // get the local stream, show it in the local video element and send it
-        console.log('Requesting getUserMedia...');
-        return navigator.mediaDevices.getUserMedia({
-            "audio": true,
-            "video": {
-                facingMode: "user", width: 150, height: 150
-            }
-        })
-            .then(function (stream) {
-            console.log("getUserMedia response: ", stream);
-            videoChat.localMediaStream = stream;
-        }, function (err) {
-            _isSupported = false;
-            console.error("Error in getUserMedia: ", err);
-        });
-    }
-    videoChat.getUserMedia = getUserMedia;
     videoChat.configuration = {
         'iceServers': [{
                 'urls': 'stun:stun.l.google.com:19302'

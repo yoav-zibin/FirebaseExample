@@ -569,6 +569,7 @@ module firebaseRules {
               "gameName": validateMandatoryString(100),
               "screenShotImageId": validateMandatoryString(100),
               "screenShotImage": getImage(),
+              "wikipediaUrl": validateSecureUrl(), // E.g., https://en.wikipedia.org/wiki/Chess
             },
           },
           "gameSpecsForPortal": {

@@ -50,6 +50,8 @@ admin.initializeApp(functions.config().firebase);
 exports.testPushNotification =
 functions.database.ref('testPushNotification').onWrite((event: any) => {
   let fcmToken = event.data.val();
+  console.log(`testPushNotification fcmToken=` + fcmToken);
+  console.error(`testPushNotification testing an error!=` + fcmToken);
   if (!fcmToken) {
     console.log(`No fcmToken`);
     return null;
@@ -98,7 +100,7 @@ function sendPushToUser(
     const payload: any = 
       {
         notification: {
-          title: "Monopoly game is starting", // TODO: fetch game name.
+          title: "Monopoly is starting", // TODO: fetch game name.
           body: body,
         },
         data: {
@@ -111,8 +113,7 @@ function sendPushToUser(
       };
     if (tokenData.platform == "web") {
       payload.notification.click_action = 
-        // GamePortalAngular|GamePortalReact
-        `https://yoav-zibin.github.io/${tokenData.app}/play/${groupId}`;
+        `https://yoav-zibin.github.io/NewGamePortal/matches/${matchId}`;
     }
      
     return admin.messaging().sendToDevice([token], payload).then((response: any) => {
@@ -156,6 +157,7 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
   // Get sender name and participants
   return Promise.all([
     admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
+    admin.database().ref(...).once('value')
   ]).then(results => {
     const participants = results[0].val();
     console.log(' participants=', participants);

@@ -12,7 +12,7 @@ admin.initializeApp({
 const db = admin.database();
 const allPromises = [];
 function refSet(path, val) {
-  console.log("refSet path=" + path);
+  // console.log("refSet path=" + path);
   promise = db.ref(path).set(val);
   allPromises.push(promise);
   return promise;
@@ -61,6 +61,7 @@ function trimGameSpecFields(gameSpec) {
     pieces: gameSpec.pieces,
     screenShotImageId: gameSpec.screenShotImageId,
     gameName: gameSpec.gameName,
+    wikipediaUrl: gameSpec.wikipediaUrl,
   };
 }
 
@@ -92,18 +93,22 @@ function downloadDatabase(){
     for (let [gameSpecId,spec] of Object.entries(specIdToSpec)) {
       
       const screenShotImageId = spec.screenShotImageId;
-      const gameName = spec.gameName;
+      let gameName = spec.gameName;
+      const wikipediaUrl = spec.wikipediaUrl == "https://no-wiki.com" ? '' : spec.wikipediaUrl || '';
       if (!screenShotImageId) continue;
       if (!spec.pieces) continue; // skip that game that has no pieces.
+      if (gameName == 'reversi_initial_state') continue;
+      if (gameName == 'reversi-sm') gameName = 'Reversi';
       specCount++;
-      console.log("gameSpecId=" + gameSpecId + " gameName=" + gameName + " screenShotImageId=" + screenShotImageId);
       gameSpecs.push({
         gameSpecId: gameSpecId,
         gameName: gameName,
         screenShotImageId: screenShotImageId,
+        wikipediaUrl: wikipediaUrl,
         screenShotImage: fixDownloadUrl(imageIdToImage[screenShotImageId])
       });
-
+      console.log(gameSpecId + "," + gameName + "," + wikipediaUrl);
+      
       const images = {};
       const elements = {};
       images[spec.board.imageId] = fixDownloadUrl(imageIdToImage[spec.board.imageId]);
@@ -124,7 +129,7 @@ function downloadDatabase(){
         gameSpec: spec,
       };
     }
-    console.log('wrote specCount=' + specCount);
+    //console.log('wrote specCount=' + specCount);
     Promise.all(downLoadUrlPromises).then(()=> {
       refSet("/gamePortal/gamesInfoAndSpec/gameInfos", gameSpecs);
       refSet("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal", gameSpecsForPortal);

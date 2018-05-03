@@ -331,7 +331,8 @@ module firebaseRules {
   const ANYONE = "auth != null";
   // Anyone can add a new image,
   // but not delete/modify values (only the uploader can change anything).
-  const ADD_OR_UPLOADER = "!data.exists() || data.child('uploaderUid').val() == auth.uid";
+  // TODO: I allow anyone to update the game specs in Gamebuilder because we need to fix many games.
+  const ADD_OR_UPLOADER = ANYONE; //  "!data.exists() || data.child('uploaderUid').val() == auth.uid";
   
   function getImage(): Object {
     return {

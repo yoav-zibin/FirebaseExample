@@ -1,0 +1,183 @@
+-KxLz3AY3-xB47ZXN9Az,3 Man Chess,
+-KxLz3BIoJfnCQtOqzJ8,Alquerque,
+-KxLz3Bm_TbQv7Y2MmvM,Blue Nile,
+-KxLz3C46phd9a9jA_4m,Chaturanga,
+-KxLz3CWTCCbCbNvKKIw,Checkers,https://en.wikipedia.org/wiki/Checkers
+-KxLz3CaPRPIBc-0mRP7,Chess,
+-KxLz3DUY3rQOpYQuDdf,Dvonn,
+-KxLz3Dd3KhAtuAU0QqN,Emergo,
+-KxLz3DlRO7gZb8uL1sG,Five in a row,
+-KxLz3DxRhzvZG5Wsq-Y,Game_of_Y,
+-KxLz3EHxNpssFiQybGf,Game_of_the_Amazons,
+-KxLz3ELOhG_GRnQZ1K6,GoBang-BlackWhite,
+-KxLz3ENuuliXjsKD-GN,Gomoku,
+-KxLz3EQ2qxyozCOuLFG,HEX,
+-KxLz3ERZLbUWpJD3PF1,Halatafl,
+-KxLz3ES3mQPHvSVAoXE,Halma,
+-KxLz3ElpUxp_2GawKwQ,Havannah,https://en.wikipedia.org/wiki/Havannah
+-KxLz3EtI5z9f-Q8xru7,Hex Chess,
+-KxLz3F-2lE8iO0V7Dw1,LightsOut,
+-KxLz3F36flSFREBInct,LiuChongQi_initial,
+-KxLz3F4qlddY-qgJlbv,Ludo,
+-KxLz3FAFZX5RrKR-mhN,Mancala,
+-KxLz3FH9LfVoq-uJWWj,Mandavoshka,
+-KxLz3FKTdapLIInm8GT,New Boku,
+-KxLz3FZYxBbzqt5VjS6,Pasang,
+-KxLz3G0OdRNF8gtU_2M,Racing Kings,
+-KxLz3G2PK2pEpXVsc63,Sato,
+-KxLz3GDxUi9QADh3jN0,Simply ingenious,
+-KxLz3GJVXshHaNFw9_m,Sidjah,
+-KxLz3GKmU13dBHSjUd8,Tablut,
+-KxLz3GUnLNDA0UXBDRO,biloba-spec,https://boardgamegeek.com/boardgame/32986/biloba
+-KxLz3HAgdBIdWKAjOyl,eight queens,
+-KxLz3HDHktoLBiofZZy,hexdame,
+-KxLz3HHiEl1lQbByeH8,lines-of-action,https://en.wikipedia.org/wiki/Lines_of_Action
+-KxLz3HSNdyVuyMwekSa,reversi_initial_state,
+-KxLz3Hi15gL3gipt36x,three_men_initial,
+-KxLz3HlTGGtGWQLl6Tt,tic-tac-toe,
+-Kz7-sXG3ysGI6V9CCXs,flipGame,https://en.wikipedia.org/wiki/Lights_Out_(game)
+-Kz72S_FO8BIj1OVRmO1,luzhanqi,https://en.wikipedia.org/wiki/Luzhanqi
+-Kz76geVTrb8m3lu9crQ,cefanqi,https://zh.wikipedia.org/wiki/%E7%AD%96%E5%8F%8D%E6%A3%8B
+-KzHeflPtgDpETw-6k50,King's Court,https://boardgamegeek.com/boardgame/5157/kings-court
+-KzIu__PqVGdQhAlileQ,Aeroplane-Chess,https://en.wikipedia.org/wiki/Aeroplane_Chess
+-KzIw_hZ_Bpq--JMmo5Z,Dice Chess,https://en.wikipedia.org/wiki/Dice_chess
+-KzKbRqDau_ddrVUrDAM,Checkers 2000,https://boardgamegeek.com/boardgame/9374/checkers-2000
+-KzKd2Cxi-iyu-0LqgaB,Ming Mang,https://boardgamegeek.com/boardgame/40573/ming-mang
+-KzKeLTztuc88-oLtUjZ,Snakes and Ladders,https://en.wikipedia.org/wiki/Snakes_and_Ladders
+-KzL3jWHcziYzufVMzCt,Lanrick,https://boardgamegeek.com/boardgame/13914/lanrick
+-KzLIBkCfABwezneVA5E,10Up,
+-KzLRRHo6uwk5WU5vyQl,Sorry! (Dice),https://en.wikipedia.org/wiki/Parcheesi
+-KzLT7LaM66pjASw7spF,Dunsany's Chess,https://en.wikipedia.org/wiki/Dunsany%27s_Chess
+-KzMUAYInW3aXHA_Zgkq,Shut The Box,https://funattic.com/dice-games/
+-KzMf0hSlyzM28LebcQe,Parcheesi,https://en.wikipedia.org/wiki/Parcheesi
+-KzSJnlU7BL0hqIxkQgn,round the clock,https://www.dice-play.com/Games/RoundTheClock.htm
+-KzXo4rncEVgBar339yw,yiora-toggleable,
+-Kzp2EEL6IDyqMLH6siz,can't stop spec,https://en.wikipedia.org/wiki/Can%27t_Stop_(board_game)
+-KzpGiP-j0FsSJXzygnW,chemistry ludo spec,
+-L-4HlYZ13tpCgM8M-4H,32dices,
+-L-4n39zl7R0dMy4sQq9,banqi_sm,https://en.wikipedia.org/wiki/Banqi
+-L-52NAdCs5EwudWmz6v,reversi-sm,https://en.wikipedia.org/wiki/Reversi
+-L-53G8W778Uvfec-5wG,chinese-poker-sm,
+-L-573LAJ1vL2jHGPVRB,Barricade,https://www.barricadegame.com/index.php?option=com_content&view=article&id=11&lang=en
+-L-5Cum5qOEdJ2b3A8n3,Chō-han-sm,https://en.wikipedia.org/wiki/Ch%C5%8D-han
+-L-5D38cHvDjQMv1LDuM,toggle squares game,https://www.shlomifish.org/MathVentures/toggle-squares/
+-L-5I1DlYwiwN4uIpkXM,Mexico-sm,https://en.wikipedia.org/wiki/Mexico_(game)
+-L-5PPZOmK6jdZ8q5HRK,Concentration-sm,https://en.wikipedia.org/wiki/Concentration_(game)
+-L-5nrtYD-uxGwkMWCHM,uno,https://en.wikipedia.org/wiki/Uno_(card_game)
+-L-7byJiaazYQ5V5i2hW,Sevens-sm,https://en.wikipedia.org/wiki/Sevens_(card_game)
+-L-8HwfzFZ9sqtK75Jbe,tetris,https://en.wikipedia.org/wiki/Tetris
+-L-8mB-lnXAdegM1yywu,blokus-sm,https://en.wikipedia.org/wiki/Blokus
+-L-8rUonEDrh-IkJk9nk,doudizhu-chinese-poker-sm,https://en.wikipedia.org/wiki/Dou_dizhu
+-L-8vsR3xOlTX369HGdT,risk,https://en.wikipedia.org/wiki/Risk_(game)
+-L-9-GuzOZJ6sRAVCh6b,five-card-stud-sm,https://en.wikipedia.org/wiki/Five-card_stud
+-L-97FOSTr-hrVjQuRc-,Chinese Poker(Seven-Joker-five-two-three),https://en.wikipedia.org/wiki/Hearts
+-L-98MfOXtZm6whwvASR,Emergo_toggleable,
+-L-9Y2rxR4wrkJb_o2ug,play-cheat-sm,
+-L-9YNV9Yk_frC_sMHdi,cheat-sm,https://en.wikipedia.org/wiki/Cheat_(game)
+-L-9ckSZBfxrpWwxABrX,Cee-Io,https://en.wikipedia.org/wiki/Cee-lo
+-L-9gFNl4Lyicd_1Hz-2,Dominoes,https://en.wikipedia.org/wiki/Dominoes
+-L-9i2ipjLxs_juUmm1P,Pachisi,https://en.wikipedia.org/wiki/Pachisi
+-L-9kinVrSPE8RbQ8o0F,Dvonn-sm,https://en.wikipedia.org/wiki/DVONN
+-L-9qTVLsumaP9TBL9_O,diaoyu,https://en.wikipedia.org/wiki/Go_Fish
+-L-9qlw-Gug6qNXzDmeP,gandengyan,https://baike.baidu.com/item/%E5%B9%B2%E7%9E%AA%E7%9C%BC/63808
+-L-9s81XcjFe-GC9szOU,510K,https://zh.wikipedia.org/wiki/%E4%BA%94%E5%8D%81K
+-L-A5MAkO0JEki7ukqO0,nine men's morris,https://en.wikipedia.org/wiki/Nine_Men%27s_Morris
+-L-AbtxtIBF0KBSxKHGC,phase10,https://en.wikipedia.org/wiki/Phase_10
+-L-B62_2EZzi0X1ZhBad,tg,
+-L-Bd-m66ANV9oT8GsYN,Dice10000,
+-L-BfC2NTkkk7id2nU5Z,Gin Rummy,
+-L-BpJJxbBHKeplvJB4s,CrownAndAnchor,
+-L-D2QPPg2hWaYZgY-OX,Big Two,
+-L-D3klCiTu3_0yYXDVu,Wuziqi,https://en.wikipedia.org/wiki/Gomoku
+-L-D6p-oiPqG8e3Plcti,Patience,
+-L-DKvDRTS3NUFzGB-N-,King-eat,
+-L-DSuWl7TmXWIj81EmQ,HEX-final,
+-L-DZbfiJDWoIG0mE8oP,Xiangqi Mahjong,
+-L-DeUEEPgnxtuGX0QHn,Four Chess,
+-L-DsuGWO14CFGKoS-3c,Boggle,https://en.wikipedia.org/wiki/Boggle
+-L-Dz-grEYa6LrM6Bnuz,Contract bridge,https://en.wikipedia.org/wiki/Contract_bridge
+-L-E8b0MbMT3dtG78NCX,Six,
+-L-E8g38ZSbq5jhGT8rS,Dou Niu,https://baike.baidu.com/item/%E6%96%97%E7%89%9B/10173143
+-L-NpR6cioH0a0g251wx,Monopoly,https://en.wikipedia.org/wiki/Monopoly_(game)
+-L-OAvD8PYowPXiaIth_,liar's dice,https://en.wikipedia.org/wiki/Liar%27s_dice
+-L-TLHYSOGFeg0TbWyK6,game-of-the-goose,https://en.wikipedia.org/wiki/Game_of_the_Goose
+-L-_249g8mD8e8K-1L6T,L-Game,https://en.wikipedia.org/wiki/L_game
+-L-_7FjoyBGhBiw6TfXU,Siam,https://boardgamegeek.com/boardgame/20782/siam
+-L-cNfziqis1SZBLBUmz,Touché,
+-L-db4M-NKnZlguWs7xv,Clue,https://en.wikipedia.org/wiki/Cluedo
+-L-iro8PlIYKWEiho78g,Shogi ,
+-L-j1P5k9ZvU9rtn99zZ,23chess,https://tieba.baidu.com/p/5078380380
+-L-j2ayY0XGMSXw5Esyk,2beat1,https://baike.baidu.com/item/%E4%BA%8C%E6%89%93%E4%B8%80%E6%A3%8B
+-L-j3lso6Rw2HG9Nx3hD,Connect_6,https://en.wikipedia.org/wiki/Connect6
+-L-j5VErj_7PsUXHhmhM,xiangqi,https://en.wikipedia.org/wiki/Xiangqi
+-L-j6rDd27hTgEDGPAkx,_Sittuyin,
+-L-jeTLrfHHvXbYgxDor,Lau kata kati,https://en.wikipedia.org/wiki/Lau_kata_kati
+-L-kFxYQhOqQYsrzOPOZ,EinStein würfelt nicht,
+-L-lw5cA3nHJlK8Lc5V9,Dueling Nobles,https://boardgamegeek.com/boardgame/14715/dueling-nobles
+-L-m0_fVl_1k-KtOhfeI,Go,https://en.wikipedia.org/wiki/Go_(game)
+-L-mPZEhi2V-hZnc_ras,Connect4,https://en.wikipedia.org/wiki/Connect_Four
+-L-mWPtNuUvoYSYv3PH6,ticket to ride,
+-L-m_ynA_RUT6RUcx37p,diplomacy-sm,
+-L-mhJby9spVzuJTrwti,Dominion(modified),https://en.wikipedia.org/wiki/Dominion_(card_game)
+-L-mkzrt95kDwQ5qbHGH,Words With Friends,https://en.wikipedia.org/wiki/Words_with_Friends
+-L-msCk-MqBLYJ8XZGSw,chuiniu,https://zh.wikipedia.org/wiki/%E5%A4%A7%E8%A9%B1%E9%AA%B0
+-L-mvpPk1zjycgCMMMkn,five_ten,https://zh.wikipedia.org/wiki/%E6%95%B8%E5%AD%97%E6%8B%B3
+-L-nAm7bO3JGskVHaZ8b,San Juan,
+-L-nNUXR2-fBzTp35E67,blackjack,https://en.wikipedia.org/wiki/Blackjack
+-L01sU3Jhq44JRIHpMC2,Craps (updated),https://en.wikipedia.org/wiki/Craps
+-L01xDqdP8hN1PCJuwI8,Texas Hold 'Em,https://en.wikipedia.org/wiki/Texas_hold_%27em
+-L01xupWIg2jOCp9Sh_K,Crazy Eights (updated),https://en.wikipedia.org/wiki/Crazy_Eights
+-L0CpHELZvGm_tjm8EKt,qwixx-final,
+-L0D5blpwD7E3zQMGOE8,Makruk-sm,https://en.wikipedia.org/wiki/Makruk
+-L0D8USHEeQfbGQao66F,dice wars,
+-L0DDm0LElDwDpOID-sD,renju-sm,https://en.wikipedia.org/wiki/Renju
+-L0DEfpWO-G2hX3Wcp8-,spades,
+-L0DFrFSKBtFw4ugr-6U,Sittuyin-sm,https://en.wikipedia.org/wiki/Sittuyin
+-L0DOyjEFuMKanG4BEnP,Tiger-game-sm,https://en.wikipedia.org/wiki/Tiger_game
+-L0GqDgd4ZlXxT9Zv3-9,Chaturaji-sm,https://en.wikipedia.org/wiki/Chaturaji
+-L0HUSCsBmCCXrgUYs8H,Tiaoqi,https://en.wikipedia.org/wiki/Chinese_checkers
+-L0HXJ3yvSBKB-ieto2c,Animals Chess,https://en.wikipedia.org/wiki/Jungle_(board_game)
+-L0HYmgJKTqCYs1dFD5m,Gourd Chess,https://en.wikipedia.org/wiki/B%E1%BA%A7u_cua_c%C3%A1_c%E1%BB%8Dp
+-L0KiwMj7yjcjuGkUnZF,Stratego!,https://en.wikipedia.org/wiki/Stratego
+-L0KjrSrsssjxEX_zr89,Cribbage,https://en.wikipedia.org/wiki/Cribbage
+-L0L1AHAnqj1O8-v87ZN,Five in a row (revised),https://en.wikipedia.org/wiki/Gomoku
+-L0L9qzZlJMAGGOToOl2,Fox and Geese ,https://en.wikipedia.org/wiki/Fox_games#Fox_and_Geese
+-L0LF7-7SZAUvAe02FIO,Halma (revised),https://en.wikipedia.org/wiki/Halmahttps://no-wiki.com
+-L0LVhyJKUJFwZE-nTOW,LightsOut,
+-L0LWp6zfRueXi0iOnHO,Ludo,
+-L0LZIqK2JRAn1szo_de,Battleship,https://en.wikipedia.org/wiki/Battleship_(game)
+-L0LZLNjuLLO_NyCtCGI,pasang (revised),https://en.wikipedia.org/wiki/Pasang_(game).com
+-L0L_3G8ecgzt6S4N2NI,BackGammon_simple_setup,
+-L0L_u9yIL46UBuxZWmF,Chem_Ludo,
+-L0LaaAZMhgUvU3I6tj8,Calculate 24,
+-L0Lb9JbpQY_tYw1y4UN,Chou WangBa,
+-L0LcEVUbRsXcBvowCOj,Ten and a half game,
+-L0Le9z_s7l9Bgh7iH-p,Daldøs,https://en.wikipedia.org/wiki/Dald%C3%B8s
+-L0LezM8FPD9nER6BNtH,Cross and Circle,https://en.wikipedia.org/wiki/Cross_and_circle_game
+-L0LiC_VOehWe9KGBKMU,Element's war!,
+-L0LvPZuxqgxUINLKw8p,Hearts,
+-L0LzqxltplfR1jCGRpO,36D6,
+-L0VmG-tHt2GvvJL-D-L,whist,https://en.wikipedia.org/wiki/Whist
+-L0Zsigsfa79_E6RiA6u,Pioneers,
+-L0_DUPDULxhzgteQRyd,Exploding Kittens,https://en.wikipedia.org/wiki/Exploding_Kittens
+-L0fN_pVaNivA-sY9566,Hexagonal chess for Three,https://boardgamegeek.com/boardgame/34066/hexagonal-chess-three
+-L0kAYbN0AACZFfrHOeN,Scrabble,https://en.wikipedia.org/wiki/Scrabble
+-L0qQZubuOqYrdXq0iYu,The Compliance Game,
+-L0quYoYZ-49wBk9VEBK,Yahtzee,https://en.wikipedia.org/wiki/Yahtzee
+-L0r6qHkR2fkeCk6B7zB,Bananagrams,https://en.wikipedia.org/wiki/Bananagrams
+-L0rJiZSMfDUIJjW49eI,Fill Or Bust!,
+-L0rJpsgOz22oPzG1JRP,Can't Stop Toggable,
+-L0rS5LnoWCaZpodkV5B,Nine Card (Revised),
+-L0sHPC9kOGhaRexU_Vc,Split-speed,https://www.pagat.com/patience/spit.html
+-L0vfQeOSWz8BQ72oU1y,Little Red Horse,https://zh.wikipedia.org/wiki/小红马_(象棋)
+-L0wqt1iPQtohjTgJOya,Shax,https://en.wikipedia.org/wiki/Shax_(board_game)
+-L0xFpOmtRs-A6f0f31x,connect6,https://en.wikipedia.org/wiki/Connect6
+-L0yzbiaRXb87OOcOT3q,memory chess,
+-L108F9pFL3_1RHB5CNz,Gong zhu,https://en.wikipedia.org/wiki/Gong_Zhu
+-L10aSJo5xK7ZQZmBg5W,Agon,https://en.wikipedia.org/wiki/Agon_(game)
+-L10eNzecGl3SMbl5Oo2,Crazy_Eights,https://en.wikipedia.org/wiki/Crazy_Eights
+-L14MMCOlgSQz2dHwoIb,Hexagonal Kyoto Shogi,
+-L14cQ8Q9QWvT1NGG-Kg,Snip Snap Snorem,
+-L483sGeKaIaToMIuMOg,Taki,https://en.wikipedia.org/wiki/Taki_(card_game)
+-L49e887EL8VgvF4WyHY,dice_war_yw,https://github.com/vivianros/social-multiplayer-games/wiki/dice-wars
+-L4I96yr-0zjdHcFUbII,Farkle_2,https://github.com/xiaozdezhu/Farkle/wiki/How-To-Play-Farkle

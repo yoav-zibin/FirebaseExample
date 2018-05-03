@@ -15,7 +15,6 @@ var videoChat;
 (function (videoChat) {
     var waitingSignals = {};
     videoChat.localMediaStream = null;
-    var localVideoElement;
     var opponentUserIds = [];
     var remoteVideoElements;
     var peerConnections = {};
@@ -40,6 +39,11 @@ var videoChat;
             .then(function (stream) {
             console.log("getUserMedia response: ", stream);
             videoChat.localMediaStream = stream;
+            setVideoStream(getVideoElement(0), stream);
+            for (var _i = 0, _a = Object.entries(peerConnections); _i < _a.length; _i++) {
+                var _b = _a[_i], _userId = _b[0], peerConnection = _b[1];
+                peerConnection.addLocalMediaStream();
+            }
         }, function (err) {
             _isSupported = false;
             console.error("Error in getUserMedia: ", err);
@@ -50,10 +54,9 @@ var videoChat;
         console.log("updateOpponents:", _myUserId, _opponentIds);
         var oldOpponentIds = opponentUserIds;
         opponentUserIds = _opponentIds.slice();
-        var index = 0;
-        localVideoElement = getVideoElement(index++);
-        checkCondition('call getUserMedia() first', videoChat.localMediaStream);
-        setVideoStream(localVideoElement, videoChat.localMediaStream);
+        if (videoChat.localMediaStream) {
+            setVideoStream(getVideoElement(0), videoChat.localMediaStream);
+        }
         // Close old connections that aren't going to be reused.
         for (var _i = 0, oldOpponentIds_1 = oldOpponentIds; _i < oldOpponentIds_1.length; _i++) {
             var oldUserId = oldOpponentIds_1[_i];
@@ -63,6 +66,7 @@ var videoChat;
         }
         // Create/reuse connections.
         remoteVideoElements = [];
+        var index = 1;
         for (var _a = 0, opponentUserIds_1 = opponentUserIds; _a < opponentUserIds_1.length; _a++) {
             var userId = opponentUserIds_1[_a];
             var remoteVideoElement = getVideoElement(index++);
@@ -239,8 +243,7 @@ var MyPeerConnection = /** @class */ (function () {
         console.log("MyPeerConnection: initialSignals=", initialSignals);
         var pc = new RTCPeerConnection(videoChat.configuration);
         this.pc = pc;
-        checkCondition('localMediaStream', videoChat.localMediaStream);
-        pc.addStream(videoChat.localMediaStream);
+        this.addLocalMediaStream();
         // send any ice candidates to the other peer
         pc.onicecandidate = function (evt) {
             if (_this.isClosed) {
@@ -312,6 +315,11 @@ var MyPeerConnection = /** @class */ (function () {
             pc.createAnswer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createAnswer: ", err); });
         }
     }
+    MyPeerConnection.prototype.addLocalMediaStream = function () {
+        if (videoChat.localMediaStream) {
+            this.pc.addStream(videoChat.localMediaStream);
+        }
+    };
     MyPeerConnection.prototype.didGetSdp = function () { return this.gotSdp; };
     MyPeerConnection.prototype.getIsCaller = function () { return this.isCaller; };
     MyPeerConnection.prototype.getRemoteStream = function () { return this.remoteStream; };
@@ -429,7 +437,7 @@ var webRTC;
     uid = window.location.search ? window.location.search.substr(1) : '' + Math.floor(Math.random() * 10);
     videoChat.getElementById('myUserId').value = uid;
     init();
-    videoChat.getUserMedia();
+    videoChat.getElementById('requestUserMedia').onclick = function () { return videoChat.getUserMedia(); };
     videoChat.getElementById('updateParticipantsUserIds').onclick = updateParticipantsUserIds;
 })(webRTC || (webRTC = {}));
 //# sourceMappingURL=firebaseWebRTC.js.map

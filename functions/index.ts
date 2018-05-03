@@ -1,11 +1,7 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const serviceKey = require('./serviceAccountKey.json');
-// admin.initializeApp({
-//   credentials: admin.credential.cert(serviceKey)
-// });
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions

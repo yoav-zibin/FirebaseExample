@@ -37,7 +37,6 @@ module videoChat {
   const waitingSignals: UserIdToSignals = {};
 
   export let localMediaStream: MediaStream | null = null;
-  let localVideoElement: VideoNameElement;
 
   let opponentUserIds: string[] = [];
   let remoteVideoElements: VideoNameElement[];
@@ -65,6 +64,10 @@ module videoChat {
         (stream) => {
           console.log("getUserMedia response: ", stream);
           localMediaStream = stream;   
+          setVideoStream(getVideoElement(0), stream);
+          for (let [_userId, peerConnection] of Object.entries(peerConnections)) {
+            peerConnection.addLocalMediaStream();
+          }
         }, (err: any) => {
           _isSupported = false;
           console.error("Error in getUserMedia: ", err); 
@@ -75,10 +78,9 @@ module videoChat {
     console.log("updateOpponents:", _myUserId, _opponentIds);
     const oldOpponentIds = opponentUserIds;
     opponentUserIds = _opponentIds.slice();
-    let index = 0;
-    localVideoElement = getVideoElement(index++);
-    checkCondition('call getUserMedia() first', localMediaStream);
-    setVideoStream(localVideoElement, localMediaStream!);
+    if (localMediaStream) {
+      setVideoStream(getVideoElement(0), localMediaStream);
+    }
     
     // Close old connections that aren't going to be reused.
     for (let oldUserId of oldOpponentIds) {
@@ -89,6 +91,7 @@ module videoChat {
     
     // Create/reuse connections.
     remoteVideoElements = [];
+    let index = 1;
     for (let userId of opponentUserIds) {
       const remoteVideoElement = getVideoElement(index++);
       remoteVideoElements.push(remoteVideoElement);
@@ -264,6 +267,12 @@ class MyPeerConnection {
   private pc: RTCPeerConnection;
   private remoteStream: MediaStream | null = null;
 
+  addLocalMediaStream() {
+    if (videoChat.localMediaStream) {
+      this.pc.addStream(videoChat.localMediaStream);
+    }
+  }
+
   constructor(
     public targetUserId: string,
     initialSignals: SignalMsg[]) {
@@ -271,8 +280,7 @@ class MyPeerConnection {
     console.log("MyPeerConnection: initialSignals=", initialSignals);
     const pc = new RTCPeerConnection(videoChat.configuration);
     this.pc = pc;
-    checkCondition('localMediaStream', videoChat.localMediaStream);
-    pc.addStream(videoChat.localMediaStream!);
+    this.addLocalMediaStream();
     
     // send any ice candidates to the other peer
     pc.onicecandidate = (evt) => {
@@ -388,7 +396,7 @@ class MyPeerConnection {
       case SDP2:
       case SDP1:
         this.gotSdp = true;
-        this.pc.setRemoteDescription(new RTCSessionDescription(signalData)).then(
+        this.pc.setRemoteDescription(<any> new RTCSessionDescription(signalData)).then(
           () => { console.log("setRemoteDescription success"); }, 
           (err: any) => { console.error("Error in setRemoteDescription: ", err); }
         );
@@ -490,7 +498,8 @@ module webRTC {
   uid = window.location.search ? window.location.search.substr(1) : ''+Math.floor(Math.random()*10);
   (<HTMLInputElement>videoChat.getElementById('myUserId')).value = uid;
   init();
-  videoChat.getUserMedia();
+  
+  videoChat.getElementById('requestUserMedia').onclick = () => videoChat.getUserMedia();  
   videoChat.getElementById('updateParticipantsUserIds').onclick = updateParticipantsUserIds;
 
 }

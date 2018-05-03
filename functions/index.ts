@@ -38,7 +38,7 @@ admin.initializeApp();
 //
 
 exports.addMatchParticipant = functions.database
-  .ref('/gamePortal/gamePortalUsers/${userId}/privateButAddable/matchMemberships/${matchId}/addedByUid')
+  .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
       const adderUserId = context.params.addedByUid;
       const addedUserId = context.params.userId;
@@ -48,8 +48,7 @@ exports.addMatchParticipant = functions.database
         return console.log('Same User');
       }
       console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
-      sendPushToUser(addedUserId, adderUserId, matchId);
-
+      return sendPushToUser(addedUserId, adderUserId, matchId);
     });
 
 

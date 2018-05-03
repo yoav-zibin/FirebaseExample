@@ -1,11 +1,7 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const serviceKey = require('./serviceAccountKey.json');
-// admin.initializeApp({
-//   credentials: admin.credential.cert(serviceKey)
-// });
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -42,7 +38,7 @@ admin.initializeApp(functions.config().firebase);
 //
 
 exports.addMatchParticipant = functions.database
-  .ref('/gamePortal/gamePortalUsers/${userId}/privateButAddable/matchMemberships/${matchId}/addedByUid')
+  .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
       const adderUserId = context.params.addedByUid;
       const addedUserId = context.params.userId;
@@ -52,8 +48,7 @@ exports.addMatchParticipant = functions.database
         return console.log('Same User');
       }
       console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
-      sendPushToUser(addedUserId, adderUserId, matchId);
-
+      return sendPushToUser(addedUserId, adderUserId, matchId);
     });
 
 

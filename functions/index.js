@@ -1,7 +1,7 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
@@ -33,6 +33,18 @@ admin.initializeApp(functions.config().firebase);
 // Recall that contact names are stored in /privateFields/contacts/$contactPhoneNumber/contactName
 // Recall that displayName are stored in /publicFields/displayName
 //
+exports.addMatchParticipant = functions.database
+    .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
+    .onWrite((change, context) => {
+    const adderUserId = context.params.addedByUid;
+    const addedUserId = context.params.userId;
+    const matchId = context.params.matchId;
+    if (!change.after.val()) {
+        return console.log('Same User');
+    }
+    console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
+    return sendPushToUser(addedUserId, adderUserId, matchId);
+});
 // 2) When someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
 // Suppose we have a match between users A, B, C.
@@ -65,4 +77,66 @@ exports.testPushNotification =
             console.error("Error: ", err);
         });
     });
+// Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
+// function sendPushToUser(
+//   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
+function sendPushToUser(toUserId, senderUid, matchId) {
+    console.log('Sending push notification:', toUserId, senderUid);
+    let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
+    // Get the list of device notification tokens.
+    return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot) => {
+        let tokensWithData = tokensSnapshot.val();
+        console.log('tokensWithData=', tokensWithData);
+        if (!tokensWithData)
+            return null;
+        // Find the tokens with the latest lastTimeReceived.
+        let tokens = Object.keys(tokensWithData);
+        tokens.sort((token1, token2) => tokensWithData[token2].lastTimeReceived - tokensWithData[token1].lastTimeReceived); // newest entries are at the beginning
+        let token = tokens[0]; // TODO: Maybe in the future I should retry other tokens if this one fails.
+        let tokenData = tokensWithData[token];
+        console.log('token=', token, 'tokenData=', tokenData);
+        // https://firebase.google.com/docs/cloud-messaging/concept-options
+        // The common keys that are interpreted by all app instances regardless of platform are message.notification.title, message.notification.body, and message.data.
+        // Push notification message fields, see
+        // https://firebase.google.com/docs/cloud-messaging/http-server-ref
+        // https://firebase.google.com/docs/cloud-messaging/js/first-message
+        // `firebasePushNotifications.html?groupId=${data.groupId}&timestamp=${data.timestamp}&fromUserId=${data.fromUserId}`
+        const payload = {
+            notification: {
+                title: "Monopoly is starting",
+                body: "Join Zibiga",
+            },
+            data: {
+                // Must be only strings in these key-value pairs
+                fromUserId: String(senderUid),
+                toUserId: String(toUserId)
+            }
+        };
+        if (tokenData.platform == "web") {
+            payload.notification.click_action =
+                `https://yoav-zibin.github.io/NewGamePortal/matches/${matchId}`;
+        }
+        return admin.messaging().sendToDevice([token], payload).then((response) => {
+            // For each message check if there was an error.
+            const tokensToRemove = [];
+            response.results.forEach((result, index) => {
+                const error = result.error;
+                if (error) {
+                    console.warn('Failure sending notification to', token, error); // Actually happens, so just warning.
+                    // Cleanup the tokens who are not registered anymore.
+                    if (error.code === 'messaging/invalid-registration-token' ||
+                        error.code === 'messaging/registration-token-not-registered') {
+                        tokensToRemove.push(admin.database().ref(fcmTokensPath + `/${token}`).remove());
+                    }
+                }
+                else {
+                    console.log('Success sending push to ', token);
+                }
+            });
+            return Promise.all(tokensToRemove);
+        });
+    }).catch((err) => {
+        console.error("Error: ", err);
+    });
+}
 //# sourceMappingURL=index.js.map

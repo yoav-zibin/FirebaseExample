@@ -13,7 +13,6 @@ admin.initializeApp();
 // Ensure headers (CORS and caching) are set correctly:
 // gsutil cors set cors.json gs://universalgamemaker.appspot.com
 // gsutil -m setmeta   -h "Cache-Control:public, max-age=3600000"  gs://universalgamemaker.appspot.com/**
-
 //
 // To init:
 // firebase init functions
@@ -24,7 +23,6 @@ admin.initializeApp();
 // exports.helloWorld = functions.https.onRequest((request, response) => {
 //  response.send("Hello from Firebase!");
 // });
-
 // TODO: implement push notification.
 // We will have 2 types of notifications:
 //
@@ -36,7 +34,6 @@ admin.initializeApp();
 // Recall that contact names are stored in /privateFields/contacts/$contactPhoneNumber/contactName
 // Recall that displayName are stored in /publicFields/displayName
 //
-
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
@@ -60,7 +57,6 @@ exports.addMatchParticipant = functions.database
 // Then it will send a notifications to users B & C, with the text:
 // {title: "<user-name> resumes the game of <Monopoly>", body: "Open Zibiga now to join the fun!"}
 // As before, <user-name> is either the contact name or displayName.
-
 
 
 exports.testPushNotification =
@@ -170,7 +166,6 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
   const messageId: string = String(event.params.messageId);
   console.log('Got chat message! senderUid=', senderUid,
     ' body=', body, ' timestamp=', timestamp, ' groupId=', groupId, ' messageId=', messageId);
-
   // Get sender name and participants
   return Promise.all([
     admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
@@ -190,13 +185,8 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
     return Promise.all(promises);
   });
 });
-
-
 /*
 All these cloud functions aren't relevant in NewGamePortal.
-
-
-
 // https://firebase.google.com/docs/functions/database-events
 exports.deleteOldEntriesOnRecentlyConnected =
 functions.database.ref('/gamePortal/recentlyConnected')
@@ -225,7 +215,6 @@ functions.database.ref('/gamePortal/recentlyConnected')
     }
     userIds[userId] = true;
   }
-
   // Filter the newest maxEntries entries.
   keys = getSortedKeys(original);
   if (keys.length > maxEntries) {
@@ -237,12 +226,10 @@ functions.database.ref('/gamePortal/recentlyConnected')
       updates[key] = null;
     }
   }
-
   
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);
 });
-
 // Firebase keys can't contain certain characters (.#$/[])
 // https://groups.google.com/forum/#!topic/firebase-talk/vtX8lfxxShk
 // encodeAsFirebaseKey("%.#$/[]") returns "%25%2E%23%24%2F%5B%5D"
@@ -291,8 +278,6 @@ exports.twitterIdIndex = createIndex("twitterId");
 exports.githubIdIndex = createIndex("githubId");
 exports.displayNameIndex = 
 functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handlerForDisplayNameIndex());
-
-
 exports.starsSummary =
 functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{reviewerUserId}/stars')
 .onWrite((event: any) => {

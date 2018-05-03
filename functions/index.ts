@@ -1,6 +1,10 @@
 'use strict';
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const serviceKey = require('./serviceAccountKey.json');
+// admin.initializeApp({
+//   credentials: admin.credential.cert(serviceKey)
+// });
 admin.initializeApp(functions.config().firebase);
 
 // // Create and Deploy Your First Cloud Functions
@@ -39,15 +43,16 @@ admin.initializeApp(functions.config().firebase);
 
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/${userId}/privateButAddable/matchMemberships/${matchId}/addedByUid')
-    .onWrite((change, context) => {
+    .onWrite((change: any, context: any) => {
       const adderUserId = context.params.addedByUid;
       const addedUserId = context.params.userId;
+      const matchId = context.params.matchId;
       
       if (!change.after.val()) {
         return console.log('Same User');
       }
       console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
-      sendPushToUser(addedUserId, adderUserId);
+      sendPushToUser(addedUserId, adderUserId, matchId);
 
     });
 
@@ -94,7 +99,7 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
 // function sendPushToUser(
 //   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
   function sendPushToUser(
-     toUserId: string, senderUid: string) {
+     toUserId: string, senderUid: string, matchId: string) {
   console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
   // Get the list of device notification tokens.

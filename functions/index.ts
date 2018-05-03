@@ -36,6 +36,22 @@ admin.initializeApp(functions.config().firebase);
 // Recall that contact names are stored in /privateFields/contacts/$contactPhoneNumber/contactName
 // Recall that displayName are stored in /publicFields/displayName
 //
+
+exports.addMatchParticipant = functions.database
+  .ref('/gamePortal/gamePortalUsers/${userId}/privateButAddable/matchMemberships/${matchId}/addedByUid')
+    .onWrite((change, context) => {
+      const adderUserId = context.params.addedByUid;
+      const addedUserId = context.params.userId;
+      
+      if (!change.after.val()) {
+        return console.log('Same User');
+      }
+      console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
+      sendPushToUser(addedUserId, adderUserId);
+
+    });
+
+
 // 2) When someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
 // Suppose we have a match between users A, B, C.
@@ -73,11 +89,13 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
     });
 });
 
-/*
+
 // Code taken from https://github.com/firebase/functions-samples/blob/master/fcm-notifications/functions/index.js
-function sendPushToUser(
-  toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
-  console.log('Sending push notification:', toUserId, senderUid, body, timestamp, groupId);
+// function sendPushToUser(
+//   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
+  function sendPushToUser(
+     toUserId: string, senderUid: string) {
+  console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
   // Get the list of device notification tokens.
   return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
@@ -101,14 +119,12 @@ function sendPushToUser(
       {
         notification: {
           title: "Monopoly is starting", // TODO: fetch game name.
-          body: body,
+          body: "Join Zibiga",
         },
         data: {
           // Must be only strings in these key-value pairs
           fromUserId: String(senderUid),
-          toUserId: String(toUserId),
-          groupId: String(groupId),
-          timestamp: String(timestamp),
+          toUserId: String(toUserId)
         }
       };
     if (tokenData.platform == "web") {
@@ -139,6 +155,7 @@ function sendPushToUser(
   });
 }
 
+/*
 exports.sendNotifications =
 functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWrite((event: any) => {
   let messageData = event.data.val();

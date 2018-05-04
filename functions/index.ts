@@ -60,11 +60,12 @@ exports.addMatchParticipant = functions.database
       }).then((response) => {
         console.log("Printing first promise");
         // For each message check if there was an error.
-        // console.log('User Display values: ',userPhoneNumber.val(), userDisplayName.val());
+        
         const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');       
         return Promise.all([userNamePromise]).then(results => {
           userName = results[0];
         }).then(() => {
+          console.log('User Display values: ',userName.val());
           console.log("Printing second promise");
           if(!userName.val()){
             userName = userDisplayName.val();           

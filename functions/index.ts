@@ -37,7 +37,9 @@ admin.initializeApp();
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
-      const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).val();
+      const snapValue = change.val();
+      console.log('Snap Value: ', snapValue);
+      const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
       // context.params.addedByUid;
       let userName: string = "";
       const addedUserId: string = context.params.userId;
@@ -45,16 +47,16 @@ exports.addMatchParticipant = functions.database
         return console.log('Same User');
       }
       const matchId: string = context.params.matchId;
-      const userPhoneNumber = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).val();
+      const userPhoneNumber = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
       if(userPhoneNumber){
-        userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).val();
+        userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
       }
-      const userDisplayName = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).val();
+      const userDisplayName = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
       console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
       if(!userName){
         userName = userDisplayName;
       }
-      return sendPushToUser(addedUserId, adderUserId, matchId, userName);
+      // return sendPushToUser(addedUserId, adderUserId, matchId, userName);
       
     });
 

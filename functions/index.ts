@@ -100,7 +100,7 @@ exports.pingOpponentsNotification = functions.database
 
 exports.testPushNotification =
 functions.database.ref('testPushNotification').onWrite((event: any) => {
-  let fcmToken = event.data.val();
+  let fcmToken = event.after.val();
   console.log(`testPushNotification fcmToken=` + fcmToken);
   console.error(`testPushNotification testing an error!=` + fcmToken);
   if (!fcmToken) {

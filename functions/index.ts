@@ -52,14 +52,14 @@ exports.addMatchParticipant = functions.database
       const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
       const gameSpecIdPromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
       return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameSpecIdPromise]).then(results => {
-        userPhoneNumber = results[0] ? results[0].val() : '';
+        userPhoneNumber = results[0] && results[0].val() || '';
         userDisplayName = results[1].val(); 
         gameSpecId = results[2].val();     
         const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
         const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}/gameSpec/gameName`).once('value');
         return Promise.all([userNamePromise, gameNamePromise]).then(results => {
           const userNameSnapshot = results[0];
-          userName = userNameSnapshot ? userNameSnapshot.val() : userDisplayName;
+          userName = userNameSnapshot && userNameSnapshot.val() || userDisplayName;
           gameName = results[1].val();
           console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
           return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);

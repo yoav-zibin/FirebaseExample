@@ -37,8 +37,8 @@ admin.initializeApp();
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
-      // const snapValue = change.after.val();
-      // console.log('Snap Value: ', snapValue);
+      const snapValue = change.after.val();
+      console.log('Snap Value: ', snapValue);
       const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
       // context.params.addedByUid;
       let userName: string = "";

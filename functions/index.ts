@@ -38,11 +38,11 @@ exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
       const adderUserId = change.after.val();
-      let userName: any;
-      let userPhoneNumber: any;
-      let userDisplayName: any;
-      let gameName: any;
-      let gameSpecId: any;
+      let userName: string;
+      let userPhoneNumber: string;
+      let userDisplayName: string;
+      let gameName: string;
+      let gameSpecId: string;
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
         return null;
@@ -50,23 +50,19 @@ exports.addMatchParticipant = functions.database
       const matchId: string = context.params.matchId;
       const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
       const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
-      const matchNamePromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
-      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, matchNamePromise]).then(results => {
-        userPhoneNumber = results[0];
-        userDisplayName = results[1]; 
-        gameSpecId = results[2];      
-      }).then((response) => {        
-        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');       
-        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId.val()}/gameSpec/gameName`).once('value');
+      const gameSpecIdPromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
+      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameSpecIdPromise]).then(results => {
+        userPhoneNumber = results[0] ? results[0].val() : '';
+        userDisplayName = results[1].val(); 
+        gameSpecId = results[2].val();     
+        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
+        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}/gameSpec/gameName`).once('value');
         return Promise.all([userNamePromise, gameNamePromise]).then(results => {
-          userName = results[0];
-          gameName = results[1];
-        }).then(() => {
-          if(!userName){
-            userName = userDisplayName.val();           
-          }
-          console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
-          return sendPushToUser(addedUserId, adderUserId, matchId, userName.val(), gameName.val());
+          const userNameSnapshot = results[0];
+          userName = userNameSnapshot ? userNameSnapshot.val() : userDisplayName;
+          gameName = results[1].val();
+          console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
+          return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
       });  
     });

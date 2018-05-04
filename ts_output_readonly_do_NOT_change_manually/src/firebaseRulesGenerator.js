@@ -236,8 +236,9 @@ var firebaseRules;
             case "$pieceIndex": return getValidateIndex(parentKey, MAX_PIECES);
             case "$deckMemberIndex": return getValidateIndex(parentKey, MAX_IMAGES_IN_DECK);
             case "$participantIndex": return getValidateIndex(parentKey, MAX_USERS_IN_MATCH);
+            // For FCM on ios: "1f87684be4a26f267bc711ab38d473006af371dfbe58e161b292b171469e4d2e"
             //"elaM4m3sjE0:APA91bHGBqZDfiyl1Hnityy3nE-G-GsC2-guIsGCaT0ua4RPjx-AYr0HSsp2_mzVDaMabKj97vgPq_qqn225gzNHyDIk4ypuAeH4PudoeVgV36TxbhNpRQflo_YEVP8-A9CbiAzHn__S",
-            case "$fcmToken": return validate(parentKey + ".matches(/^.{140,200}$/)");
+            case "$fcmToken": return validate(parentKey + ".matches(/^.{10,200}$/)");
             case "$phoneNumber": return validateMyPhoneNumber("$phoneNumber"); //validate(`${parentKey}.matches(/^[+][0-9]{5,20}$/)`);
             case "$contactPhoneNumber": return validate(parentKey + ".matches(/^[+][0-9]{5,20}$/) || " + parentKey + ".matches(" + MAGIC_PHONE_NUMBERS_FOR_TESTS_REGEX + ")");
             case "$gameBuilderUserId":

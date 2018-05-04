@@ -29,7 +29,7 @@ function createPCs(localStream) {
     pc2.onicecandidate = function (evt) { return onicecandidate(pc1, evt); };
     pc1.onaddstream = function (evt) { return onaddstream(pc1, evt); };
     pc2.onaddstream = function (evt) { return onaddstream(pc2, evt); };
-    pc1.createOffer().then(function (desc) { return gotDescription(pc1, pc2, desc); });
+    pc1.createOffer().then(function (desc) { return gotDescription(true, pc1, pc2, desc); });
 }
 function onicecandidate(targetPC, evt) {
     console.log("onicecandidate: ", evt);
@@ -43,16 +43,21 @@ function onaddstream(myPC, evt) {
         setVideoStream(myPC == pc1 ? 'pc1Video' : 'pc2Video', evt.stream);
     }
 }
-function gotDescription(myPC, targetPC, desc) {
+function gotDescription(isOffer, myPC, targetPC, desc) {
     console.log("gotDescription: ", desc);
     myPC.setLocalDescription(desc).then(function () { console.log("setLocalDescription success"); }, function (err) { console.error("Error in setLocalDescription: ", err); });
     targetPC.setRemoteDescription(new RTCSessionDescription(desc)).then(function () { console.log("setRemoteDescription success"); }, function (err) { console.error("Error in setRemoteDescription: ", err); });
-    if (myPC == pc1) {
-        pc2.createAnswer().then(function (desc) { return gotDescription(pc2, pc1, desc); });
+    if (isOffer) {
+        targetPC.createAnswer().then(function (desc) { return gotDescription(false, pc2, pc1, desc); });
     }
 }
 document.getElementById('addStreamToPc2').onclick = function () {
+    // TODO: doesn't work :(
+    // I can't add a stream after connection was established,
+    // despite:
+    // https://stackoverflow.com/questions/16015022/webrtc-how-to-add-stream-after-offer-and-answer
     console.log("Trying to add a stream after connection established");
     pc2.addStream(localStream);
+    pc2.createOffer().then(function (desc) { return gotDescription(true, pc2, pc1, desc); });
 };
 //# sourceMappingURL=simpleWebRTC.js.map

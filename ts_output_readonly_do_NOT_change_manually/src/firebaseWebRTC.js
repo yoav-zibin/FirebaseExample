@@ -2,8 +2,11 @@
 // We send messages to a user by writing SignalData to
 // gamePortal/gamePortalUsers/$userId/privateButAddable/signal/$signalId
 // And the target user will read the signals and delete them after reading them.
-var SDP1 = 'sdp1';
-var SDP2 = 'sdp2';
+// TODO: Between users X and Y we have two peer connections (to support getting video before
+// one gave permission to camera/mic.)
+// We will need candidateA and candidateB signal types (one for each peer connection). 
+var SDP1 = 'sdp1'; // offer
+var SDP2 = 'sdp2'; // response
 var CANDIDATE = 'candidate';
 function checkCondition(desc, cond) {
     if (!cond) {
@@ -303,6 +306,7 @@ var MyPeerConnection = /** @class */ (function () {
         var isCaller = !initialSignals || initialSignals.length == 0;
         this.isCaller = isCaller;
         if (isCaller) {
+            checkCondition('caller must have local stream', videoChat.localMediaStream);
             pc.createOffer().then(this.gotDescription.bind(this), function (err) { console.error("Error in createOffer: ", err); });
         }
         else {

@@ -77,6 +77,21 @@ function changeElementToCard(element) {
   element.elementKind = 'card';
 }
 
+const gamesToSkip = [
+  "3 Man Chess",
+  "chemistry ludo spec",
+  "Gourd Chess",
+  "Connect_6",
+  "dice_war_yw",
+  "Five in a row",
+  "liar's dice", "chuiniu", 'reversi_initial_state'
+];
+
+const gamesToRename = {
+  'three_men_initial': "3 men's morris",
+  "nine men's morris": "9 men's morris"
+}
+
 function downloadDatabase(){
   let database_json = {};
   allPromises.push(db.ref("/gameBuilder").once("value", (snap) => {
@@ -97,7 +112,7 @@ function downloadDatabase(){
       const wikipediaUrl = spec.wikipediaUrl == "https://no-wiki.com" ? '' : spec.wikipediaUrl || '';
       if (!screenShotImageId) continue;
       if (!spec.pieces) continue; // skip that game that has no pieces.
-      if (gameName == 'reversi_initial_state') continue;
+      if (gamesToSkip.indexOf(gameName) !== -1) continue;
       if (gameName == 'reversi-sm') gameName = 'Reversi';
       specCount++;
       gameSpecs.push({

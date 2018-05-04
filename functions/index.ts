@@ -37,25 +37,35 @@ admin.initializeApp();
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
-      const snapValue = change.after.val();
-      console.log('Snap Value: ', snapValue);
-      const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
+      const adderUserId = change.after.val();
+      // console.log('Snap Value: ', snapValue);
+      // const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
       // context.params.addedByUid;
       let userName: string = "";
+      let userPhoneNumber: string = "";
+      let userDisplayName: string = "";
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
         return console.log('Same User');
       }
       const matchId: string = context.params.matchId;
-      const userPhoneNumber = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
-      if(userPhoneNumber){
-        userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
-      }
-      const userDisplayName = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
-      console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
-      if(!userName){
-        userName = userDisplayName;
-      }
+      const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
+      const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
+      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise]).then(results => {
+        userPhoneNumber = results[0];
+        userDisplayName = results[1];       
+      }).then((response) => {
+        // For each message check if there was an error.
+        if(userPhoneNumber){
+          return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
+        }
+        if(!userName){
+          userName = userDisplayName;
+        }
+        console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
+      });
+      
+      
       // return sendPushToUser(addedUserId, adderUserId, matchId, userName);
       
     });

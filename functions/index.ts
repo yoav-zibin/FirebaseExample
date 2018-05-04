@@ -38,9 +38,6 @@ exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
       const adderUserId = change.after.val();
-      // console.log('Snap Value: ', snapValue);
-      // const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
-      // context.params.addedByUid;
       let userName: any;
       let userPhoneNumber: any;
       let userDisplayName: any;
@@ -80,6 +77,21 @@ exports.addMatchParticipant = functions.database
 // Then it will send a notifications to users B & C, with the text:
 // {title: "<user-name> resumes the game of <Monopoly>", body: "Open Zibiga now to join the fun!"}
 // As before, <user-name> is either the contact name or displayName.
+
+exports.pingOpponentsNotification = functions.database
+  .ref('/gamePortal/matches/{matchId}/participants/{participantUserId}/pingOpponents')
+    .onWrite((change: any, context: any) => {
+      let tokensSnapshot: any;
+      let opponentNames: any;
+      const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
+      return Promise.all([getOpponentsName]).then(results => {
+        tokensSnapshot = results[0];     
+      }).then((response) => {        
+          opponentNames = Object.keys(tokensSnapshot.val());
+          console.log('The opponents are', opponentNames);
+          // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
+        });   
+    });
 
 
 exports.testPushNotification =
@@ -147,6 +159,8 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
           toUserId: String(toUserId)
         }
       };
+      console.log('Payload is:', payload);
+
     if (tokenData.platform == "web") {
       payload.notification.click_action = 
         `https://yoav-zibin.github.io/NewGamePortal/matches/${matchId}`;

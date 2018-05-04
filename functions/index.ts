@@ -58,15 +58,19 @@ exports.addMatchParticipant = functions.database
         userDisplayName = results[1]; 
         gameName = results[2];      
       }).then((response) => {
+        console.log("Printing first Promise");
         // For each message check if there was an error.
         // console.log('User Display values: ',userPhoneNumber.val(), userDisplayName.val());
-        if(userPhoneNumber.val()){
-          return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');
-        }
-        if(!userName.val()){
-          userName = userDisplayName.val();
-        }
-        console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
+        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');       
+        return Promise.all([userNamePromise]).then(results => {
+          userName = results[0];
+        }).then(() => {
+          console.log("Printing second Promise");
+          if(!userName.val()){
+            userName = userDisplayName.val();
+            console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
+          }
+        });   
       });
       
       

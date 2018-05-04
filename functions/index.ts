@@ -63,7 +63,7 @@ exports.addMatchParticipant = functions.database
             userName = userDisplayName.val();           
           }
           console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
-          return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
+          return sendPushToUser(addedUserId, adderUserId, matchId, userName.val(), gameName.val());
         });   
       });  
     });

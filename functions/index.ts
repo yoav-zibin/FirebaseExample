@@ -42,8 +42,8 @@ exports.addMatchParticipant = functions.database
       // const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
       // context.params.addedByUid;
       let userName: string = "";
-      let userPhoneNumber: string = "";
-      let userDisplayName: string = "";
+      let userPhoneNumber: any;
+      let userDisplayName: any;
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
         return console.log('Same User');
@@ -56,9 +56,10 @@ exports.addMatchParticipant = functions.database
         userDisplayName = results[1];       
       }).then((response) => {
         // For each message check if there was an error.
-        if(userPhoneNumber){
-          return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
-        }
+        console.log('User Display values: ',userPhoneNumber.val(), userDisplayName.val());
+        // if(userPhoneNumber){
+        //   return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
+        // }
         if(!userName){
           userName = userDisplayName;
         }

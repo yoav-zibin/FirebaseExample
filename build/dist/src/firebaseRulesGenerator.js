@@ -118,6 +118,9 @@ var firebaseRules;
     function validateBoolean() {
         return validate("newData.isBoolean()");
     }
+    function validateAnyNumber() {
+        return validate("newData.isNumber()");
+    }
     function validateTrue() {
         return validate("newData.isBoolean() && newData.val() == true");
     }

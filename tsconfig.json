@@ -38,6 +38,7 @@
     },
     "files": [
         "firebase-messaging-sw.js",
+        "src/simpleWebRTC.ts",
         "src/firebaseDbExample.ts",
         "src/firebaseWebRTC.ts",
         "src/firebaseRulesGenerator.ts",

@@ -101,6 +101,9 @@ var firebaseRules;
         // to ensure accurate timestamps
         VALIDATE_NOW);
     }
+    function validateAnyNumber() {
+        return validate("newData.isNumber()");
+    }
     function validateBoolean() {
         return validate("newData.isBoolean()");
     }
@@ -641,7 +644,10 @@ var firebaseRules;
                             },
                         },
                         "createdOn": validateNow(),
-                        "lastUpdatedOn": validateNow(),
+                        // I want to quickly detect if it's a state I just set,
+                        // so I set lastUpdatedOn to
+                        // new Date().getTime()
+                        "lastUpdatedOn": validateAnyNumber(),
                         "gameSpecId": validateGameSpecId(),
                         "pieces": {
                             "$pieceIndex": {

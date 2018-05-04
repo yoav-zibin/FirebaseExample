@@ -90,7 +90,8 @@ exports.pingOpponentsNotification = functions.database
       return Promise.all([getOpponentsName]).then(results => {
         tokensSnapshot = results[0];     
       }).then((response) => {        
-          opponentNames = Object.keys(tokensSnapshot.val());
+          opponentNames = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != context.params.participantUserId); 
+          // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
           console.log('The opponents are', opponentNames);
           // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   

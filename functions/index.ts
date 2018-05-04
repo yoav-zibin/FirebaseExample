@@ -37,7 +37,7 @@ admin.initializeApp();
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
-      const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`);
+      const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).val();
       // context.params.addedByUid;
       let userName: string = "";
       const addedUserId: string = context.params.userId;
@@ -45,11 +45,11 @@ exports.addMatchParticipant = functions.database
         return console.log('Same User');
       }
       const matchId: string = context.params.matchId;
-      const userPhoneNumber = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`);
+      const userPhoneNumber = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).val();
       if(userPhoneNumber){
-        userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`);
+        userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).val();
       }
-      const userDisplayName = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`);
+      const userDisplayName = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).val();
       console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
       if(!userName){
         userName = userDisplayName;
@@ -103,7 +103,7 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
      toUserId: string, senderUid: string, matchId: string, userName: string) {
   console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
-  let gameName = admin.database().ref(`/gameSpecsForPortal/${matchId}/gameSpec/gameName`);
+  let gameName = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchId}/gameSpec/gameName`).val();
   // Get the list of device notification tokens.
   return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
     let tokensWithData = tokensSnapshot.val();

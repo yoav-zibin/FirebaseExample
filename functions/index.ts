@@ -41,9 +41,10 @@ exports.addMatchParticipant = functions.database
       // console.log('Snap Value: ', snapValue);
       // const adderUserId: string = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateButAddable/matchMemberships/${context.params.matchId}/addedByUid`).once('value');
       // context.params.addedByUid;
-      let userName: string = "";
+      let userName: any;
       let userPhoneNumber: any;
       let userDisplayName: any;
+      let gameName: any;
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
         return console.log('Same User');
@@ -51,23 +52,25 @@ exports.addMatchParticipant = functions.database
       const matchId: string = context.params.matchId;
       const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
       const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
-      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise]).then(results => {
+      const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchId}/gameSpec/gameName`).once('value');
+      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameNamePromise]).then(results => {
         userPhoneNumber = results[0];
-        userDisplayName = results[1];       
+        userDisplayName = results[1]; 
+        gameName = results[2];      
       }).then((response) => {
         // For each message check if there was an error.
-        console.log('User Display values: ',userPhoneNumber.val(), userDisplayName.val());
-        // if(userPhoneNumber){
-        //   return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');
-        // }
-        if(!userName){
-          userName = userDisplayName;
+        // console.log('User Display values: ',userPhoneNumber.val(), userDisplayName.val());
+        if(userPhoneNumber.val()){
+          return userName = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');
         }
-        console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
+        if(!userName.val()){
+          userName = userDisplayName.val();
+        }
+        console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
       });
       
       
-      // return sendPushToUser(addedUserId, adderUserId, matchId, userName);
+      // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
       
     });
 
@@ -113,10 +116,10 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
 // function sendPushToUser(
 //   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
   function sendPushToUser(
-     toUserId: string, senderUid: string, matchId: string, userName: string) {
+     toUserId: string, senderUid: string, matchId: string, userName: string, gameName: string) {
   console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
-  let gameName = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchId}/gameSpec/gameName`).val();
+  
   // Get the list of device notification tokens.
   return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
     let tokensWithData = tokensSnapshot.val();

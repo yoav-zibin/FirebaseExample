@@ -42,10 +42,10 @@ exports.addMatchParticipant = functions.database
       let userPhoneNumber: any;
       let userDisplayName: any;
       let gameName: any;
-      let matchName: any;
+      let gameSpecId: any;
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
-        return console.log('Same User');
+        return null;
       }
       const matchId: string = context.params.matchId;
       const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
@@ -54,15 +54,15 @@ exports.addMatchParticipant = functions.database
       return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, matchNamePromise]).then(results => {
         userPhoneNumber = results[0];
         userDisplayName = results[1]; 
-        matchName = results[2];      
+        gameSpecId = results[2];      
       }).then((response) => {        
         const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');       
-        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchName.val()}/gameSpec/gameName`).once('value');
+        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId.val()}/gameSpec/gameName`).once('value');
         return Promise.all([userNamePromise, gameNamePromise]).then(results => {
           userName = results[0];
           gameName = results[1];
         }).then(() => {
-          if(!userName.val()){
+          if(!userName){
             userName = userDisplayName.val();           
           }
           console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName.val(), 'User Name:', userName.val());
@@ -84,17 +84,22 @@ exports.addMatchParticipant = functions.database
 exports.pingOpponentsNotification = functions.database
   .ref('/gamePortal/matches/{matchId}/participants/{participantUserId}/pingOpponents')
     .onWrite((change: any, context: any) => {
-      let tokensSnapshot: any;
-      let opponentNames: any;
-      const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
-      return Promise.all([getOpponentsName]).then(results => {
-        tokensSnapshot = results[0];     
-      }).then((response) => {        
-          opponentNames = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != context.params.participantUserId); 
-          // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
-          console.log('The opponents are', opponentNames);
-          // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
+      const afterOpponents = change.after.val();
+      const beforeOpponents = change.before.val();
+      if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
+      {
+        let tokensSnapshot: any;
+        let opponentNames: any;
+        const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
+        return Promise.all([getOpponentsName]).then(results => {
+          tokensSnapshot = results[0];     
+        }).then((response) => {        
+            opponentNames = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != context.params.participantUserId); 
+            // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
+            console.log('The opponents are', opponentNames);
+            // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
+      }    
     });
 
 

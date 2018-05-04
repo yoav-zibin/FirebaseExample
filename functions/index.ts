@@ -42,6 +42,7 @@ exports.addMatchParticipant = functions.database
       let userPhoneNumber: any;
       let userDisplayName: any;
       let gameName: any;
+      let matchName: any;
       const addedUserId: string = context.params.userId;
       if (adderUserId === addedUserId) {
         return console.log('Same User');
@@ -49,15 +50,17 @@ exports.addMatchParticipant = functions.database
       const matchId: string = context.params.matchId;
       const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
       const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
-      const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchId}/gameSpec/gameName`).once('value');
-      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameNamePromise]).then(results => {
+      const matchNamePromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
+      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, matchNamePromise]).then(results => {
         userPhoneNumber = results[0];
         userDisplayName = results[1]; 
-        gameName = results[2];      
+        matchName = results[2];      
       }).then((response) => {        
         const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber.val()}/contactName`).once('value');       
-        return Promise.all([userNamePromise]).then(results => {
+        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${matchName}/gameSpec/gameName`).once('value');
+        return Promise.all([userNamePromise, gameNamePromise]).then(results => {
           userName = results[0];
+          gameName = results[1];
         }).then(() => {
           if(!userName.val()){
             userName = userDisplayName.val();           

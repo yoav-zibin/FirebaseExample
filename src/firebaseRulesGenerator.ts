@@ -351,6 +351,7 @@ module firebaseRules {
       "isBoardImage": validateBoolean(),
       "downloadURL": validateSecureUrl(), // URL that allows downloading from cloudStorage.
       "sizeInBytes": validateNumber(100, 2 * 1024 * 1024), // At most 2MB per image (though even board images should be around 512KB).
+      // TODO: switch existing images to "resized"
       "cloudStoragePath": validateRegex(`images\\/${ID_PATTERN}[.](gif|png|jpg)`), // e.g., "images/-KuV-Y9TXnfnaZExRTli.gif"
       "name": validateMandatoryString(100),
     };
@@ -569,6 +570,7 @@ module firebaseRules {
         "gamesInfoAndSpec": {
           ".read": ANYONE,
           // TODO: Will be written by cloud functions
+          ".write": ANYONE,
           "gameInfos": {
             "$gameInfoId": {
               "gameSpecId": validateMandatoryString(100),

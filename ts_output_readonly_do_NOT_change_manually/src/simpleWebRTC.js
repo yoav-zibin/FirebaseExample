@@ -40,7 +40,9 @@ function onicecandidate(targetPC, evt) {
 function onaddstream(myPC, evt) {
     console.log("onaddstream: ", evt);
     if (evt.stream) {
-        setVideoStream(myPC == pc1 ? 'pc1Video' : 'pc2Video', evt.stream);
+        if (myPC == pc1)
+            throw new Error("Internal bug");
+        setVideoStream('pcVideo', evt.stream);
     }
 }
 function gotDescription(isOffer, myPC, targetPC, desc) {
@@ -51,13 +53,4 @@ function gotDescription(isOffer, myPC, targetPC, desc) {
         targetPC.createAnswer().then(function (desc) { return gotDescription(false, pc2, pc1, desc); });
     }
 }
-document.getElementById('addStreamToPc2').onclick = function () {
-    // TODO: doesn't work :(
-    // I can't add a stream after connection was established,
-    // despite:
-    // https://stackoverflow.com/questions/16015022/webrtc-how-to-add-stream-after-offer-and-answer
-    console.log("Trying to add a stream after connection established");
-    pc2.addStream(localStream);
-    pc2.createOffer().then(function (desc) { return gotDescription(true, pc2, pc1, desc); });
-};
 //# sourceMappingURL=simpleWebRTC.js.map

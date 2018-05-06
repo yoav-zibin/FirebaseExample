@@ -146,6 +146,8 @@ function downloadDatabase(){
     }
     //console.log('wrote specCount=' + specCount);
     Promise.all(downLoadUrlPromises).then(()=> {
+
+      // TODO: put the games with most votes first in gamePortal/gamesInfoAndSpec.
       refSet("/gamePortal/gamesInfoAndSpec/gameInfos", gameSpecs);
       refSet("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal", gameSpecsForPortal);
       Promise.all(allPromises).then(() => {

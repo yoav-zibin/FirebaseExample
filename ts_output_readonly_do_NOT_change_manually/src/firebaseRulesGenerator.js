@@ -311,6 +311,7 @@ var firebaseRules;
             "isBoardImage": validateBoolean(),
             "downloadURL": validateSecureUrl(),
             "sizeInBytes": validateNumber(100, 2 * 1024 * 1024),
+            // TODO: switch existing images to "resized"
             "cloudStoragePath": validateRegex("images\\/" + ID_PATTERN + "[.](gif|png|jpg)"),
             "name": validateMandatoryString(100),
         };
@@ -515,6 +516,7 @@ var firebaseRules;
                 "gamesInfoAndSpec": {
                     ".read": ANYONE,
                     // TODO: Will be written by cloud functions
+                    ".write": ANYONE,
                     "gameInfos": {
                         "$gameInfoId": {
                             "gameSpecId": validateMandatoryString(100),

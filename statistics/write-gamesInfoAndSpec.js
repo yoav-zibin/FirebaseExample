@@ -1,4 +1,4 @@
-const isTestProject = true;
+const isTestProject = false;
 const projectName = isTestProject ? "testproject-a6dce" : "universalgamemaker";
 const certificateName = isTestProject ? "testproject-firebase-adminsdk.json" : "universalgamemaker-firebase-adminsdk.json";
 const serviceAccount = require(`../../Certificates/${certificateName}`);
@@ -19,7 +19,13 @@ function refSet(path, val) {
 }
 
 const downLoadUrlPromises = [];
-function fixDownloadUrl(image) {
+const allImages = {};
+function fixDownloadUrl(imageId, image) {
+  if (allImages[imageId]) {
+    image = allImages[imageId];
+  } else {
+    allImages[imageId] = image;
+  }
   if (image.cloudStoragePath.startsWith("compressed")) return image; // already fixed.
   image.cloudStoragePath = image.cloudStoragePath.replace("images", "compressed");
   const storage = admin.storage().bucket();
@@ -105,6 +111,9 @@ function downloadDatabase(){
     let specCount = 0;
     let gameSpecs = [];
     let gameSpecsForPortal = {};
+    for (let [imageId,image] of Object.entries(imageIdToImage)) {
+      fixDownloadUrl(imageId, imageIdToImage[imageId]);
+    }
     for (let [gameSpecId,spec] of Object.entries(specIdToSpec)) {
       
       const screenShotImageId = spec.screenShotImageId;
@@ -120,20 +129,21 @@ function downloadDatabase(){
         gameName: gameName,
         screenShotImageId: screenShotImageId,
         wikipediaUrl: wikipediaUrl,
-        screenShotImage: fixDownloadUrl(imageIdToImage[screenShotImageId])
+        screenShotImage: fixDownloadUrl(screenShotImageId, imageIdToImage[screenShotImageId])
       });
-      console.log(gameSpecId + "," + gameName + "," + wikipediaUrl);
+      // console.log(gameSpecId + "," + gameName + "," + wikipediaUrl);
       
       const images = {};
       const elements = {};
-      images[spec.board.imageId] = fixDownloadUrl(imageIdToImage[spec.board.imageId]);
+      const boardImageId = spec.board.imageId;
+      images[boardImageId] = fixDownloadUrl(boardImageId, imageIdToImage[boardImageId]);
       for (let [_index, piece] of Object.entries(spec.pieces)) {
         const elementId = piece.pieceElementId;
         let element = elementIdToElement[elementId];
         if (piece.deckPieceIndex !== -1) changeElementToCard(element);
         elements[elementId] = element;
         for (let [k,v] of Object.entries(element.images)) {
-          images[v.imageId] = fixDownloadUrl(imageIdToImage[v.imageId]);
+          images[v.imageId] = fixDownloadUrl(v.imageId, imageIdToImage[v.imageId]);
         }
       }
 
@@ -146,11 +156,15 @@ function downloadDatabase(){
     }
     //console.log('wrote specCount=' + specCount);
     Promise.all(downLoadUrlPromises).then(()=> {
-
+      for (let [k,v] of Object.entries(allImages)) {
+        refSet(`/gameBuilder/images/${k}/cloudStoragePath`, v.cloudStoragePath);
+        refSet(`/gameBuilder/images/${k}/downloadURL`, v.downloadURL);
+      }
       // TODO: put the games with most votes first in gamePortal/gamesInfoAndSpec.
       refSet("/gamePortal/gamesInfoAndSpec/gameInfos", gameSpecs);
       refSet("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal", gameSpecsForPortal);
       Promise.all(allPromises).then(() => {
+        console.log("All Done");
         admin.app().delete();
       }).catch((e) => console.error("Promise error: " + e));
     });

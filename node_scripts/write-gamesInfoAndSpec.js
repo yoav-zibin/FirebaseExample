@@ -95,8 +95,15 @@ const gamesToSkip = [
 
 const gamesToRename = {
   'three_men_initial': "3 men's morris",
-  "nine men's morris": "9 men's morris"
-}
+  "nine men's morris": "9 men's morris",
+  "reversi-sm":	"Reversi",
+  "banqi_sm": "Banqi",
+};
+
+// TODO: implement
+const gamesWhereCardsAreReversed = [
+  "Banqi",
+];
 
 function downloadDatabase(){
   let database_json = {};
@@ -118,11 +125,11 @@ function downloadDatabase(){
       
       const screenShotImageId = spec.screenShotImageId;
       let gameName = spec.gameName;
+      if (gamesToRename[gamesToRename]) gameName = gamesToRename[gamesToRename];
       const wikipediaUrl = spec.wikipediaUrl == "https://no-wiki.com" ? '' : spec.wikipediaUrl || '';
       if (!screenShotImageId) continue;
       if (!spec.pieces) continue; // skip that game that has no pieces.
       if (gamesToSkip.indexOf(gameName) !== -1) continue;
-      if (gameName == 'reversi-sm') gameName = 'Reversi';
       specCount++;
       gameSpecs.push({
         gameSpecId: gameSpecId,
@@ -137,10 +144,71 @@ function downloadDatabase(){
       const elements = {};
       const boardImageId = spec.board.imageId;
       images[boardImageId] = fixDownloadUrl(boardImageId, imageIdToImage[boardImageId]);
+      const decksIndices = {};
       for (let [_index, piece] of Object.entries(spec.pieces)) {
         const elementId = piece.pieceElementId;
         let element = elementIdToElement[elementId];
-        if (piece.deckPieceIndex !== -1) changeElementToCard(element);
+        if (piece.deckPieceIndex !== -1) {
+          decksIndices[piece.deckPieceIndex] = true;
+        }
+      }
+      const numOfDecks = Object.keys(decksIndices).length;
+      if (numOfDecks > 1) {
+        console.warn('Game with multiple decks: gameSpecId=' + gameSpecId + ' gameName=' + gameName);
+      }
+      let shouldAddDeck = false;
+      let minX = 100;
+      let maxX = 0;
+      let minY = 100;
+      let maxY = 0;
+      const piecesNum = Object.entries(spec.pieces).length;
+      for (let [_index, piece] of Object.entries(spec.pieces)) {
+        const elementId = piece.pieceElementId;
+        let element = elementIdToElement[elementId];
+        if (element.elementKind == 'card' && piece.deckPieceIndex === -1) {
+          // If the game has just one deck, then let's fix it.
+          if (numOfDecks == 1) {
+            piece.deckPieceIndex = Object.keys(decksIndices)[0];
+          } else if (numOfDecks == 0) {          
+            shouldAddDeck = true;
+            piece.deckPieceIndex = piecesNum;
+            minX = Math.min(minX, piece.initialState.x);
+            maxX = Math.max(maxX, piece.initialState.x);
+            minY = Math.min(minY, piece.initialState.y);
+            maxY = Math.max(maxY, piece.initialState.y);
+          } else {
+            console.warn('card without a deck: elementId=' + elementId + ' gameSpecId=' + gameSpecId + ' gameName=' + gameName);
+            break;
+          }
+        }
+      }
+
+      if (shouldAddDeck) {
+        const deckElementId = gameSpecId + '-Deck';
+        spec.pieces[piecesNum] = {
+          pieceElementId: deckElementId,
+          deckPieceIndex: -1,
+          initialState: {
+            x: minX, y: minY,
+            zDepth: 1,
+            currentImageIndex: 0,
+          },
+        };
+        elementIdToElement[deckElementId] = {
+          height: ((maxY - minY)/100) * images[boardImageId].height,
+          width: ((maxX - minX)/100) * images[boardImageId].width,
+          elementKind: 'cardsDeck',
+          images: [],
+          isDraggable: false
+        };
+      }
+
+      for (let [_index, piece] of Object.entries(spec.pieces)) {
+        const elementId = piece.pieceElementId;
+        let element = elementIdToElement[elementId];
+        if (piece.deckPieceIndex !== -1) {
+          changeElementToCard(element);
+        }
         elements[elementId] = element;
         for (let [k,v] of Object.entries(element.images)) {
           images[v.imageId] = fixDownloadUrl(v.imageId, imageIdToImage[v.imageId]);

@@ -123,10 +123,6 @@ module firebaseRules {
       // to ensure accurate timestamps
       VALIDATE_NOW);
   }
-  
-  function validateAnyNumber(): Rule {
-    return validate("newData.isNumber()");
-  }
 
   function validateBoolean(): Rule {
     return validate("newData.isBoolean()");
@@ -705,10 +701,8 @@ module firebaseRules {
               },
             },
             "createdOn": validateNow(),
-            // I want to quickly detect if it's a state I just set,
-            // so I set lastUpdatedOn to
-            // new Date().getTime()
-            "lastUpdatedOn": validateAnyNumber(), // validateNow(),
+            "lastUpdatedOn": validateNow(),
+            updatedByUserId: validateMyUid(),
             "gameSpecId": validateGameSpecId(),
             "pieces": {
               "$pieceIndex": {

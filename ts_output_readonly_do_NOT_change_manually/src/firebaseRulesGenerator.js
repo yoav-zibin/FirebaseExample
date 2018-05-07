@@ -311,8 +311,7 @@ var firebaseRules;
             "isBoardImage": validateBoolean(),
             "downloadURL": validateSecureUrl(),
             "sizeInBytes": validateNumber(100, 2 * 1024 * 1024),
-            // TODO: switch existing images to "resized"
-            "cloudStoragePath": validateRegex("images\\/" + ID_PATTERN + "[.](gif|png|jpg)"),
+            "cloudStoragePath": validateRegex("(images|compressed)\\/" + ID_PATTERN + "[.](gif|png|jpg)"),
             "name": validateMandatoryString(100),
         };
     }
@@ -647,10 +646,8 @@ var firebaseRules;
                             },
                         },
                         "createdOn": validateNow(),
-                        // I want to quickly detect if it's a state I just set,
-                        // so I set lastUpdatedOn to
-                        // new Date().getTime()
-                        "lastUpdatedOn": validateAnyNumber(),
+                        "lastUpdatedOn": validateNow(),
+                        updatedByUserId: validateMyUid(),
                         "gameSpecId": validateGameSpecId(),
                         "pieces": {
                             "$pieceIndex": {

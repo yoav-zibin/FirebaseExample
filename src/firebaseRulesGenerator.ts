@@ -659,7 +659,8 @@ module firebaseRules {
             "privateButAddable": {
               "matchMemberships": {
                 "$matchMembershipId": { // Match Id
-                  ".write": "!data.exists()",
+                  // Sometimes the same entry is written twice, so allowing it in the rules.
+                  ".write": "!data.exists() || (newData.child('addedByUid').val() == data.child('addedByUid').val())",
                   "addedByUid": validateMyUid(),
                   "timestamp": validateNow(),
                 },

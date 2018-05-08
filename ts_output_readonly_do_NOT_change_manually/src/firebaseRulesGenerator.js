@@ -101,9 +101,6 @@ var firebaseRules;
         // to ensure accurate timestamps
         VALIDATE_NOW);
     }
-    function validateAnyNumber() {
-        return validate("newData.isNumber()");
-    }
     function validateBoolean() {
         return validate("newData.isBoolean()");
     }
@@ -604,7 +601,8 @@ var firebaseRules;
                         "privateButAddable": {
                             "matchMemberships": {
                                 "$matchMembershipId": {
-                                    ".write": "!data.exists()",
+                                    // Sometimes the same entry is written twice, so allowing it in the rules.
+                                    ".write": "!data.exists() || (newData.child('addedByUid').val() == data.child('addedByUid').val())",
                                     "addedByUid": validateMyUid(),
                                     "timestamp": validateNow(),
                                 },

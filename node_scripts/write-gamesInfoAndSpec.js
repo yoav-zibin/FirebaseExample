@@ -26,6 +26,11 @@ function fixDownloadUrl(imageId, image) {
   } else {
     allImages[imageId] = image;
   }
+  return image;
+  /*
+  // Newly created images won't be compressed.
+  // I've already updated gameBuilder to use compressed, so no need for this code anymore.
+
   if (image.cloudStoragePath.startsWith("compressed")) return image; // already fixed.
   image.cloudStoragePath = image.cloudStoragePath.replace("images", "compressed");
   const storage = admin.storage().bucket();
@@ -39,6 +44,7 @@ function fixDownloadUrl(imageId, image) {
   });
   downLoadUrlPromises.push(promise);
   return image;
+  */
 }
 
 function trimImageFields(img) {
@@ -100,10 +106,6 @@ const gamesToRename = {
   "banqi_sm": "Banqi",
 };
 
-// TODO: implement
-const gamesWhereCardsAreReversed = [
-  "Banqi",
-];
 
 function downloadDatabase(){
   let database_json = {};

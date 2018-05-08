@@ -659,9 +659,9 @@ module firebaseRules {
             "privateButAddable": {
               "matchMemberships": {
                 "$matchMembershipId": { // Match Id
-                  // Sometimes the same entry is written twice, so allowing it in the rules.
-                  // I would have preferred to write: newData.key() == data.key()  but key isn't a method in FB rules.
-                  ".write": "!data.exists() || (newData.child('addedByUid').val() == data.child('addedByUid').val())",
+                  // Sometimes the same entry is written twice, so allowing update in the rules (but not deletion).
+                  // (newData.child('addedByUid').val() == data.child('addedByUid').val())
+                  ".write": "!data.exists() || newData.exists()",
                   "addedByUid": validateMyUid(),
                   "timestamp": validateNow(),
                 },

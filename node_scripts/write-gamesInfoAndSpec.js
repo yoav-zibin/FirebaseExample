@@ -106,6 +106,9 @@ const gamesToRename = {
   "banqi_sm": "Banqi",
 };
 
+const screenshotsToMap = {
+  "-KxLz3HKZcyR22qfys5x": "-KxLz3FAFZX5RrKR-mhN" // mancala-spec --> mancala
+}
 
 function downloadDatabase(){
   let database_json = {};
@@ -124,12 +127,19 @@ function downloadDatabase(){
       fixDownloadUrl(imageId, imageIdToImage[imageId]);
     }
     for (let [gameSpecId,spec] of Object.entries(specIdToSpec)) {
-      
-      const screenShotImageId = spec.screenShotImageId;
+
+      let screenShotImageId = spec.screenShotImageId;
       let gameName = spec.gameName;
       if (gamesToRename[gamesToRename]) gameName = gamesToRename[gamesToRename];
       const wikipediaUrl = spec.wikipediaUrl == "https://no-wiki.com" ? '' : spec.wikipediaUrl || '';
-      if (!screenShotImageId) continue;
+      if (!screenShotImageId) {
+        // If it's in the mapping, use the mapped spec's screenshot
+        if(screenshotsToMap[gameSpecId]){
+          const mappedSpecId = screenshotsToMap[gameSpecId];
+          const mappedSpec = specIdToSpec[mappedSpecId];
+          screenShotImageId = mappedSpec.screenShotImageId;
+        }else{ continue; }
+      };
       if (!spec.pieces) continue; // skip that game that has no pieces.
       if (gamesToSkip.indexOf(gameName) !== -1) continue;
       specCount++;
@@ -141,7 +151,7 @@ function downloadDatabase(){
         screenShotImage: fixDownloadUrl(screenShotImageId, imageIdToImage[screenShotImageId])
       });
       // console.log(gameSpecId + "," + gameName + "," + wikipediaUrl);
-      
+
       const images = {};
       const elements = {};
       const boardImageId = spec.board.imageId;
@@ -171,7 +181,7 @@ function downloadDatabase(){
           // If the game has just one deck, then let's fix it.
           if (numOfDecks == 1) {
             piece.deckPieceIndex = Object.keys(decksIndices)[0];
-          } else if (numOfDecks == 0) {          
+          } else if (numOfDecks == 0) {
             shouldAddDeck = true;
             piece.deckPieceIndex = piecesNum;
             minX = Math.min(minX, piece.initialState.x);
@@ -243,4 +253,3 @@ function downloadDatabase(){
 
 
 downloadDatabase();
-

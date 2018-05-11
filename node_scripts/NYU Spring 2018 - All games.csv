@@ -1,0 +1,175 @@
+GameSpecID,Game name,Better game name,Should delete?,Game wiki link,Owner,Votes,Comments/issues
+-KxLz3BIoJfnCQtOqzJ8,Alquerque,,,https://en.wikipedia.org/wiki/Alquerque,Sisi,,None
+-KxLz3Bm_TbQv7Y2MmvM,Blue Nile,,,https://boardgamegeek.com/boardgame/33046/blue-nile,Sisi,1,"Move pieces to the side, have 61 pieces there."
+-KxLz3C46phd9a9jA_4m,Chaturanga,,,https://en.wikipedia.org/wiki/Chaturanga,Sisi,,None
+-KxLz3CWTCCbCbNvKKIw,Checkers,,,https://en.wikipedia.org/wiki/Checkers,YiWei,,"change the piece color to white, change to international draughts and initial position"
+-KxLz3CaPRPIBc-0mRP7,Chess,,,https://en.wikipedia.org/wiki/Chess,Angelina,,Lack of one queen
+-KxLz3DUY3rQOpYQuDdf,Dvonn,,Yes (use dvonn-sm instead),https://en.wikipedia.org/wiki/DVONN,Herbert,,"wrong # of pieces (should be 23 black, 23 white, and 3 red)"
+-KxLz3Dd3KhAtuAU0QqN,Emergo,,Yes (use emergo-toggleable instead),https://en.wikipedia.org/wiki/Emergo_(board_game),Herbert,,wrong # of pieces (should be 12 black and 12 white)
+-KxLz3DxRhzvZG5Wsq-Y,Game_of_Y,,,https://en.wikipedia.org/wiki/Y_(game),Herbert,1,Works
+-KxLz3EHxNpssFiQybGf,Game_of_the_Amazons,,,https://en.wikipedia.org/wiki/Game_of_the_Amazons,Herbert,,Missing other pieces
+-KxLz3ELOhG_GRnQZ1K6,GoBang-BlackWhite,,,https://en.wikipedia.org/wiki/Gomoku,Herbert,,Only has set # of white and black pieces
+-KxLz3ENuuliXjsKD-GN,Gomoku,,,https://en.wikipedia.org/wiki/Gomoku,Herbert,,"No white pieces, only set # of black"
+-KxLz3EQ2qxyozCOuLFG,HEX,,,https://en.wikipedia.org/wiki/Hex_(board_game),Herbert,,Missing pieces
+-KxLz3ERZLbUWpJD3PF1,Halatafl,,,https://en.wikipedia.org/wiki/Fox_games,Herbert,1,Works
+-KxLz3ES3mQPHvSVAoXE,Halma,,,https://en.wikipedia.org/wiki/Halma,Herbert,,revised version works
+-KxLz3ElpUxp_2GawKwQ,Havannah,,,https://en.wikipedia.org/wiki/Havannah,Sisi,,None
+-KxLz3EtI5z9f-Q8xru7,Hex Chess,,,https://en.wikipedia.org/wiki/Hexagonal_chess,Angelina,,
+-KxLz3F-2lE8iO0V7Dw1,LightsOut,,"Yes, it's honestly not even a board game",https://en.wikipedia.org/wiki/Lights_Out_(game),Herbert,,"Missing pieces, at least 17"
+-KxLz3F36flSFREBInct,LiuChongQi_initial,,,,Radhika,,
+-KxLz3F4qlddY-qgJlbv,Ludo,,,https://en.wikipedia.org/wiki/Ludo_(board_game),Radhika,,no pieces; make pieces bigger; email me one ludo to remove
+-KxLz3FAFZX5RrKR-mhN,Mancala,,,https://en.wikipedia.org/wiki/Mancala,Radhika,,Make pieces bigger
+-KxLz3FH9LfVoq-uJWWj,Mandavoshka,,,,Radhika,,
+-KxLz3FKTdapLIInm8GT,New Boku,,,https://en.wikipedia.org/wiki/B%C5%8Dku,Angelina,,Add more pieces
+-KxLz3FZYxBbzqt5VjS6,Pasang,,Yes (use revised version),https://en.wikipedia.org/wiki/Pasang_(game),Herbert,,works (use revised version)
+-KxLz3G0OdRNF8gtU_2M,Racing Kings,,,https://en.wikipedia.org/wiki/List_of_chess_variants,Herbert,,works
+-KxLz3G2PK2pEpXVsc63,Sato,,,,Radhika,,
+-KxLz3GDxUi9QADh3jN0,Simply ingenious,,,,Radhika,,
+-KxLz3GJVXshHaNFw9_m,Sidjah,,,,Radhika,,
+-KxLz3GKmU13dBHSjUd8,Tablut,,,http://www.ludoteka.com/tablut-en.html,Sisi,,none
+-KxLz3GUnLNDA0UXBDRO,biloba-spec,,,http://biloba.sourceforge.net/#rules,YiWei,,none
+-KxLz3HAgdBIdWKAjOyl,eight queens,,,https://en.wikipedia.org/wiki/Eight_queens_puzzle,Sisi,,none
+-KxLz3HDHktoLBiofZZy,hexdame,,,https://en.wikipedia.org/wiki/Hexdame,Sisi,,none
+-KxLz3HHiEl1lQbByeH8,lines-of-action,,,https://en.wikipedia.org/wiki/Lines_of_Action,Sisi,,
+-KxLz3Hi15gL3gipt36x,three_men_initial,,,https://en.wikipedia.org/wiki/Three_Men%27s_Morris,Sisi,,"The board is empty to begin the game, and players take turns placing their pieces on empty intersections. HAve 5 pieces of each color"
+-KxLz3HlTGGtGWQLl6Tt,tic-tac-toe,,,https://en.wikipedia.org/wiki/Tic-tac-toe,Radhika,1,moving a piece will revert previous move
+-Kz7-sXG3ysGI6V9CCXs,flipGame,,,https://en.wikipedia.org/wiki/Lights_Out_(game),YiWei,,none
+-Kz72S_FO8BIj1OVRmO1,luzhanqi,,,https://en.wikipedia.org/wiki/Luzhanqi,Angelina,,
+-Kz76geVTrb8m3lu9crQ,cefanqi,,,https://zh.wikipedia.org/wiki/%E7%AD%96%E5%8F%8D%E6%A3%8B,Angelina,,
+-KzHeflPtgDpETw-6k50,King's Court,,,https://boardgamegeek.com/boardgame/5157/kings-court,YiWei,,none
+-KzIu__PqVGdQhAlileQ,Aeroplane-Chess,,,https://en.wikipedia.org/wiki/Aeroplane_Chess,YiWei,2,make the piece bigger
+-KzIw_hZ_Bpq--JMmo5Z,Dice Chess,,,https://en.wikipedia.org/wiki/Dice_chess,Angelina,,
+-KzKbRqDau_ddrVUrDAM,Checkers 2000,,,https://boardgamegeek.com/boardgame/9374/checkers-2000,YiWei,,none
+-KzKd2Cxi-iyu-0LqgaB,Ming Mang,,,https://boardgamegeek.com/boardgame/40573/ming-mang,Angelina,,
+-KzKeLTztuc88-oLtUjZ,Snakes and Ladders,,,https://en.wikipedia.org/wiki/Snakes_and_Ladders,Sisi,,Make pieces bigger.
+-KzL3jWHcziYzufVMzCt,Lanrick,,,https://boardgamegeek.com/boardgame/13914/lanrick,Sisi,,
+-KzLIBkCfABwezneVA5E,10Up,,,https://boardgamegeek.com/boardgame/201559/10,Radhika,,Make them cards
+-KzLRRHo6uwk5WU5vyQl,Sorry! (Dice),,,https://en.wikipedia.org/wiki/Parcheesi,YiWei,1,none
+-KzLT7LaM66pjASw7spF,Dunsany's Chess,,,https://en.wikipedia.org/wiki/Dunsany%27s_Chess,YiWei,,none
+-KzMUAYInW3aXHA_Zgkq,Shut The Box,,,https://funattic.com/dice-games/,YiWei,,none
+-KzMf0hSlyzM28LebcQe,Parcheesi,,,https://en.wikipedia.org/wiki/Parcheesi,YiWei,,none
+-KzSJnlU7BL0hqIxkQgn,round the clock,,,https://www.dice-play.com/Games/RoundTheClock.htm,YiWei,,"cannot open wiki link, cannot find the game with same map"
+-KzXo4rncEVgBar339yw,yiora-toggleable,,,,Radhika,,
+-Kzp2EEL6IDyqMLH6siz,can't stop spec,,,https://en.wikipedia.org/wiki/Can%27t_Stop_(board_game),YiWei,,
+-L-4HlYZ13tpCgM8M-4H,32dices,,,https://boardgamegeek.com/boardgame/113360/32-dice,Angelina,,some of the dices cannot be moved
+-L-4n39zl7R0dMy4sQq9,banqi_sm,,,https://en.wikipedia.org/wiki/Banqi,Angelina,,
+-L-52NAdCs5EwudWmz6v,reversi-sm,Reversi,,https://en.wikipedia.org/wiki/Reversi,YiWei,,
+-L-53G8W778Uvfec-5wG,chinese-poker-sm,,,https://en.wikipedia.org/wiki/Chinese_poker,Radhika,,"3 Chinese poker, we need all 3?"
+-L-573LAJ1vL2jHGPVRB,Barricade,,,https://www.barricadegame.com/index.php?option=com_content&view=article&id=11&lang=en,Priyanka,,Bad Game
+-L-5Cum5qOEdJ2b3A8n3,Chō-han-sm,,,https://en.wikipedia.org/wiki/Ch%C5%8D-han,Priyanka,,none
+-L-5D38cHvDjQMv1LDuM,toggle squares game,,,http://www.shlomifish.org/MathVentures/toggle-squares/,Priyanka,,
+-L-5I1DlYwiwN4uIpkXM,Mexico-sm,,,https://en.wikipedia.org/wiki/Mexico_(game),Priyanka,,
+-L-5PPZOmK6jdZ8q5HRK,Concentration-sm,,,https://en.wikipedia.org/wiki/Concentration_(game),Priyanka,,
+-L-5nrtYD-uxGwkMWCHM,uno,,,https://en.wikipedia.org/wiki/Uno_(card_game),YiWei,,"cards not draggable, should be invisible to everyone initially. why dice? enough cards? 108 cards, of which there are 25 of each color"
+-L-7byJiaazYQ5V5i2hW,Sevens-sm,,,https://en.wikipedia.org/wiki/Sevens_(card_game),YiWei,,standard deck of 52 cards. cards should be invisible and shuffled to everyone initially.
+-L-8HwfzFZ9sqtK75Jbe,tetris,,,https://en.wikipedia.org/wiki/Tetris,Priyanka,,
+-L-8mB-lnXAdegM1yywu,blokus-sm,,,https://en.wikipedia.org/wiki/Blokus,Priyanka,,
+-L-8rUonEDrh-IkJk9nk,doudizhu-chinese-poker-sm,,,https://en.wikipedia.org/wiki/Dou_dizhu,YiWei,,"initially, all cards should be invisible to everyone, cards are in order(should be shuffled)"
+-L-8vsR3xOlTX369HGdT,risk,,,https://en.wikipedia.org/wiki/Risk_(game),Priyanka,,
+-L-9-GuzOZJ6sRAVCh6b,five-card-stud-sm,,,https://en.wikipedia.org/wiki/Five-card_stud,Priyanka,,
+-L-97FOSTr-hrVjQuRc-,Chinese Poker(Seven-Joker-five-two-three),,,https://en.wikipedia.org/wiki/Hearts,YiWei,,"initially, all cards should be invisible to everyone, cards are in order(should be shuffled)"
+-L-98MfOXtZm6whwvASR,Emergo_toggleable,Emergo,,https://en.wikipedia.org/wiki/Emergo_(board_game),Herbert,,"wrong # of toggable pieces, should be 24 in total"
+-L-9Y2rxR4wrkJb_o2ug,play-cheat-sm,,,,Radhika,,
+-L-9YNV9Yk_frC_sMHdi,cheat-sm,,,https://en.wikipedia.org/wiki/Cheat_(game),Priyanka,,
+-L-9ckSZBfxrpWwxABrX,Cee-Io,,,https://en.wikipedia.org/wiki/Cee-lo,Priyanka,,
+-L-9gFNl4Lyicd_1Hz-2,Dominoes,,,https://en.wikipedia.org/wiki/Dominoes,Priyanka,,
+-L-9i2ipjLxs_juUmm1P,Pachisi,,,https://en.wikipedia.org/wiki/Pachisi,Priyanka,,
+-L-9kinVrSPE8RbQ8o0F,Dvonn-sm,,,https://en.wikipedia.org/wiki/DVONN,Priyanka,,
+-L-9qTVLsumaP9TBL9_O,diaoyu,,,https://en.wikipedia.org/wiki/Go_Fish,YiWei,,"initially, all cards should be invisible to everyone, cards are in order(should be shuffled)"
+-L-9qlw-Gug6qNXzDmeP,gandengyan,,,https://baike.baidu.com/item/%E5%B9%B2%E7%9E%AA%E7%9C%BC/63808,YiWei,,No English rule
+-L-9s81XcjFe-GC9szOU,510K,,,https://zh.wikipedia.org/wiki/%E4%BA%94%E5%8D%81K,,,
+-L-A5MAkO0JEki7ukqO0,nine men's morris,,,https://en.wikipedia.org/wiki/Nine_Men%27s_Morris,Sisi,,none
+-L-AbtxtIBF0KBSxKHGC,phase10,,,https://en.wikipedia.org/wiki/Phase_10,Priyanka,,
+-L-B62_2EZzi0X1ZhBad,tg,,"Yes, no idea what this is supposed to be",,,,
+-L-Bd-m66ANV9oT8GsYN,Dice10000,,,https://en.wikipedia.org/wiki/Dice_10000,Angelina,,
+-L-BfC2NTkkk7id2nU5Z,Gin Rummy,,,https://en.wikipedia.org/wiki/Gin_rummy,Radhika,,Standard deck of cards
+-L-BpJJxbBHKeplvJB4s,CrownAndAnchor,,,,Radhika,,
+-L-D2QPPg2hWaYZgY-OX,Big Two,,,,Radhika,,
+-L-D3klCiTu3_0yYXDVu,Wuziqi,,,https://en.wikipedia.org/wiki/Gomoku,Angelina,,
+-L-D6p-oiPqG8e3Plcti,Patience,Solitaire,,https://en.wikipedia.org/wiki/Patience_(game),Herbert,,
+-L-DKvDRTS3NUFzGB-N-,King-eat,,,,Radhika,,
+-L-DSuWl7TmXWIj81EmQ,HEX-final,,,,Radhika,,
+-L-DZbfiJDWoIG0mE8oP,Xiangqi Mahjong,,,https://en.wikipedia.org/wiki/Mahjong,Angelina,,
+-L-DeUEEPgnxtuGX0QHn,Four Chess,,,https://en.wikipedia.org/wiki/Four-player_chess,Herbert,,
+-L-DsuGWO14CFGKoS-3c,Boggle,,,https://en.wikipedia.org/wiki/Boggle,Sisi,,none
+-L-Dz-grEYa6LrM6Bnuz,Contract bridge,,,https://en.wikipedia.org/wiki/Contract_bridge,Sisi,,cards are visible to everyone
+-L-E8b0MbMT3dtG78NCX,Six,,,https://boardgamegeek.com/boardgame/20195/six,Herbert,,
+-L-E8g38ZSbq5jhGT8rS,Dou Niu,,,https://baike.baidu.com/item/%E6%96%97%E7%89%9B/10173143,Angelina,,
+-L-NpR6cioH0a0g251wx,Monopoly,,,https://en.wikipedia.org/wiki/Monopoly_(game),YiWei,2,
+-L-TLHYSOGFeg0TbWyK6,game-of-the-goose,,,https://en.wikipedia.org/wiki/Game_of_the_Goose,Radhika,,moving a piece will revert previous move
+-L-_249g8mD8e8K-1L6T,L-Game,,,https://en.wikipedia.org/wiki/L_game,Sisi,,None
+-L-_7FjoyBGhBiw6TfXU,Siam,,,https://boardgamegeek.com/boardgame/20782/siam,Sisi,,None
+-L-cNfziqis1SZBLBUmz,Touché,,,,,,
+-L-db4M-NKnZlguWs7xv,Clue,,,https://en.wikipedia.org/wiki/Cluedo,Radhika,,bigger pieces
+-L-iro8PlIYKWEiho78g,Shogi,,,https://en.wikipedia.org/wiki/Shogi,Radhika,,moving a piece will revert previous move
+-L-j1P5k9ZvU9rtn99zZ,23chess,,,https://tieba.baidu.com/p/5078380380,Angelina,,
+-L-j2ayY0XGMSXw5Esyk,2beat1,,,https://baike.baidu.com/item/%E4%BA%8C%E6%89%93%E4%B8%80%E6%A3%8B,Angelina,,
+-L-j5VErj_7PsUXHhmhM,xiangqi,,,https://en.wikipedia.org/wiki/Xiangqi,Angelina,1,Cannot erase item
+-L-j6rDd27hTgEDGPAkx,_Sittuyin,,,https://en.wikipedia.org/wiki/Sittuyin,Radhika,,can't move pieces
+-L-jeTLrfHHvXbYgxDor,Lau kata kati,,,https://en.wikipedia.org/wiki/Lau_kata_kati,Sisi,,none
+-L-kFxYQhOqQYsrzOPOZ,EinStein würfelt nicht,,,,,,
+-L-lw5cA3nHJlK8Lc5V9,Dueling Nobles,,,https://boardgamegeek.com/boardgame/14715/dueling-nobles,YiWei,,
+-L-m0_fVl_1k-KtOhfeI,Go,,,https://en.wikipedia.org/wiki/Go_(game),Radhika,1,moving a piece will revert previous move
+-L-mPZEhi2V-hZnc_ras,Connect4,,,https://en.wikipedia.org/wiki/Connect_Four,YiWei,1,change pieces to be circular
+-L-mWPtNuUvoYSYv3PH6,ticket to ride,,,https://en.wikipedia.org/wiki/Ticket_to_Ride_(board_game),Herbert,,
+-L-m_ynA_RUT6RUcx37p,diplomacy-sm,,,https://en.wikipedia.org/wiki/Diplomacy_(game),Herbert,,
+-L-mhJby9spVzuJTrwti,Dominion(modified),,,https://en.wikipedia.org/wiki/Dominion_(card_game),YiWei,,
+-L-mkzrt95kDwQ5qbHGH,Words With Friends,,,https://en.wikipedia.org/wiki/Words_with_Friends,YiWei,,
+-L-mvpPk1zjycgCMMMkn,five_ten,,,https://zh.wikipedia.org/wiki/%E6%95%B8%E5%AD%97%E6%8B%B3,YiWei,,
+-L-nAm7bO3JGskVHaZ8b,San Juan,,yes!,https://boardgamegeek.com/boardgame/8217/san-juan,Sisi,,"only 3 cards, should be 110"
+-L-nNUXR2-fBzTp35E67,blackjack,,,https://en.wikipedia.org/wiki/Blackjack,Angelina,1,
+-L01sU3Jhq44JRIHpMC2,Craps (updated),,,https://en.wikipedia.org/wiki/Craps,YiWei,,
+-L01xDqdP8hN1PCJuwI8,Texas Hold 'Em,,,https://en.wikipedia.org/wiki/Texas_hold_%27em,Radhika,,moving a piece will revert previous move
+-L01xupWIg2jOCp9Sh_K,Crazy Eights (updated),,,https://en.wikipedia.org/wiki/Crazy_Eights,YiWei,,cards should be initially invisible
+-L0CpHELZvGm_tjm8EKt,qwixx-final,,,,,,
+-L0D5blpwD7E3zQMGOE8,Makruk-sm,,,https://en.wikipedia.org/wiki/Makruk,YiWei,,none
+-L0D8USHEeQfbGQao66F,dice wars,,,,,,
+-L0DDm0LElDwDpOID-sD,renju-sm,,,https://en.wikipedia.org/wiki/Renju,YiWei,,none
+-L0DEfpWO-G2hX3Wcp8-,spades,,,https://en.wikipedia.org/wiki/Spades,Radhika,,moving a piece will revert previous move
+-L0DFrFSKBtFw4ugr-6U,Sittuyin-sm,,,https://en.wikipedia.org/wiki/Sittuyin,Herbert,,
+-L0DOyjEFuMKanG4BEnP,Tiger-game-sm,,,https://en.wikipedia.org/wiki/Tiger_game,Herbert,,
+-L0GqDgd4ZlXxT9Zv3-9,Chaturaji-sm,,,https://en.wikipedia.org/wiki/Chaturaji,Herbert,,
+-L0HUSCsBmCCXrgUYs8H,Tiaoqi,,,https://en.wikipedia.org/wiki/Chinese_checkers,Angelina,1,
+-L0HXJ3yvSBKB-ieto2c,Animals Chess,,,https://en.wikipedia.org/wiki/Jungle_(board_game),Angelina,,
+-L0KiwMj7yjcjuGkUnZF,Stratego!,,,https://en.wikipedia.org/wiki/Stratego,Priyanka,,
+-L0KjrSrsssjxEX_zr89,Cribbage,,,https://en.wikipedia.org/wiki/Cribbage,Herbert,,
+-L0L1AHAnqj1O8-v87ZN,Five in a row (revised),,,https://en.wikipedia.org/wiki/Gomoku,Angelina,,Make sure there are enough pieces
+-L0L9qzZlJMAGGOToOl2,Fox and Geese,,,https://en.wikipedia.org/wiki/Fox_games#Fox_and_Geese,YiWei,,none
+-L0LF7-7SZAUvAe02FIO,Halma (revised),,,https://en.wikipedia.org/wiki/Halmahttps://no-wiki.com,Priyanka,,
+-L0LVhyJKUJFwZE-nTOW,LightsOut,,,https://en.wikipedia.org/wiki/Lights_Out_(game),Angelina,,
+-L0LWp6zfRueXi0iOnHO,Ludo,,,https://www.ymimports.com/pages/how-to-play-ludo,Radhika,,moving a piece will revert previous move
+-L0LZIqK2JRAn1szo_de,Battleship,,,https://en.wikipedia.org/wiki/Battleship_(game),Herbert,,missing ships
+-L0LZLNjuLLO_NyCtCGI,pasang (revised),Pasang,,https://en.wikipedia.org/wiki/Pasang_(game).com,Herbert,,works (use this version)
+-L0L_3G8ecgzt6S4N2NI,BackGammon_simple_setup,,,,,,
+-L0L_u9yIL46UBuxZWmF,Chem_Ludo,,,https://www.ymimports.com/pages/how-to-play-ludo,Radhika,,moving a piece will revert previous move
+-L0LaaAZMhgUvU3I6tj8,Calculate 24,,,https://en.wikipedia.org/wiki/24_Game,Angelina,,The deck is not complete
+-L0Lb9JbpQY_tYw1y4UN,Chou WangBa,,,,,,
+-L0LcEVUbRsXcBvowCOj,Ten and a half game,,,,,,
+-L0Le9z_s7l9Bgh7iH-p,Daldøs,,,https://en.wikipedia.org/wiki/Dald%C3%B8s,,,
+-L0LezM8FPD9nER6BNtH,Cross and Circle,,,https://en.wikipedia.org/wiki/Cross_and_circle_game,Priyanka,,
+-L0LiC_VOehWe9KGBKMU,Element's war!,,,,,,
+-L0LvPZuxqgxUINLKw8p,Hearts,,,https://en.wikipedia.org/wiki/Hearts,Herbert,,works
+-L0LzqxltplfR1jCGRpO,36D6,,,,,,
+-L0VmG-tHt2GvvJL-D-L,whist,,,https://en.wikipedia.org/wiki/Whist,Herbert,,
+-L0Zsigsfa79_E6RiA6u,Pioneers,,,,,,
+-L0_DUPDULxhzgteQRyd,Exploding Kittens,,,https://en.wikipedia.org/wiki/Exploding_Kittens,Priyanka,,
+-L0fN_pVaNivA-sY9566,Hexagonal chess for Three,,,https://boardgamegeek.com/boardgame/34066/hexagonal-chess-three,YiWei,,none
+-L0kAYbN0AACZFfrHOeN,Scrabble,,,https://en.wikipedia.org/wiki/Scrabble,YiWei,5,"Remove ""tiles"", have a different image/color for the private face of the tiles (so when you make a tile visible to you, you can clearly notice it). Also, check there are exactly two tiles without any letter (blank tiles)."
+-L0qQZubuOqYrdXq0iYu,The Compliance Game,,,,,,
+-L0quYoYZ-49wBk9VEBK,Yahtzee,,,https://en.wikipedia.org/wiki/Yahtzee,Radhika,,moving a piece will revert previous move
+-L0r6qHkR2fkeCk6B7zB,Bananagrams,,,https://en.wikipedia.org/wiki/Bananagrams,Radhika,,moving a piece will revert previous move
+-L0rJiZSMfDUIJjW49eI,Fill Or Bust!,,,,,,
+-L0rJpsgOz22oPzG1JRP,Can't Stop Toggable,,,,,,
+-L0rS5LnoWCaZpodkV5B,Nine Card (Revised),,,https://en.wikipedia.org/wiki/Nines_(card_game),Radhika,,moving a piece will revert previous move
+-L0sHPC9kOGhaRexU_Vc,Split-speed,,,https://www.pagat.com/patience/spit.html,,,
+-L0vfQeOSWz8BQ72oU1y,Little Red Horse,,,https://zh.wikipedia.org/wiki/小红马_(象棋),Angelina,,
+-L0wqt1iPQtohjTgJOya,Shax,,,https://en.wikipedia.org/wiki/Shax_(board_game),Herbert,,
+-L0xFpOmtRs-A6f0f31x,connect6,,,https://en.wikipedia.org/wiki/Connect6,YiWei,,none
+-L0yzbiaRXb87OOcOT3q,memory chess,,,,,,
+-L108F9pFL3_1RHB5CNz,Gong zhu,,,https://en.wikipedia.org/wiki/Gong_Zhu,Angelina,,
+-L10aSJo5xK7ZQZmBg5W,Agon,,,https://en.wikipedia.org/wiki/Agon_(game),Herbert,,the black hexagonal piece is not draggable
+-L10eNzecGl3SMbl5Oo2,Crazy_Eights,,,https://en.wikipedia.org/wiki/Crazy_Eights,Herbert,,"cards should be face down, and when you shuffle they go back to the same order"
+-L14MMCOlgSQz2dHwoIb,Hexagonal Kyoto Shogi,,,,,,
+-L14cQ8Q9QWvT1NGG-Kg,Snip Snap Snorem,,,https://en.wikipedia.org/wiki/Snip_snap_snorem,Herbert,,
+-L483sGeKaIaToMIuMOg,Taki,,,https://en.wikipedia.org/wiki/Taki_(card_game),Radhika,,moving a piece will revert previous move
+-L4I96yr-0zjdHcFUbII,Farkle_2,,,https://github.com/xiaozdezhu/Farkle/wiki/How-To-Play-Farkle,Angelina,,

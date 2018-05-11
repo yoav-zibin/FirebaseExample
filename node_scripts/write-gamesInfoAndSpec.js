@@ -1,4 +1,4 @@
-const isTestProject = false;
+const isTestProject = true;
 const projectName = isTestProject ? "testproject-a6dce" : "universalgamemaker";
 const certificateName = isTestProject ? "testproject-firebase-adminsdk.json" : "universalgamemaker-firebase-adminsdk.json";
 const serviceAccount = require(`../../Certificates/${certificateName}`);
@@ -138,8 +138,11 @@ function downloadDatabase(){
           const mappedSpecId = screenshotsToMap[gameSpecId];
           const mappedSpec = specIdToSpec[mappedSpecId];
           screenShotImageId = mappedSpec.screenShotImageId;
-        }else{ continue; }
-      };
+          spec.screenShotImageId = screenShotImageId;
+        }else{
+          continue;
+        }
+      }
       if (!spec.pieces) continue; // skip that game that has no pieces.
       if (gamesToSkip.indexOf(gameName) !== -1) continue;
       specCount++;

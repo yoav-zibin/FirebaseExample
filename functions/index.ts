@@ -48,6 +48,15 @@ exports.addMatchParticipant = functions.database
         return null;
       }
       const matchId: string = context.params.matchId;
+      return getMessagePayload(adderUserId,addedUserId,matchId);
+    });
+
+    function getMessagePayload(adderUserId: string, addedUserId: string, matchId: string ) {
+      let userName: string;
+      let userPhoneNumber: string;
+      let userDisplayName: string;
+      let gameName: string;
+      let gameSpecId: string;
       const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
       const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
       const gameSpecIdPromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
@@ -55,7 +64,7 @@ exports.addMatchParticipant = functions.database
         userPhoneNumber = results[0] && results[0].val() || '';
         userDisplayName = results[1].val(); 
         gameSpecId = results[2].val();     
-        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${context.params.userId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
+        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${addedUserId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
         const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}/gameSpec/gameName`).once('value');
         return Promise.all([userNamePromise, gameNamePromise]).then(results => {
           const userNameSnapshot = results[0];
@@ -64,9 +73,8 @@ exports.addMatchParticipant = functions.database
           console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
           return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
-      });  
-    });
-
+      }); 
+    }
 
 // 2) When someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents

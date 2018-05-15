@@ -90,8 +90,8 @@ exports.pingOpponentsNotification = functions.database
   .ref('/gamePortal/matches/{matchId}/participants/{participantUserId}/pingOpponents')
     .onWrite((change: any, context: any) => {
       const afterOpponents = change.after.val();
-      // const beforeOpponents = change.before.val();
-      // console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
+      const beforeOpponents = change.before.val();
+      console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
       // if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
       // {
         console.log("Inside Ping Opponents " + context.params.participantUserId);

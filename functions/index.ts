@@ -92,8 +92,8 @@ exports.pingOpponentsNotification = functions.database
       const afterOpponents = change.after.val();
       const beforeOpponents = change.before.val();
       console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
-      // if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
-      // {
+      if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
+      {
         console.log("Inside Ping Opponents " + context.params.participantUserId);
         let tokensSnapshot: any;
         let opponentNames: any;
@@ -112,7 +112,7 @@ exports.pingOpponentsNotification = functions.database
 
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
-     // }    
+      }    
     });
 
 

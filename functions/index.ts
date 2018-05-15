@@ -48,10 +48,11 @@ exports.addMatchParticipant = functions.database
         return null;
       }
       const matchId: string = context.params.matchId;
-      return getMessagePayload(adderUserId,addedUserId,matchId);
+      const title: string =  " added you to a game of "
+      return getMessagePayload(adderUserId, addedUserId, matchId, title);
     });
 
-    function getMessagePayload(adderUserId: string, addedUserId: string, matchId: string ) {
+    function getMessagePayload(adderUserId: string, addedUserId: string, matchId: string, title: string ) {
       let userName: string;
       let userPhoneNumber: string;
       let userDisplayName: string;
@@ -71,7 +72,7 @@ exports.addMatchParticipant = functions.database
           userName = userNameSnapshot && userNameSnapshot.val() || userDisplayName;
           gameName = results[1].val();
           console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
-          return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
+          return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName, title);
         });   
       }); 
     }
@@ -96,6 +97,7 @@ exports.pingOpponentsNotification = functions.database
         console.log("Inside Ping Opponents ");
         let tokensSnapshot: any;
         let opponentNames: any;
+        const title: string =  " resumes the game of ";
         const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
         return Promise.all([getOpponentsName]).then(results => {
           tokensSnapshot = results[0];     
@@ -104,7 +106,8 @@ exports.pingOpponentsNotification = functions.database
             // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
             // console.log('The opponents are', opponentNames);
             for(let oppName in opponentNames){
-              console.log('The opponents are', opponentNames[oppName]);
+              // console.log('The opponents are', opponentNames[oppName]);
+              return getMessagePayload(context.params.participantUserId, opponentNames[oppName], context.params.matchId, title);
             }
 
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
@@ -144,7 +147,7 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
 // function sendPushToUser(
 //   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
   function sendPushToUser(
-     toUserId: string, senderUid: string, matchId: string, userName: string, gameName: string) {
+     toUserId: string, senderUid: string, matchId: string, userName: string, gameName: string, notTitle: string) {
   console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
   
@@ -169,7 +172,7 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
     const payload: any = 
       {
         notification: {
-          title: userName + " added you to a game of " + gameName, // TODO: fetch game name.
+          title: userName + notTitle + gameName, // TODO: fetch game name.
           body: "Open Zibiga now to join the fun!",
         },
         data: {

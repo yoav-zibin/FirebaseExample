@@ -90,8 +90,10 @@ exports.pingOpponentsNotification = functions.database
     .onWrite((change: any, context: any) => {
       const afterOpponents = change.after.val();
       const beforeOpponents = change.before.val();
+      console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
       if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
       {
+        console.log("Inside Ping Opponents ");
         let tokensSnapshot: any;
         let opponentNames: any;
         const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
@@ -169,7 +171,8 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
         data: {
           // Must be only strings in these key-value pairs
           fromUserId: String(senderUid),
-          toUserId: String(toUserId)
+          toUserId: String(toUserId),
+          matchId: String(matchId)
         }
       };
       console.log('Payload is:', payload);

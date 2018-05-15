@@ -94,7 +94,7 @@ exports.pingOpponentsNotification = functions.database
       // console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
       // if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
       // {
-        console.log("Inside Ping Opponents ");
+        console.log("Inside Ping Opponents " + context.params.participantUserId);
         let tokensSnapshot: any;
         let opponentNames: any;
         const title: string =  " resumes the game of ";
@@ -107,7 +107,7 @@ exports.pingOpponentsNotification = functions.database
             // console.log('The opponents are', opponentNames);
             for(let oppName in opponentNames){
               // console.log('The opponents are', opponentNames[oppName]);
-              return getMessagePayload(context.params.participantUserId, opponentNames[oppName], context.params.matchId, title);
+              getMessagePayload(context.params.participantUserId, opponentNames[oppName], context.params.matchId, title);
             }
 
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);

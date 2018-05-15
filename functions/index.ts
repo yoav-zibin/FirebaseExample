@@ -89,10 +89,10 @@ exports.pingOpponentsNotification = functions.database
   .ref('/gamePortal/matches/{matchId}/participants/{participantUserId}/pingOpponents')
     .onWrite((change: any, context: any) => {
       const afterOpponents = change.after.val();
-      const beforeOpponents = change.before.val();
-      console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
-      if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
-      {
+      // const beforeOpponents = change.before.val();
+      // console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
+      // if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
+      // {
         console.log("Inside Ping Opponents ");
         let tokensSnapshot: any;
         let opponentNames: any;
@@ -102,10 +102,14 @@ exports.pingOpponentsNotification = functions.database
         }).then((response) => {        
             opponentNames = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != context.params.participantUserId); 
             // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
-            console.log('The opponents are', opponentNames);
+            // console.log('The opponents are', opponentNames);
+            for(let oppName in opponentNames){
+              console.log('The opponents are', oppName);
+            }
+
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
-      }    
+     // }    
     });
 
 

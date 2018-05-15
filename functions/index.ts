@@ -104,7 +104,7 @@ exports.pingOpponentsNotification = functions.database
             // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
             // console.log('The opponents are', opponentNames);
             for(let oppName in opponentNames){
-              console.log('The opponents are', oppName);
+              console.log('The opponents are', opponentNames[oppName]);
             }
 
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);

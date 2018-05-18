@@ -3,6 +3,8 @@ const projectName = isTestProject ? "testproject-a6dce" : "universalgamemaker";
 const certificateName = isTestProject ? "testproject-firebase-adminsdk.json" : "universalgamemaker-firebase-adminsdk.json";
 const serviceAccount = require(`../../Certificates/${certificateName}`);
 const admin = require("firebase-admin");
+const parse = require('csv-parse/lib/sync');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: `https://${projectName}.firebaseio.com`,
@@ -111,8 +113,9 @@ const gamesToRename = {
   "banqi_sm": "Banqi",
 };
 
+const badMancalaSpec = "-KxLz3FAFZX5RrKR-mhN";
 const screenshotsToMap = {
-  "-KxLz3HKZcyR22qfys5x": "-KxLz3FAFZX5RrKR-mhN" // mancala-spec --> mancala
+  "-KxLz3HKZcyR22qfys5x": badMancalaSpec // mancala-spec --> mancala
 }
 
 function downloadDatabase(){
@@ -150,6 +153,7 @@ function downloadDatabase(){
       }
       if (!spec.pieces) continue; // skip that game that has no pieces.
       if (gamesToSkip.indexOf(gameName) !== -1) continue;
+      if (gameSpecId === badMancalaSpec) continue;
       specCount++;
       gameSpecs.push({
         gameSpecId: gameSpecId,
@@ -258,7 +262,25 @@ function downloadDatabase(){
         refSet(`/gameBuilder/images/${k}/cloudStoragePath`, v.cloudStoragePath);
         refSet(`/gameBuilder/images/${k}/downloadURL`, v.downloadURL);
       }
-      // TODO: put the games with most votes first in gamePortal/gamesInfoAndSpec.
+
+      // Sorting specs by votes
+      for (let spec of gameSpecs) {
+        if (!specIdToRecord[spec.gameSpecId]) {
+          console.warn("Missing spec in our spreadsheet=" + spec.gameSpecId + " " + spec.gameName);
+        }
+      }
+      function specToVote(spec) {
+        // Sort by vote and then by game name.
+        const vote = Number(specIdToRecord[spec.gameSpecId] ? specIdToRecord[spec.gameSpecId]['Votes'] : 0);
+        return vote ? vote : 0;
+      }
+      gameSpecs.sort((spec1, spec2) => {
+        return 10*(specToVote(spec2) - specToVote(spec1)) + spec1.gameName.localeCompare(spec2.gameName);
+      });
+      for (let i=0; i<10; i++) {
+        console.log('spec pos i=', i,' ', gameSpecs[i].gameName, " vote=", specToVote(gameSpecs[i]));
+      }
+
       refSet("/gamePortal/gamesInfoAndSpec/gameInfos", gameSpecs);
       refSet("/gamePortal/gamesInfoAndSpec/gameSpecsForPortal", gameSpecsForPortal);
       Promise.all(allPromises).then(() => {
@@ -269,5 +291,31 @@ function downloadDatabase(){
   }));
 }
 
+// An array of records:
+  /*
+  { GameSpecID: '-L-_249g8mD8e8K-1L6T',
+    'Game name': 'L-Game',
+    'Better game name': '',
+    'Should delete?': '',
+    'Game wiki link': 'https://en.wikipedia.org/wiki/L_game',
+    Owner: 'Sisi',
+    Votes: '',
+    'Comments/issues': 'None' },
+    */
+let ourSpreadsheetRecords;
+let specIdToRecord = {};
 
-downloadDatabase();
+fs = require('fs')
+fs.readFile('NYU Spring 2018 - All games.csv', 'utf8', function (err,data) {
+  if (err) {
+    return console.log(err);
+  }
+  // console.log(data);
+  ourSpreadsheetRecords = parse(data, {columns: true});
+  // console.log(ourSpreadsheetRecords);
+  for (let record of ourSpreadsheetRecords) {
+    specIdToRecord[record['GameSpecID']] = record; 
+  }
+  downloadDatabase();
+});
+

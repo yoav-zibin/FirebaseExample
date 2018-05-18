@@ -13,7 +13,6 @@ admin.initializeApp();
 // Ensure headers (CORS and caching) are set correctly:
 // gsutil cors set cors.json gs://universalgamemaker.appspot.com
 // gsutil -m setmeta   -h "Cache-Control:public, max-age=3600000"  gs://universalgamemaker.appspot.com/**
-
 //
 // To init:
 // firebase init functions
@@ -24,8 +23,6 @@ admin.initializeApp();
 // exports.helloWorld = functions.https.onRequest((request, response) => {
 //  response.send("Hello from Firebase!");
 // });
-
-// TODO: implement push notification.
 // We will have 2 types of notifications:
 //
 // 1) When someone added you as a participant, i.e., when someone writes to:
@@ -36,21 +33,51 @@ admin.initializeApp();
 // Recall that contact names are stored in /privateFields/contacts/$contactPhoneNumber/contactName
 // Recall that displayName are stored in /publicFields/displayName
 //
-
 exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
-      const adderUserId = context.params.addedByUid;
-      const addedUserId = context.params.userId;
-      const matchId = context.params.matchId;
-      
-      if (!change.after.val()) {
-        return console.log('Same User');
+      const adderUserId = change.after.val();
+      if (!adderUserId) { // User left a match.
+        return null;
       }
-      console.log('User Id:', adderUserId, 'Added By user:', addedUserId);
-      return sendPushToUser(addedUserId, adderUserId, matchId);
+      let userName: string;
+      let userPhoneNumber: string;
+      let userDisplayName: string;
+      let gameName: string;
+      let gameSpecId: string;
+      const addedUserId: string = context.params.userId;
+      if (adderUserId === addedUserId) { // User started a single player match.
+        return null;
+      }
+      const matchId: string = context.params.matchId;
+      const title: string =  " added you to a game of "
+      return getMessagePayload(adderUserId, addedUserId, matchId, title);
     });
 
+    function getMessagePayload(adderUserId: string, addedUserId: string, matchId: string, title: string ) {
+      let userName: string;
+      let userPhoneNumber: string;
+      let userDisplayName: string;
+      let gameName: string;
+      let gameSpecId: string;
+      const userPhoneNumberPromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/privateFields/phoneNumber`).once('value');
+      const userDisplayNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${adderUserId}/publicFields/displayName`).once('value');
+      const gameSpecIdPromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
+      return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameSpecIdPromise]).then(results => {
+        userPhoneNumber = results[0] && results[0].val() || '';
+        userDisplayName = results[1].val() || 'Unknown user'; 
+        gameSpecId = results[2].val();     
+        const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${addedUserId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
+        const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}/gameSpec/gameName`).once('value');
+        return Promise.all([userNamePromise, gameNamePromise]).then(results => {
+          const userNameSnapshot = results[0];
+          userName = userNameSnapshot && userNameSnapshot.val() || userDisplayName;
+          gameName = results[1].val();
+          console.log('User Id:', adderUserId, 'Added By user:', addedUserId, 'Display Name:', userDisplayName, 'User Name:', userName);
+          return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName, title);
+        });   
+      }); 
+    }
 
 // 2) When someone writes to
 // /gamePortal/matches/$matchId/participants/$participantUserId/pingOpponents
@@ -61,11 +88,35 @@ exports.addMatchParticipant = functions.database
 // {title: "<user-name> resumes the game of <Monopoly>", body: "Open Zibiga now to join the fun!"}
 // As before, <user-name> is either the contact name or displayName.
 
+exports.pingOpponentsNotification = functions.database
+  .ref('/gamePortal/matches/{matchId}/participants/{participantUserId}/pingOpponents')
+    .onWrite((change: any, context: any) => {
+      const afterOpponents = change.after.val();
+      const beforeOpponents = change.before.val();
+      console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
+      if(!beforeOpponents || !afterOpponents || afterOpponents === beforeOpponents) {
+        return null;
+      }
+      
+      const title: string =  " resumes the game of ";
+      const matchId = context.params.matchId;
+      const participantUserId = context.params.participantUserId;
+      console.log("Inside Ping Opponents " + participantUserId);
+      const getOpponentsIds = admin.database().ref(`/gamePortal/matches/${matchId}/participants/`).once('value');
+      return getOpponentsIds.then((tokensSnapshot: any) => {
+        let opponentIds = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != participantUserId); 
+        const promises = [];
+        for(let opponentId of opponentIds){
+          promises.push(getMessagePayload(participantUserId, opponentId, matchId, title));
+        }
+        return Promise.all(promises);
+      }); 
+    });
 
 
 exports.testPushNotification =
 functions.database.ref('testPushNotification').onWrite((event: any) => {
-  let fcmToken = event.data.val();
+  let fcmToken = event.after.val();
   console.log(`testPushNotification fcmToken=` + fcmToken);
   console.error(`testPushNotification testing an error!=` + fcmToken);
   if (!fcmToken) {
@@ -94,9 +145,10 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
 // function sendPushToUser(
 //   toUserId: string, senderUid: string,  body: string, timestamp: string, groupId: string) {
   function sendPushToUser(
-     toUserId: string, senderUid: string, matchId: string) {
+     toUserId: string, senderUid: string, matchId: string, userName: string, gameName: string, notTitle: string) {
   console.log('Sending push notification:', toUserId, senderUid);
   let fcmTokensPath = `/gamePortal/gamePortalUsers/${toUserId}/privateFields/fcmTokens`;
+  
   // Get the list of device notification tokens.
   return admin.database().ref(fcmTokensPath).once('value').then((tokensSnapshot: any) => {
     let tokensWithData = tokensSnapshot.val();
@@ -118,15 +170,18 @@ functions.database.ref('testPushNotification').onWrite((event: any) => {
     const payload: any = 
       {
         notification: {
-          title: "Monopoly is starting", // TODO: fetch game name.
-          body: "Join Zibiga",
+          title: userName + notTitle + gameName, // TODO: fetch game name.
+          body: "Open Zibiga now to join the fun!",
         },
         data: {
           // Must be only strings in these key-value pairs
           fromUserId: String(senderUid),
-          toUserId: String(toUserId)
+          toUserId: String(toUserId),
+          matchId: String(matchId)
         }
       };
+      console.log('Payload is:', payload);
+
     if (tokenData.platform == "web") {
       payload.notification.click_action = 
         `https://yoav-zibin.github.io/NewGamePortal/matches/${matchId}`;
@@ -170,7 +225,6 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
   const messageId: string = String(event.params.messageId);
   console.log('Got chat message! senderUid=', senderUid,
     ' body=', body, ' timestamp=', timestamp, ' groupId=', groupId, ' messageId=', messageId);
-
   // Get sender name and participants
   return Promise.all([
     admin.database().ref(`/gamePortal/groups/${groupId}/participants`).once('value'),
@@ -190,13 +244,8 @@ functions.database.ref('gamePortal/groups/{groupId}/messages/{messageId}').onWri
     return Promise.all(promises);
   });
 });
-
-
 /*
 All these cloud functions aren't relevant in NewGamePortal.
-
-
-
 // https://firebase.google.com/docs/functions/database-events
 exports.deleteOldEntriesOnRecentlyConnected =
 functions.database.ref('/gamePortal/recentlyConnected')
@@ -225,7 +274,6 @@ functions.database.ref('/gamePortal/recentlyConnected')
     }
     userIds[userId] = true;
   }
-
   // Filter the newest maxEntries entries.
   keys = getSortedKeys(original);
   if (keys.length > maxEntries) {
@@ -237,12 +285,10 @@ functions.database.ref('/gamePortal/recentlyConnected')
       updates[key] = null;
     }
   }
-
   
   console.log('deleteOldEntriesOnRecentlyConnected: keys=', keys, ' updates=', updates, ' original=', original);
   return event.data.adminRef.update(updates);
 });
-
 // Firebase keys can't contain certain characters (.#$/[])
 // https://groups.google.com/forum/#!topic/firebase-talk/vtX8lfxxShk
 // encodeAsFirebaseKey("%.#$/[]") returns "%25%2E%23%24%2F%5B%5D"
@@ -291,8 +337,6 @@ exports.twitterIdIndex = createIndex("twitterId");
 exports.githubIdIndex = createIndex("githubId");
 exports.displayNameIndex = 
 functions.database.ref('/users/{userId}/publicFields/displayName').onWrite(handlerForDisplayNameIndex());
-
-
 exports.starsSummary =
 functions.database.ref('gamePortal/gameSpec/reviews/{reviewedGameSpecId}/{reviewerUserId}/stars')
 .onWrite((event: any) => {

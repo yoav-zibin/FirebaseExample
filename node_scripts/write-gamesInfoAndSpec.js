@@ -277,7 +277,7 @@ function downloadDatabase(){
       gameSpecs.sort((spec1, spec2) => {
         return 10*(specToVote(spec2) - specToVote(spec1)) + spec1.gameName.localeCompare(spec2.gameName);
       });
-      for (let i=0; i<10; i++) {
+      for (let i=0; i<20; i++) {
         console.log('spec pos i=', i,' ', gameSpecs[i].gameName, " vote=", specToVote(gameSpecs[i]));
       }
 

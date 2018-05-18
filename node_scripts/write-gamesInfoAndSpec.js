@@ -185,7 +185,7 @@ function downloadDatabase(){
       let maxX = 0;
       let minY = 100;
       let maxY = 0;
-      const piecesNum = Object.entries(spec.pieces).length;
+      let piecesNum = Object.entries(spec.pieces).length;
       for (let [_index, piece] of Object.entries(spec.pieces)) {
         const elementId = piece.pieceElementId;
         let element = elementIdToElement[elementId];
@@ -207,6 +207,7 @@ function downloadDatabase(){
         }
       }
 
+      // Flip cards if they're shown at beginning of match
       if(elementsToFlip[gameSpecId]){
         let indices = elementsToFlip[gameSpecId];
         for(let index of indices){
@@ -216,6 +217,89 @@ function downloadDatabase(){
           element.images[0].imageId = element.images[1].imageId;
           element.images[1].imageId = holder;
         }
+      }
+
+      // Fix the game Clue
+      if(gameSpecId === '-L-db4M-NKnZlguWs7xv'){
+        const weapons = [ '-L-d_h37U891uBtv208Q', '-L-d_U8KPp6PUwqyjVIB', '-L-d_F8X96xNZObzTM-j', '-L-dZokPXbTxO_-BB2Co', '-L-dZu67s4f0h9l7Tlg5' ];
+        const people = [ '-L-dZYDKvnPLAP57TGVB', '-L-dZemiD0id_IfPe4Jj', '-L-d_IVT7VJM3ydGhKf5', '-L-d_CeSX5N8eBdUkY8N', '-L-dZlt0Cz9Labjtw5cH', '-L-d_KTXwAmFk6XivLba'];
+        const rooms = [ '-L-d_QTeKNAKBpNJ7HEZ', '-L-d_O1QikvBXtciOfvL', '-L-d_Y-p5fyredO7Zo7m', '-L-d_W0fkt_q-DlZItXw', '-L-d_ew5aGWbaipesnXl', '-L-d_lLaGa4VIQbaifcl', '-L-dZj93JIkw7uwiBmrr', '-L-d_jWi-QPr-Vg20Skd', '-L-d_aslQCdYtk6-oAR4'];
+        for (let [_index, piece] of Object.entries(spec.pieces)) {
+           const elementId = piece.pieceElementId;
+           const deckPieceIndex = piece.deckPieceIndex;
+           if(deckPieceIndex > -1){
+             const element = elementIdToElement[elementId];
+             if(weapons.includes(elementId)){
+               piece.deckPieceIndex = 30;
+             }else if(people.includes(elementId)){
+               piece.deckPieceIndex = 29;
+             }
+             element.isDraggable = true;
+           }
+        }
+        // TODO: Add a wrench element
+        const wrenchElementId = gameSpecId + 'wrench';
+        spec.pieces[piecesNum] = {
+          pieceElementId: wrenchElementId,
+          deckPieceIndex: 30,
+          initialState: {
+            x: minX, y: minY,
+            zDepth: 1,
+            currentImageIndex: 0
+          }
+        };
+        elementIdToElement[wrenchElementId] = {
+          height: ((maxY - minY)/100) * images[boardImageId].height,
+          width: ((maxX - minX)/100) * images[boardImageId].width,
+          elementKind: 'card',
+          images: [
+            { imageId: '-L-dSvl_8qKxo5noB-JL' },
+            { imageId: '-L-dTIY6LW_zYNrJkOU8' }
+          ],
+          isDraggable: true
+        }
+
+        piecesNum++;
+
+        // TODO: Make 3 separate decks for weapons, people, rooms
+        const peopleDeck = gameSpecId + 'people-Deck';
+        spec.pieces[piecesNum] = {
+          pieceElementId: peopleDeck,
+          deckPieceIndex: -1,
+          initialState: {
+            x: minX, y: minY,
+            zDepth: 1,
+            currentImageIndex: 0,
+          },
+        };
+        elementIdToElement[peopleDeck] = {
+          height: ((maxY - minY)/100) * images[boardImageId].height,
+          width: ((maxX - minX)/100) * images[boardImageId].width,
+          elementKind: 'cardsDeck',
+          images: [],
+          isDraggable: false
+        };
+
+        piecesNum++;
+
+        const weaponsDeck = gameSpecId + 'weapons-Deck';
+        spec.pieces[piecesNum] = {
+          pieceElementId: weaponsDeck,
+          deckPieceIndex: -1,
+          initialState: {
+            x: minX, y: minY,
+            zDepth: 1,
+            currentImageIndex: 0,
+          },
+        };
+        elementIdToElement[weaponsDeck] = {
+          height: ((maxY - minY)/100) * images[boardImageId].height,
+          width: ((maxX - minX)/100) * images[boardImageId].width,
+          elementKind: 'cardsDeck',
+          images: [],
+          isDraggable: false
+        };
+        console.log("PIECES LENGTH IS NOW:", Object.entries(spec.pieces).length);
       }
 
       if (shouldAddDeck) {

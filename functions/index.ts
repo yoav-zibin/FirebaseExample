@@ -112,7 +112,11 @@ exports.pingOpponentsNotification = functions.database
 
             // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
         });   
-      }    
+      } 
+      else
+      {
+        return null;
+      }   
     });
 
 

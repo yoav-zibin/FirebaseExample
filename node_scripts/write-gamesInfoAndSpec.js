@@ -1,4 +1,4 @@
-const isTestProject = true;
+const isTestProject = false;
 const projectName = isTestProject ? "testproject-a6dce" : "universalgamemaker";
 const certificateName = isTestProject ? "testproject-firebase-adminsdk.json" : "universalgamemaker-firebase-adminsdk.json";
 const serviceAccount = require(`../../Certificates/${certificateName}`);
@@ -8,7 +8,7 @@ admin.initializeApp({
   databaseURL: `https://${projectName}.firebaseio.com`,
   storageBucket: `${projectName}.appspot.com`
 });
-
+console.log('Project name:', projectName);
 const db = admin.database();
 const allPromises = [];
 function refSet(path, val) {
@@ -88,6 +88,11 @@ function changeElementToCard(element) {
   if (Object.keys(element.images).length != 2) throw new Error('changeElementToCard');
   element.elementKind = 'card';
 }
+
+// For all elements in this list, swap their front-back images.
+const elementsToFlip = {
+  '-L0rS5LnoWCaZpodkV5B': [ 4, 7, 45, 50, 13, 25, 8, 22, 20, 52, 23, 37, 11, 19, 36, 35, 38, 26, 12, 39, 49, 3, 51, 5, 48, 47, 2, 9, 10, 1, 24, 14, 46, 21  ]
+};
 
 const gamesToSkip = [
   "3 Man Chess",
@@ -198,6 +203,17 @@ function downloadDatabase(){
         }
       }
 
+      if(elementsToFlip[gameSpecId]){
+        let indices = elementsToFlip[gameSpecId];
+        for(let index of indices){
+          let elementId = spec.pieces[index].pieceElementId;
+          let element = elementIdToElement[elementId];
+          let holder = element.images[0].imageId;
+          element.images[0].imageId = element.images[1].imageId;
+          element.images[1].imageId = holder;
+        }
+      }
+
       if (shouldAddDeck) {
         const deckElementId = gameSpecId + '-Deck';
         spec.pieces[piecesNum] = {
@@ -229,7 +245,6 @@ function downloadDatabase(){
           images[v.imageId] = fixDownloadUrl(v.imageId, imageIdToImage[v.imageId]);
         }
       }
-
       if (Object.keys(elements).length == 0) throw new Error("no elements in gameSpecId=" + gameSpecId);
       gameSpecsForPortal[gameSpecId] = {
         images: images,

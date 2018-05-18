@@ -23,7 +23,6 @@ admin.initializeApp();
 // exports.helloWorld = functions.https.onRequest((request, response) => {
 //  response.send("Hello from Firebase!");
 // });
-// TODO: implement push notification.
 // We will have 2 types of notifications:
 //
 // 1) When someone added you as a participant, i.e., when someone writes to:
@@ -38,13 +37,16 @@ exports.addMatchParticipant = functions.database
   .ref('/gamePortal/gamePortalUsers/{userId}/privateButAddable/matchMemberships/{matchId}/addedByUid')
     .onWrite((change: any, context: any) => {
       const adderUserId = change.after.val();
+      if (!adderUserId) { // User left a match.
+        return null;
+      }
       let userName: string;
       let userPhoneNumber: string;
       let userDisplayName: string;
       let gameName: string;
       let gameSpecId: string;
       const addedUserId: string = context.params.userId;
-      if (adderUserId === addedUserId) {
+      if (adderUserId === addedUserId) { // User started a single player match.
         return null;
       }
       const matchId: string = context.params.matchId;
@@ -63,7 +65,7 @@ exports.addMatchParticipant = functions.database
       const gameSpecIdPromise = admin.database().ref(`/gamePortal/matches/${matchId}/gameSpecId`).once('value');
       return Promise.all([userPhoneNumberPromise, userDisplayNamePromise, gameSpecIdPromise]).then(results => {
         userPhoneNumber = results[0] && results[0].val() || '';
-        userDisplayName = results[1].val(); 
+        userDisplayName = results[1].val() || 'Unknown user'; 
         gameSpecId = results[2].val();     
         const userNamePromise = admin.database().ref(`/gamePortal/gamePortalUsers/${addedUserId}/privateFields/contacts/${userPhoneNumber}/contactName`).once('value');       
         const gameNamePromise = admin.database().ref(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}/gameSpec/gameName`).once('value');
@@ -92,31 +94,23 @@ exports.pingOpponentsNotification = functions.database
       const afterOpponents = change.after.val();
       const beforeOpponents = change.before.val();
       console.log('After ' + afterOpponents + '  Before  ' + beforeOpponents)
-      if(beforeOpponents !== null && afterOpponents !== beforeOpponents)
-      {
-        console.log("Inside Ping Opponents " + context.params.participantUserId);
-        let tokensSnapshot: any;
-        let opponentNames: any;
-        const title: string =  " resumes the game of ";
-        const getOpponentsName = admin.database().ref(`/gamePortal/matches/${context.params.matchId}/participants/`).once('value');
-        return Promise.all([getOpponentsName]).then(results => {
-          tokensSnapshot = results[0];     
-        }).then((response) => {        
-            opponentNames = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != context.params.participantUserId); 
-            // opponentNames = opponentNames.filter((userId: string) => userId != context.params.participantUserId); 
-            // console.log('The opponents are', opponentNames);
-            for(let oppName in opponentNames){
-              // console.log('The opponents are', opponentNames[oppName]);
-              getMessagePayload(context.params.participantUserId, opponentNames[oppName], context.params.matchId, title);
-            }
-
-            // return sendPushToUser(addedUserId, adderUserId, matchId, userName, gameName);
-        });   
-      } 
-      else
-      {
+      if(!beforeOpponents || !afterOpponents || afterOpponents === beforeOpponents) {
         return null;
-      }   
+      }
+      
+      const title: string =  " resumes the game of ";
+      const matchId = context.params.matchId;
+      const participantUserId = context.params.participantUserId;
+      console.log("Inside Ping Opponents " + participantUserId);
+      const getOpponentsIds = admin.database().ref(`/gamePortal/matches/${matchId}/participants/`).once('value');
+      return getOpponentsIds.then((tokensSnapshot: any) => {
+        let opponentIds = Object.keys(tokensSnapshot.val()).filter((userId: string) => userId != participantUserId); 
+        const promises = [];
+        for(let opponentId of opponentIds){
+          promises.push(getMessagePayload(participantUserId, opponentId, matchId, title));
+        }
+        return Promise.all(promises);
+      }); 
     });
 
 
